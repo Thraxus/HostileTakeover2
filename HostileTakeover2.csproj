@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E4EA731E-1CF2-4C58-8D7E-25DA03BEDF52}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>HostileTakeover2</RootNamespace>
+    <AssemblyName>HostileTakeover2</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\netstandard.dll</HintPath>
+    </Reference>
+    <Reference Include="ProtoBuf.Net">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\ProtoBuf.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="ProtoBuf.Net.Core">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\ProtoBuf.Net.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Common">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\Sandbox.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Game">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\Sandbox.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Game.XmlSerializers">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\Sandbox.Game.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Graphics">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\Sandbox.Graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.RenderDirect">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\Sandbox.RenderDirect.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.Game">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.ObjectBuilders">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.ObjectBuilders.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.ObjectBuilders.XmlSerializers">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="VRage">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Ansel">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Ansel.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Audio">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Audio.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Game">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Game.XmlSerializers">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Game.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Input">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Input.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Library">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Math">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Math.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Math.XmlSerializers">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Math.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.NativeAftermath">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.NativeAftermath.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.NativeWrapper">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.NativeWrapper.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Network">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Platform.Windows">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Platform.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Render.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render11">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Render11.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Scripting">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Steam">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.Steam.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.UserInterface">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.UserInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.XmlSerializers">
+      <HintPath>..\..\SteamLibrary\steamapps\common\SpaceEngineers\Bin64\VRage.XmlSerializers.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseFactory.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseGameLogicComp.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseLoggingClass.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseSessionComp.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseXmlUserSettings.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Enums\CompType.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Enums\FactionRelationship.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Enums\LogType.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Extensions\Bools.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Factions\DataTypes\Enums\FactionTypes.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Factions\Models\FactionDictionaries.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Factions\Models\Settings.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Generics\ActionQueue.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Generics\ObjectPool.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\IActionQueue.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\IClose.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\ICommon.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\ILog.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\IReset.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\IUpdate.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Models\BufferedBinaryReader.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Models\FastQueue.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\References.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\ExistingFactions.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\GameSettings.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\InstalledMods.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\StoredItentities.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\FileHandlers\Load.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\FileHandlers\Save.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Statics\Statics.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Statics\ThrusterCalculations.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Statics\VectorManipulations.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Logging\Log.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Networking\ChatHandler.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Networking\MessageBase.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Networking\Messages\ExampleMessage.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Networking\Messaging.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestlogDetail.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestScreen.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Profiler.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\ConstructController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\DataTypes\ClassExample.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\DataTypes\Enums\ExampleEnum.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\DataTypes\StructExample.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Factories\ConstructFactory.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\HostileTakeover2Core.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\ExampleModelWithEventLog.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
