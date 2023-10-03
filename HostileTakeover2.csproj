@@ -194,17 +194,24 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestlogDetail.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestScreen.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Profiler.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\ConstructController.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\DataTypes\ClassExample.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\DataTypes\Enums\ExampleEnum.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\DataTypes\StructExample.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Factories\ConstructFactory.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GrinderController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\GridValidationType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\HostileTakeover2Core.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\ExampleModelWithEventLog.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Block.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\BlockController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\BlockType.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Grid.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\HighlightController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\OwnershipController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Controller\SettingsController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Settings\DefaultSettings.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Types\Setting.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Settings\UserSettings.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\OwnershipType.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Utilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

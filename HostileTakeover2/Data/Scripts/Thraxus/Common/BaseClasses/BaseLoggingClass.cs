@@ -9,7 +9,7 @@ namespace HostileTakeover2.Thraxus.Common.BaseClasses
 		public event Action<IClose> OnClose;
         public event Action<IReset> OnReset;
 
-        public bool IsClosed { get; private set; }
+        public bool IsClosed { get; protected set; }
 
 		public virtual void Close()
 		{
@@ -27,7 +27,8 @@ namespace HostileTakeover2.Thraxus.Common.BaseClasses
 
         public virtual void Reset()
         {
+			Close();
             OnReset?.Invoke(this);
         }
     }
-}
+} 

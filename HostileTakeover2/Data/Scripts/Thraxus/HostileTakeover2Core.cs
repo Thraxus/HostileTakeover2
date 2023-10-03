@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Enums;
 using HostileTakeover2.Thraxus.Common.Factions.Models;
-using HostileTakeover2.Thraxus.Common.Generics;
 using HostileTakeover2.Thraxus.Common.Interfaces;
-using HostileTakeover2.Thraxus.Controllers;
-using HostileTakeover2.Thraxus.Factories;
+using HostileTakeover2.Thraxus.Enums;
+using HostileTakeover2.Thraxus.Utility;
+using HostileTakeover2.Thraxus.Utility.UserConfig.Controller;
+using HostileTakeover2.Thraxus.Utility.UserConfig.Settings;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using Sandbox.ModAPI.Weapons;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -22,29 +24,15 @@ namespace HostileTakeover2.Thraxus
         protected override CompType Type => CompType.Server;
         protected override MyUpdateOrder Schedule => MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation;
 
-        private readonly ConstructFactory _constructFactory;
         private readonly HashSet<ICommon> _commonObjects = new HashSet<ICommon>();
-        public readonly ActionQueue ActionQueue = new ActionQueue();
-
-
-
-        public HostileTakeover2Core()
-        {
-            _constructFactory = new ConstructFactory(ActionQueue);
-        }
-
-        /// <inheritdoc />
-        protected override void LateSetup()
-        {
-            base.LateSetup();
-            var sb = new StringBuilder();
-
-            WriteGeneral("LateSetup",sb.ToString());
-        }
+        private readonly Utilities _utilities = new Utilities();
+        private SettingsController _settings;
 
         protected override void SuperEarlySetup()
         {
             base.SuperEarlySetup();
+            _settings = new SettingsController(ModContext.ModName);
+            _settings.Initialize();
             MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
         }
 
@@ -53,19 +41,44 @@ namespace HostileTakeover2.Thraxus
             var grid = entity as MyCubeGrid;
             if (grid == null) return;
             WriteGeneral("OnEntityAdd", $"[{grid.EntityId:D18}] {grid.DisplayName}");
-            if (ValidateGrid(grid))
-                ActionQueue.Add(2, () => ConstructFactory(grid));
+            CheckGrid(grid);
+            var grinder = entity as IMyAngleGrinder;
+            if (grinder == null) return;
+            _utilities.ActionQueue.Add(DefaultSettings.GrinderTickDelay, () => _utilities.GrinderController.RunGrinderLogic(grinder));
+        }
+
+        private void CheckGrid(MyCubeGrid grid)
+        {
+            GridValidationType type = ValidateGrid(grid);
+            Action action = null;
+            var delay = 0;
+            switch (type)
+            {
+                case GridValidationType.Indestructible:
+                case GridValidationType.Immune:
+                case GridValidationType.NotEditable:
+                    delay = DefaultSettings.RecheckGridInterval;
+                    action = () => CheckGrid(grid);
+                    break;
+                case GridValidationType.NoPhysics:
+                    break;
+                case GridValidationType.Null:
+                    break;
+                case GridValidationType.Valid:
+                    delay = DefaultSettings.EntityAddTickDelay;
+                    action = () => GridFactory(grid);
+                    break;
+                case GridValidationType.VanillaTrade:
+                    break;
+            }
+            if (action != null)
+                _utilities.ActionQueue.Add(delay, action);
         }
 
         protected override void UpdateBeforeSim()
         {
             base.UpdateBeforeSim();
-            ActionQueue.Execute();
-        }
-
-        private void OnGridSplitCreated(MyCubeGrid grid)
-        {
-            WriteGeneral("OnGridSplitCreated", $"[{grid.EntityId:D18}] {grid.DisplayName}");
+            _utilities.ActionQueue.Execute();
         }
 
         protected override void Unload()
@@ -77,109 +90,68 @@ namespace HostileTakeover2.Thraxus
             }
             base.Unload();
         }
-
-        private readonly Dictionary<long, ConstructController> _constructMap = new Dictionary<long, ConstructController>();
         
-        private void ConstructFactory(MyCubeGrid grid)
+        private void GridFactory(MyCubeGrid cubeGrid)
         {
-            if (_constructMap.ContainsKey(grid.EntityId))
-            {
-                WriteGeneral(nameof(ConstructFactory), $"[{grid.EntityId:D18}] Grid rejected.  It already exists in the dictionary under Construct [{_constructMap[grid.EntityId].ConstructId:D5}]");
-                return;
-            }
-
-            ConstructController constructController = _constructFactory.SetupNewConstruct(grid);
-            RegisterCommonObject(constructController);
-            foreach (var id in constructController.GridIds)
-            {
-                if (_constructMap.ContainsKey(id))
-                {
-                    WriteGeneral(nameof(ConstructFactory), $"[{id:D18}] Duplicate call for key insertion.");
-                    continue;
-                }
-                //WriteGeneral(nameof(ConstructFactory), $"[{id:D18}] Adding to Construct {constructController.ConstructId:D5}.");
-                _constructMap.Add(id, constructController);
-            }
-
-            PrintConstructMap();
+            var grid = _utilities.GridPool.Get();
+            grid.Init(_utilities, cubeGrid);
+            RegisterCommonObject(grid);
         }
 
         private void RegisterCommonObject(ICommon iCommon)
         {
             iCommon.OnWriteToLog += WriteGeneral;
-            iCommon.OnClose += OnClose;
-            iCommon.OnReset += OnReset;
+            iCommon.OnClose += OnCommonClose;
             _commonObjects.Add(iCommon);
-        }
-
-        private void OnReset(IReset iReset)
-        {
-            OnClose((IClose)iReset);
         }
 
         private void DeRegisterCommonObject(ICommon iCommon)
         {
             iCommon.OnWriteToLog -= WriteGeneral;
-            iCommon.OnClose -= OnClose;
-            iCommon.OnReset -= OnReset;
+            iCommon.OnClose -= OnCommonClose;
             _commonObjects.Remove(iCommon);
         }
 
-        private void OnClose(IClose iClose)
+        private void OnCommonClose(IClose iClose)
         {
             DeRegisterCommonObject((ICommon)iClose);
         }
 
-        private void PrintConstructMap()
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine();
-            foreach (var construct in _constructMap)
-            {
-                sb.AppendFormat("{0,-8}[{1:D18}] is a member of Construct {2:D5}\n", " ", construct.Key, construct.Value.ConstructId);
-            }
-            WriteGeneral(nameof(PrintConstructMap), sb.ToString());
-        }
-
-        private bool ValidateGrid(MyCubeGrid grid)
+        private GridValidationType ValidateGrid(MyCubeGrid grid)
         {
             // I don't exist!  So why am I here...
             if (grid == null)
             {
                 WriteRejectionReason(null, "NULL");
-                return false;
+                return GridValidationType.Null;
             }
-
-            // You don't own me.  No one owns me! 
-            if (grid.BigOwners == null || grid.BigOwners.Count == 0)
-                return false;
 
             // I'm a projection!  Begone fool! ...or lend me your... components.
             if (grid.Physics == null)
             {
                 WriteRejectionReason(grid, "NO PHYSICS");
-                return false;
+                return GridValidationType.NoPhysics;
             }
 
             // I'm not destructible because someone said so.
             if (!grid.DestructibleBlocks)
             {
                 WriteRejectionReason(grid, "INDESTRUCTIBLE");
-                return false;
+                return GridValidationType.Indestructible;
             }
 
             // Haha bitch, I'm immune to your garbage.
             if (grid.Immune)
             {
                 WriteRejectionReason(grid, "IMMUNE");
-                return false;
+                return GridValidationType.Immune;
             }
 
             // Thou shall not edit me.  So saith ...me.
             if (!grid.Editable)
             {
                 WriteRejectionReason(grid, "NOT EDITABLE");
-                return false;
+                return GridValidationType.NotEditable;
             }
 
             // I'm a station...!
@@ -193,18 +165,17 @@ namespace HostileTakeover2.Thraxus
                     {
                         // ...that belongs to cheater NPC's, so back off! 
                         WriteRejectionReason(grid, "VANILLA TRADE");
-                        return false;
+                        return GridValidationType.VanillaTrade;
                     }
                 }
             }
 
-            return true;
+            return GridValidationType.Valid;
         }
 
         private void WriteRejectionReason(MyCubeGrid grid, string reason)
         {
             WriteGeneral(nameof(WriteRejectionReason), $"Grid Rejected as {reason}: [{grid?.EntityId:D18}] {grid?.DisplayName}");
         }
-
     }
 }

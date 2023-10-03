@@ -14,7 +14,14 @@ namespace HostileTakeover2.Thraxus.Common.Generics
                 _actionQueue.Enqueue(() => Add(--delay, action));
                 return;
             }
-            action?.Invoke();
+            try
+            {
+                action?.Invoke();
+            }
+            catch
+            {
+                // ignored - i don't want the action to crash the game if the origin or related objects are no longer available
+            }
         }
 
         public void Execute(int iterationMax = 500)

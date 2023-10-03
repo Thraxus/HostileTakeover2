@@ -3,7 +3,7 @@
     public abstract class BaseXmlUserSettings
     {
         private readonly string _settingsFileName;
-        private const string Extension = ".xml";
+        private const string Extension = ".cfg";
 
         protected BaseXmlUserSettings(string modName)
         {

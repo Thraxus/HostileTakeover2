@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using HostileTakeover2.Thraxus.Common.Interfaces;
 
 namespace HostileTakeover2.Thraxus.Common.Generics
 {
-    internal class ObjectPool<T>
+    internal class ObjectPool<T> where T : IReset
     {
         private readonly ConcurrentBag<T> _objects;
         private readonly Func<T> _objectGenerator;
@@ -20,7 +21,11 @@ namespace HostileTakeover2.Thraxus.Common.Generics
             return _objects.TryTake(out item) ? item : _objectGenerator();
         }
 
-        public void Return(T item) => _objects.Add(item);
+        public void Return(T item)
+        {
+            item.Reset();
+            _objects.Add(item);
+        }
     }
 }
 
