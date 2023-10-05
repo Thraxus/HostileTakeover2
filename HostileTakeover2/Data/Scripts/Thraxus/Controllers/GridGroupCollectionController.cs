@@ -3,7 +3,7 @@ using HostileTakeover2.Thraxus.Models;
 
 namespace HostileTakeover2.Thraxus.Controllers
 {
-    internal class GridController
+    internal class GridGroupCollectionController
     {
         private readonly Dictionary<long, Grid> _grids = new Dictionary<long, Grid>();
 

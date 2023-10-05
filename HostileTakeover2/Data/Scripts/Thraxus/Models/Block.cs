@@ -1,4 +1,5 @@
-﻿using HostileTakeover2.Thraxus.Common.BaseClasses;
+﻿using System;
+using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Controllers;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
@@ -9,15 +10,18 @@ namespace HostileTakeover2.Thraxus.Models
     internal class Block : BaseLoggingClass
     {
         private MyCubeBlock _block;
-        private OwnershipController _ownershipController;
-
+        private GridOwnershipController _gridOwnershipController;
+        public Action<Block> BlockHasBeenDisableAction;
         public BlockType BlockType;
+        public string Name => _block.Name;
+
+        public bool IsFunctional => _block.IsFunctional;
         
-        public void Initialize(BlockType blockType, MyCubeBlock block, OwnershipController ownershipController)
+        public void Initialize(BlockType blockType, MyCubeBlock block, GridOwnershipController gridOwnershipController)
         {
             BlockType = blockType;
             _block = block;
-            _ownershipController = ownershipController;
+            _gridOwnershipController = gridOwnershipController;
             RegisterEvents();
         }
 
@@ -36,14 +40,21 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void BlockOnOwnershipChanged(IMyTerminalBlock block)
         {
-            _ownershipController.SetOwnership(_block);
+            _gridOwnershipController.SetOwnership(_block);
         }
 
         private void BlockOnWorkingChanged(MyCubeBlock block)
         {
-            
+            BlockOnOwnershipChanged((IMyTerminalBlock)block);
+            if (!block.IsFunctional)
+                BlockHasBeenDisable();
         }
-        
+
+        private void BlockHasBeenDisable()
+        {
+            BlockHasBeenDisableAction?.Invoke(this);
+        }
+
         public override void Close()
         {
             base.Close();

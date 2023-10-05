@@ -2,7 +2,8 @@
 {
     internal enum OwnershipType
     {
+        None,
         Npc,
-        Other
+        Player
     }
 }

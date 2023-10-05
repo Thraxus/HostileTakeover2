@@ -15,11 +15,11 @@ namespace HostileTakeover2.Thraxus.Controllers
 {
     internal class GrinderController : BaseLoggingClass
     {
-        private Utilities _utilities;
+        private Mediator _mediator;
 
-        public void Init(Utilities utilities)
+        public void Init(Mediator mediator)
         {
-            _utilities = utilities;
+            _mediator = mediator;
         }
 
         private readonly List<MyEntity> _reusableEntityList = new List<MyEntity>();
@@ -45,11 +45,11 @@ namespace HostileTakeover2.Thraxus.Controllers
             foreach (MyEntity target in entList)
             {
                 if (grinder.OwnerIdentityId == 0) break;
-                Grid grid = _utilities.GridController.GetGrid(target.EntityId);
+                Grid grid = _mediator.GridGroupCollectionController.GetGrid(target.EntityId);
                 WriteGeneral(nameof(RunGrinderLogic), $"Looking for: [{(grid == null ? "T" : "F")}] [{target.EntityId:D20}] [{grinder.OwnerIdentityId:D20}]");
-                if (grid == null || grid.Ownership != OwnershipType.Npc) continue;
+                if (grid == null || grid.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
                 WriteGeneral(nameof(RunGrinderLogic), $"Found: [{target.EntityId:D20}]");
-                grid.TriggerHighlights();
+                grid.TriggerHighlights(grinder.OwnerIdentityId);
             }
         }
     }

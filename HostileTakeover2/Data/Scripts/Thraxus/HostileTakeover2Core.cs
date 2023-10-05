@@ -25,7 +25,7 @@ namespace HostileTakeover2.Thraxus
         protected override MyUpdateOrder Schedule => MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation;
 
         private readonly HashSet<ICommon> _commonObjects = new HashSet<ICommon>();
-        private readonly Utilities _utilities = new Utilities();
+        private readonly Mediator _utilities = new Mediator();
         private SettingsController _settings;
 
         protected override void SuperEarlySetup()

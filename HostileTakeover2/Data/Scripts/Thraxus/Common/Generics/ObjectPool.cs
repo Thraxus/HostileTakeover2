@@ -4,7 +4,7 @@ using HostileTakeover2.Thraxus.Common.Interfaces;
 
 namespace HostileTakeover2.Thraxus.Common.Generics
 {
-    internal class ObjectPool<T> where T : IReset
+    internal class ObjectPool<T> where T : IResetWithAction
     {
         private readonly ConcurrentBag<T> _objects;
         private readonly Func<T> _objectGenerator;

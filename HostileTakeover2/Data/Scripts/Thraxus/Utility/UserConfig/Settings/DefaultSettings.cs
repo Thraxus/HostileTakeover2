@@ -31,13 +31,15 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Settings
         public static readonly Setting<bool> HighlightSingleNearestBlockInActiveGroup = new Setting<bool>(false, false, false, false);
 
         // Mod hardcoded settings
-        public const int EntityAddTickDelay = 10;
+        public static bool CapturePlayerBlocks = true;
         public const int BlockAddTickDelay = 10;
+        public const int EntityAddTickDelay = 10;
         public const int GrinderTickDelay = 10;
         public const int RecheckGridInterval = Common.References.TicksPerMinute * 3;
+        
 
         // HighlightSettings
-        public static long HighlightDuration = Common.References.TicksPerSecond * 60;
+        public static int HighlightDuration = Common.References.TicksPerSecond * 60;
         public static int HighlightPulseDuration = 120;
         public static int EnabledThickness = 10;
         public static int DisabledThickness = -1;

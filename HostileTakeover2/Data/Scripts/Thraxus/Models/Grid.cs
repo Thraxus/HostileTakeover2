@@ -5,7 +5,6 @@ using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Settings;
 using Sandbox.Game.Entities;
-using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.ModAPI;
 
@@ -13,28 +12,38 @@ namespace HostileTakeover2.Thraxus.Models
 {
     internal class Grid : BaseLoggingClass
     {
+        /// <summary>
+        /// Systems required for different ownership types:
+        /// None / Player
+        /// - On ownership check, trigger Ignore Grid, which should set the following conditions
+        /// - Event for OnBlockOwnershipChanged (grid registration)
+        /// - BlockTypeController reset
+        /// NPC - All systems engaged
+        /// </summary>
+
         private MyCubeGrid _me;
         private IMyGridGroupData _myGridGroupData;
-        public OwnershipController OwnershipController = new OwnershipController();
 
-        private readonly BlockController _blockController = new BlockController();
-        private Utilities _utilities;
+        public readonly GridOwnershipController GridOwnershipController = new GridOwnershipController();
+        public readonly BlockTypeController BlockTypeController = new BlockTypeController();
+        private Mediator _mediator;
 
-        public OwnershipType Ownership => 
-            _me.BigOwners.Count != 0 && MyAPIGateway.Players.TryGetSteamId(_me.BigOwners[0]) <= 0 ? 
-                OwnershipType.Npc : OwnershipType.Other;
+        public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
 
-        public void Init(Utilities utilities, MyCubeGrid grid)
+        public void Init(Mediator mediator, MyCubeGrid grid)
         {
             IsClosed = false;
             _me = grid;
-            _utilities = utilities;
-            _utilities.GridController.AddToGrids(_me.EntityId, this);
-            _blockController.Init(utilities, OwnershipController);
-            OwnershipController.SetOwnershipAction += SetOwnership;
+            _mediator = mediator;
+            _mediator.GridGroupCollectionController.AddToGrids(_me.EntityId, this);
+            BlockTypeController.Init(mediator, GridOwnershipController);
+            GridOwnershipController.SetOwnershipAction += SetOwnership;
+            GridOwnershipController.DisownGridAction += DisownGrid;
+            GridOwnershipController.TakeOverGridAction += TakeOverGrid;
+            GridOwnershipController.IgnoreGridAction += IgnoreGrid;
             SetupGridGroup();
             RegisterEvents();
-            EvaluateOwnership();
+            _mediator.GridGroupCoordinationController.CoordinateOwnership(_myGridGroupData);
         }
 
         private void SetupGridGroup()
@@ -55,106 +64,91 @@ namespace HostileTakeover2.Thraxus.Models
                 _myGridGroupData.OnGridRemoved -= OnGridRemoved;
                 SetupGridGroup();
             }
-            EvaluateOwnership();
-        }
-
-        private readonly List<IMyCubeGrid> _reusableGridCollection = new List<IMyCubeGrid>();
-
-        private void EvaluateOwnership()
-        {
-            _reusableGridCollection.Clear();
-            _myGridGroupData.GetGrids(_reusableGridCollection);
-
-            bool disown = true;
-
-            OwnershipController.SoftReset();
-            foreach (IMyCubeGrid grid in _reusableGridCollection)
-            {
-                Grid someGrid = _utilities.GridController.GetGrid(grid.EntityId);
-                if (someGrid.Ownership != OwnershipType.Npc) continue;
-                disown = false; // We just need one hit to confirm this is still a NPC ship.
-
-                // TODO Evaluate this, I think it can fail.  Need a good way to pool ownership and unite the grids with one owner if it does fail;
-                OwnershipController.SetOwnership(someGrid.OwnershipController.OwnerId(_me) != 0 && MyAPIGateway.Players.TryGetSteamId(_me.BigOwners[0]) <= 0 ? someGrid.OwnershipController.OwnerId(_me) : 0, OwnershipType.Npc);
-            }
-
-            if (!disown) return; // No grids in the grid group was npc owned, so this collection needs neutral ownership
-
-            foreach (IMyCubeGrid grid in _reusableGridCollection)
-                _utilities.GridController.GetGrid(grid.EntityId).DisownGrid();
-
+            _mediator.GridGroupCoordinationController.CoordinateOwnership(_myGridGroupData);
         }
 
         public void DisownGrid()
         {
-            OwnershipController.Reset();
+            GridOwnershipController.Reset();
+            BlockTypeController.Reset();
+            SetOwnership();
+        }
+
+        private void IgnoreGrid()
+        {
+
+        }
+
+        private void TakeOverGrid()
+        {
+            if (GridOwnershipController.OwnershipType == OwnershipType.Npc && !BlockTypeController.IsClosed)
+                SetOwnership();
+        }
+
+        private void SetOwnership()
+        {
             foreach (var block in _me.GetFatBlocks())
                 SetOwnership(block);
         }
-         
+
         private void SetOwnership(MyCubeBlock block)
         {
-            block.ChangeOwner(block.IsFunctional ? OwnershipController.RightfulOwner : 0, MyOwnershipShareModeEnum.None);
+            block.ChangeOwner(block.IsFunctional ? GridOwnershipController.RightfulOwner : 0, MyOwnershipShareModeEnum.None);
         }
 
-        public void TriggerHighlights()
+        public void TriggerHighlights(long grinderOwnerIdentityId)
         {
-            EnableHighlights();
-        }
-
-        public void EnableHighlights()
-        {
-            if (!DefaultSettings.UseHighlights.Current) return;
-            _reusableGridCollection.Clear();
-            _myGridGroupData.GetGrids(_reusableGridCollection);
-            
-            // TODO this operates on the assumption the grid group contains this grid.  If not, modify as needed.
-            foreach (IMyCubeGrid grid in _reusableGridCollection)
-            {
-                Grid someGrid = _utilities.GridController.GetGrid(grid.EntityId);
-                someGrid.EnableHighlights();
-            }
+            _mediator.HighlightController.EnableHighlights(_myGridGroupData, grinderOwnerIdentityId);
         }
 
         private void AddBlock(MyCubeBlock block)
         {
             SetOwnership(block);
-            _blockController.AddBlock(block);
+            BlockTypeController.AddBlock(block);
         }
 
         private void RegisterEvents()
         {
-            _me.OnFatBlockAdded += OnBlockAdded;
-            _me.OnBlockOwnershipChanged += OnBlockOwnershipChanged;
+            if(DefaultSettings.CapturePlayerBlocks)
+            {
+                _me.OnFatBlockAdded += OnBlockAdded;
+                _me.OnBlockOwnershipChanged += OnBlockOwnershipChanged;
+            }
             _me.OnMarkForClose += entity => Close();
-            _me.OnClosing += entity => Close();
-            _me.OnClose += entity => Close();
+            //_me.OnClosing += entity => Close();
+            //_me.OnClose += entity => Close();
         }
-
+        
         private void DeRegisterEvents()
         {
-            _me.OnFatBlockAdded -= OnBlockAdded;
-            _me.OnBlockOwnershipChanged -= OnBlockOwnershipChanged;
+            if (DefaultSettings.CapturePlayerBlocks)
+            {
+                _me.OnFatBlockAdded -= OnBlockAdded;
+                _me.OnBlockOwnershipChanged -= OnBlockOwnershipChanged;
+            }
         }
-
-        private void OnBlockOwnershipChanged(MyCubeGrid grid)
-        {
-            EvaluateOwnership();
-        }
-
         private void OnBlockAdded(MyCubeBlock block)
         {
-            if (Ownership == OwnershipType.Npc)
-                _utilities.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
+            // TODO need to check here for the connector being added from a player ship.  We shouldn't be taking that over.  At the same time, we don't want it connected either. 
+            // TODO perhaps add logic that looks for store blocks on the NPC grid and if none found (or the mating connector has trade disabled?) then just unlatch the connectors
+            if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
+                _mediator.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
+        }
+
+        private void OnBlockOwnershipChanged(MyCubeGrid unused)
+        {
+            if (GridOwnershipController.OwnershipType == OwnershipType.None)
+                _mediator.GridGroupCoordinationController.CoordinateOwnership(_myGridGroupData);
         }
 
         public override void Close()
         {
             if (IsClosed) return;
             base.Close();
-            OwnershipController.Reset();
             DeRegisterEvents();
-            _utilities.GridController.RemoveFromGrids(_me.EntityId);
+            GridOwnershipController.Reset();
+            BlockTypeController.Reset();
+            _mediator.GridGroupCollectionController.RemoveFromGrids(_me.EntityId);
         }
     }
 }

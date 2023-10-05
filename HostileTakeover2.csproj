@@ -173,6 +173,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\ICommon.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\ILog.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\IReset.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\IResetWithAction.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Interfaces\IUpdate.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Models\BufferedBinaryReader.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Models\FastQueue.cs" />
@@ -194,22 +195,24 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestlogDetail.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestScreen.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Profiler.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridGroupCoordinationController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GrinderController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\HighlightSettings.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\GridValidationType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\HostileTakeover2Core.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Block.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\BlockController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\BlockTypeController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\BlockType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Grid.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridGroupCollectionController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\HighlightController.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\OwnershipController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridOwnershipController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Controller\SettingsController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Settings\DefaultSettings.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Types\Setting.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Settings\UserSettings.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\OwnershipType.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Utilities.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Mediator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

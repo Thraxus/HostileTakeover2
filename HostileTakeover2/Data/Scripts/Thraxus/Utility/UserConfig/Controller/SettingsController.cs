@@ -86,7 +86,8 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controller
                 _userSettings.EntityDetectionRange = DefaultSettings.EntityDetectionRange.ToString().ToLower();
             }
 
-            
+            //TODO If Use EasyNpcTakeovers == TRUE, then fuck every other setting and set all settings to do what ENT does.
+            // No highlights, no traps, no weapons, no capture of blocks
 
         }
     }

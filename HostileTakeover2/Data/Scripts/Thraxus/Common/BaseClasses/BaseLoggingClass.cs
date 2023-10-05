@@ -7,7 +7,7 @@ namespace HostileTakeover2.Thraxus.Common.BaseClasses
 	{
 		public event Action<string, string> OnWriteToLog;
 		public event Action<IClose> OnClose;
-        public event Action<IReset> OnReset;
+        public event Action<IResetWithAction> OnReset;
 
         public bool IsClosed { get; protected set; }
 
