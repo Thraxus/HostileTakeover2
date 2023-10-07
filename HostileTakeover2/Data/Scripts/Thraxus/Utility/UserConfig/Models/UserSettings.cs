@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace HostileTakeover2.Thraxus.Utility.UserConfig.Settings
+namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
 {
     [XmlRoot(nameof(UserSettings), IsNullable = true)]
     public class UserSettings

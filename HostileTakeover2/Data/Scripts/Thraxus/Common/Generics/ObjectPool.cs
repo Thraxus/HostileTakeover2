@@ -4,16 +4,18 @@ using HostileTakeover2.Thraxus.Common.Interfaces;
 
 namespace HostileTakeover2.Thraxus.Common.Generics
 {
-    internal class ObjectPool<T> where T : IResetWithAction
+    internal class ObjectPool<T> where T : IReset
     {
         private readonly ConcurrentBag<T> _objects;
         private readonly Func<T> _objectGenerator;
-
+        
         public ObjectPool(Func<T> objectGenerator)
         {
             _objectGenerator = objectGenerator;
             _objects = new ConcurrentBag<T>();
         }
+
+        public int Count() => _objects.Count;
 
         public T Get()
         {

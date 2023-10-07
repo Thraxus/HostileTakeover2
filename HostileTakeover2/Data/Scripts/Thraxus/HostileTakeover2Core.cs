@@ -6,8 +6,8 @@ using HostileTakeover2.Thraxus.Common.Factions.Models;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
-using HostileTakeover2.Thraxus.Utility.UserConfig.Controller;
-using HostileTakeover2.Thraxus.Utility.UserConfig.Settings;
+using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
+using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
@@ -25,26 +25,43 @@ namespace HostileTakeover2.Thraxus
         protected override MyUpdateOrder Schedule => MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation;
 
         private readonly HashSet<ICommon> _commonObjects = new HashSet<ICommon>();
-        private readonly Mediator _utilities = new Mediator();
+        private readonly Mediator _mediator = new Mediator();
         private SettingsController _settings;
-
+        
         protected override void SuperEarlySetup()
         {
             base.SuperEarlySetup();
             _settings = new SettingsController(ModContext.ModName);
+            _mediator.OnWriteToLog += WriteGeneral;
+            _mediator.AddSettings(_settings);
             _settings.Initialize();
             MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
         }
 
         private void OnEntityAdd(IMyEntity entity)
         {
+            _mediator.ActionQueue.Add(DefaultSettings.EntityAddTickDelay, () =>
+            {
+                if (!CheckForGrid(entity)) CheckForGrinder(entity);
+            });
+        }
+
+        private bool CheckForGrid(IMyEntity entity)
+        {
             var grid = entity as MyCubeGrid;
-            if (grid == null) return;
-            WriteGeneral("OnEntityAdd", $"[{grid.EntityId:D18}] {grid.DisplayName}");
+            if (grid == null) return false;
+            WriteGeneral("OnEntityAdd", $"Grid: [{grid.EntityId:D18}] {grid.DisplayName}");
             CheckGrid(grid);
+            return true;
+        }
+
+        private bool CheckForGrinder(IMyEntity entity)
+        {
             var grinder = entity as IMyAngleGrinder;
-            if (grinder == null) return;
-            _utilities.ActionQueue.Add(DefaultSettings.GrinderTickDelay, () => _utilities.GrinderController.RunGrinderLogic(grinder));
+            if (grinder == null) return false;
+            WriteGeneral("OnEntityAdd", $"Grinder: [{grinder.EntityId:D18}]");
+            _mediator.GrinderController.RunGrinderLogic(grinder);
+            return true;
         }
 
         private void CheckGrid(MyCubeGrid grid)
@@ -65,56 +82,38 @@ namespace HostileTakeover2.Thraxus
                 case GridValidationType.Null:
                     break;
                 case GridValidationType.Valid:
-                    delay = DefaultSettings.EntityAddTickDelay;
+                    delay = DefaultSettings.MinorTickDelay;
                     action = () => GridFactory(grid);
                     break;
                 case GridValidationType.VanillaTrade:
                     break;
             }
-            if (action != null)
-                _utilities.ActionQueue.Add(delay, action);
+            //if (action != null)
+                //_mediator.ActionQueue.Add(delay, action);
+            action?.Invoke();
+            WriteGeneral(nameof(CheckGrid), $"Check Grid returned type of {type}, Action was null? {action == null} {action?.Method}");
         }
 
         protected override void UpdateBeforeSim()
         {
             base.UpdateBeforeSim();
-            _utilities.ActionQueue.Execute();
+            _mediator.ActionQueue.Execute();
         }
 
         protected override void Unload()
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
-            foreach (var common in _commonObjects)
-            {
-                DeRegisterCommonObject(common);
-            }
+            _mediator.Close();
+            _mediator.OnWriteToLog -= WriteGeneral;
             base.Unload();
         }
         
         private void GridFactory(MyCubeGrid cubeGrid)
         {
-            var grid = _utilities.GridPool.Get();
-            grid.Init(_utilities, cubeGrid);
-            RegisterCommonObject(grid);
-        }
-
-        private void RegisterCommonObject(ICommon iCommon)
-        {
-            iCommon.OnWriteToLog += WriteGeneral;
-            iCommon.OnClose += OnCommonClose;
-            _commonObjects.Add(iCommon);
-        }
-
-        private void DeRegisterCommonObject(ICommon iCommon)
-        {
-            iCommon.OnWriteToLog -= WriteGeneral;
-            iCommon.OnClose -= OnCommonClose;
-            _commonObjects.Remove(iCommon);
-        }
-
-        private void OnCommonClose(IClose iClose)
-        {
-            DeRegisterCommonObject((ICommon)iClose);
+            //var grid = _mediator.GridPool.Get();
+            var grid = _mediator.GetGrid();
+            grid.Init(_mediator, cubeGrid);
+            WriteGeneral(nameof(GridFactory), $"Grid Factory Engaged.  Created Grid.");
         }
 
         private GridValidationType ValidateGrid(MyCubeGrid grid)

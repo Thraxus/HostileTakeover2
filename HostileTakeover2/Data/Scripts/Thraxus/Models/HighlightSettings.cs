@@ -1,6 +1,4 @@
-﻿using System;
-using HostileTakeover2.Thraxus.Common.Interfaces;
-using HostileTakeover2.Thraxus.Utility.UserConfig.Settings;
+﻿using HostileTakeover2.Thraxus.Common.Interfaces;
 using VRageMath;
 
 namespace HostileTakeover2.Thraxus.Models
@@ -9,8 +7,8 @@ namespace HostileTakeover2.Thraxus.Models
     {
         public string Name;
         public bool Enabled;
-        public int Thickness = DefaultSettings.EnabledThickness;
-        public int Duration = DefaultSettings.EnabledThickness;
+        public int LineThickness;
+        public int PulseDuration;
         public Color Color;
         public long PlayerId;
 

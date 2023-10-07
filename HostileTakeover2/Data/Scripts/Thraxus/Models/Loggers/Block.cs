@@ -5,7 +5,7 @@ using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 
-namespace HostileTakeover2.Thraxus.Models
+namespace HostileTakeover2.Thraxus.Models.Loggers
 {
     internal class Block : BaseLoggingClass
     {
@@ -55,10 +55,16 @@ namespace HostileTakeover2.Thraxus.Models
             BlockHasBeenDisableAction?.Invoke(this);
         }
 
+        public override void Reset()
+        {
+            DeRegisterEvents();
+            base.Reset();
+        }
+
         public override void Close()
         {
             base.Close();
-            DeRegisterEvents();
+            Reset();
         }
     }
 }

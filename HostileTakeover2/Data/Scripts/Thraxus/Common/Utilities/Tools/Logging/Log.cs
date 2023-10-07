@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using Sandbox.ModAPI;
+using VRage.Game.Components;
+using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging
 {
@@ -22,7 +25,7 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging
 			Init();
 		}
 
-		private void Init()
+        private void Init()
 		{
 			if (TextWriter != null) return;
 			TextWriter = MyAPIGateway.Utilities.WriteFileInLocalStorage(LogName, typeof(Log));
@@ -31,7 +34,8 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging
 		public void Close()
 		{
 			TextWriter?.Flush();
-			TextWriter?.Close();
+            TextWriter?.Dispose();
+            TextWriter?.Close();
 			TextWriter = null;
 		}
 
@@ -50,15 +54,20 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging
 		private void BuildLogLine(string caller, string message)
 		{
 			lock (_lockObject)
-			{
-				WriteLine($"{TimeStamp}{Indent}{caller}{Indent}{message}");
-			}
+            {
+                MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                {
+                    var newMessage = $"{TimeStamp}{Indent}{caller}{Indent}{message}";
+                    WriteLine(newMessage);
+					MyLog.Default.WriteLineAndConsole(newMessage);
+                });
+            }
 		}
 
 		private void WriteLine(string line)
 		{
-			TextWriter?.WriteLine(line);
-			TextWriter?.Flush();
+            TextWriter?.WriteLine(line);
+            TextWriter?.Flush();
 		}
 	}
 }

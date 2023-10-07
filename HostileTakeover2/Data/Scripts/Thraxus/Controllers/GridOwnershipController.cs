@@ -1,11 +1,12 @@
 ﻿using System;
+using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Controllers
 {
-    internal class GridOwnershipController
+    internal class GridOwnershipController : BaseLoggingClass
     {
         public long RightfulOwner = 0;
         public OwnershipType OwnershipType = OwnershipType.None;
@@ -41,6 +42,8 @@ namespace HostileTakeover2.Thraxus.Controllers
             OwnershipType = rightfulOwner == 0 ? OwnershipType.None : MyAPIGateway.Players.TryGetSteamId(rightfulOwner) <= 0
                 ? OwnershipType.Npc : OwnershipType.Player;
             
+            WriteGeneral(nameof(SetOwnership), $"Owner determined to be {rightfulOwner:D18} which is of type {OwnershipType}");
+
             switch (OwnershipType)
             {
                 case OwnershipType.Npc:
@@ -56,13 +59,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             }
         }
 
-        public void SoftReset()
-        {
-            RightfulOwner = 0;
-            OwnershipType = OwnershipType.None;
-        }
-
-        public void Reset()
+        public override void Reset()
         {
             RightfulOwner = 0;
             SetOwnershipAction = null;

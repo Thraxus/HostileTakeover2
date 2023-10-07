@@ -1,15 +1,16 @@
 ﻿using System.Text;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Utility.UserConfig.Settings;
+using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 
 // ReSharper disable SpecifyACultureInStringConversionExplicitly
 
-namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controller
+namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
 {
     public class SettingsController : BaseXmlUserSettings
     {
         private UserSettings _userSettings;
-
+        public readonly DefaultSettings DefaultSettings = new DefaultSettings();
+        
         public SettingsController(string modName) : base(modName) { }
 
         public void Initialize()
