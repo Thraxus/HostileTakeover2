@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using Sandbox.ModAPI;
-using VRage.Game.Components;
 using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging

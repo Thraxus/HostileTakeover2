@@ -1,6 +1,6 @@
 ﻿using System;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Controllers;
+using HostileTakeover2.Thraxus.Controllers.Loggers;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
@@ -9,38 +9,39 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
 {
     internal class Block : BaseLoggingClass
     {
-        private MyCubeBlock _block;
+        public MyCubeBlock MyCubeBlock;
         private GridOwnershipController _gridOwnershipController;
         public Action<Block> BlockHasBeenDisableAction;
         public BlockType BlockType;
-        public string Name => _block.Name;
+        public string Name => MyCubeBlock.Name;
+        public long EntityId => MyCubeBlock.EntityId;
 
-        public bool IsFunctional => _block.IsFunctional;
+        public bool IsFunctional => MyCubeBlock.IsFunctional;
         
         public void Initialize(BlockType blockType, MyCubeBlock block, GridOwnershipController gridOwnershipController)
         {
             BlockType = blockType;
-            _block = block;
+            MyCubeBlock = block;
             _gridOwnershipController = gridOwnershipController;
             RegisterEvents();
         }
 
         private void RegisterEvents()
         {
-            _block.OnClose += block => Close();
-            _block.IsWorkingChanged += BlockOnWorkingChanged;
-            ((IMyTerminalBlock)_block).OwnershipChanged += BlockOnOwnershipChanged;
+            MyCubeBlock.OnClose += block => Close();
+            MyCubeBlock.IsWorkingChanged += BlockOnWorkingChanged;
+            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged += BlockOnOwnershipChanged;
         }
 
         private void DeRegisterEvents()
         {
-            _block.IsWorkingChanged -= BlockOnWorkingChanged;
-            ((IMyTerminalBlock)_block).OwnershipChanged -= BlockOnOwnershipChanged;
+            MyCubeBlock.IsWorkingChanged -= BlockOnWorkingChanged;
+            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged -= BlockOnOwnershipChanged;
         }
 
         private void BlockOnOwnershipChanged(IMyTerminalBlock block)
         {
-            _gridOwnershipController.SetOwnership(_block);
+            _gridOwnershipController.SetOwnership(MyCubeBlock);
         }
 
         private void BlockOnWorkingChanged(MyCubeBlock block)
@@ -57,14 +58,10 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
 
         public override void Reset()
         {
-            DeRegisterEvents();
             base.Reset();
-        }
-
-        public override void Close()
-        {
-            base.Close();
-            Reset();
+            DeRegisterEvents();
+            MyCubeBlock = null;
+            BlockType = BlockType.None;
         }
     }
 }

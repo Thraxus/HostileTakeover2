@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
+using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Models;
@@ -34,6 +35,7 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         private void HighlightBlock(Block block, BlockType type, long grinderOwnerIdentityId)
         {
+            if (_currentHighlightedBlocks.ContainsKey(block)) return;
             //HighlightSettings hls = _mediator.HighlightSettingsPool.Get();
             var hls = _mediator.GetHighlightSetting();
             hls.Name = block.Name;
@@ -52,6 +54,7 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         private void RemoveFromHighlightedBlocks(Block block)
         {
+            WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Attempting to remove a block: [{(_currentHighlightedBlocks.ContainsKey(block)).ToSingleChar()}] {block.EntityId.ToEntityIdFormat()}");
             if (!_currentHighlightedBlocks.ContainsKey(block)) return;
             HighlightSettings hls = _currentHighlightedBlocks[block];
             _currentHighlightedBlocks.Remove(block);
@@ -101,25 +104,27 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
         {
             //_reusableGridCollection.Clear();
             ClearReusableImportantBlockDictionary();
-            WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {grinderOwnerIdentityId:D18}");
+            WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {grinderOwnerIdentityId.ToEntityIdFormat()}");
             //myGridGroupData.GetGrids(_reusableGridCollection);
-            var gridList = _mediator.GridGroupCollectionController.Get(myGridGroupData);
+            var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
             int counter = 0;
             foreach (var myCubeGrid in gridList)
             {
                 Grid grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);
                 foreach (var kvp in grid.BlockTypeController.GetImportantBlockDictionary())
                 {
-                    foreach (var block in kvp.Value)
+                    Block block = kvp.Value;
+                    if (!block.IsFunctional || block.IsClosed || block.BlockType == BlockType.None)
                     {
-                        if (!block.IsFunctional || block.IsClosed) continue;
-                        _reusableImportantBlocksDictionary[kvp.Key].Add(block);
-                        counter++;
+                        WriteGeneral(nameof(EnableHighlights), $"Block rejected!  Type: {block.BlockType} | Functional: {block.IsFunctional} | Closed: {block.IsClosed}");
+                        continue;
                     }
+                    _reusableImportantBlocksDictionary[block.BlockType].Add(block);
+                    counter++;
                 }
             }
-            WriteGeneral(nameof(EnableHighlights), $"Attempting to highlight {counter:D3} blocks");
-            _mediator.GridGroupCollectionController.Return(gridList);
+            WriteGeneral(nameof(EnableHighlights), $"Attempting to highlight {counter:D3} blocks [{_reusableImportantBlocksDictionary[BlockType.Control].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Medical].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Weapon].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Trap].Count:D2}]");
+            _mediator.ReturnReusableCubeGridList(gridList);
             HighlightNextSet(grinderOwnerIdentityId);
         }
 
@@ -162,6 +167,12 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             {
                 HighlightBlock(block, type, grinderOwnerIdentityId);
             }
+        }
+
+        public override void Reset()
+        {
+            ClearReusableImportantBlockDictionary();
+            base.Reset();
         }
     }
 }

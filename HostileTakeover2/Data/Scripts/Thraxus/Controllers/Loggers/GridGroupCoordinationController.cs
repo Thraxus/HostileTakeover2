@@ -1,17 +1,15 @@
 ﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Models;
+using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Models.Loggers;
 using HostileTakeover2.Thraxus.Utility;
 using VRage.Game.ModAPI;
 
-namespace HostileTakeover2.Thraxus.Controllers
+namespace HostileTakeover2.Thraxus.Controllers.Loggers
 {
     internal class GridGroupCoordinationController : BaseLoggingClass
     {
         private Mediator _mediator;
-        //private readonly List<IMyCubeGrid> _reusableGridCollection = new List<IMyCubeGrid>();
-        //private readonly List<IMyCubeGrid> _reusableGridCollection = new List<IMyCubeGrid>();
         private readonly Dictionary<long, int> _reusableOwnershipDictionary = new Dictionary<long, int>();
 
         public void Init(Mediator mediator)
@@ -19,28 +17,33 @@ namespace HostileTakeover2.Thraxus.Controllers
             _mediator = mediator;
         }
         
-        public void CoordinateOwnership(IMyGridGroupData myGridGroupData)
+        public void InitializeOwnership(IMyGridGroupData myGridGroupData)
         {
-            IterateGridGroup(myGridGroupData);
+            long ownerId = GetCurrentOwnerId(myGridGroupData);
+            WriteGeneral(nameof(InitializeOwnership), $"Grid group owner determined to be {ownerId:D18}");
+            SetGridGroupOwnership(myGridGroupData, ownerId);
         }
 
-        private void IterateGridGroup(IMyGridGroupData myGridGroupData)
+        public void ReEvaluateOwnership(IMyGridGroupData myGridGroupData, long cachedOwnerId)
         {
-            //List<IMyCubeGrid> reusableGridCollection = new List<IMyCubeGrid>();
-            //_reusableGridCollection.Clear();
+            long ownerId = GetCurrentOwnerId(myGridGroupData);
+            WriteGeneral(nameof(ReEvaluateOwnership), $"Ownership reevaluated, change required: [{(cachedOwnerId == ownerId).ToSingleChar()}]");
+            if (cachedOwnerId == ownerId) return;
+            SetGridGroupOwnership(myGridGroupData, ownerId);
+        }
+
+        private long GetCurrentOwnerId(IMyGridGroupData myGridGroupData)
+        {
             _reusableOwnershipDictionary.Clear();
-            //myGridGroupData.GetGrids(reusableGridCollection);
-            var gridList = _mediator.GridGroupCollectionController.Get(myGridGroupData);
+            var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
 
             foreach (var myCubeGrid in gridList)
             {
                 Grid grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);
                 AddToOwnershipDictionary(grid.CurrentOwnerId);
             }
-
-            long ownerId = CalculateOwnerFromOwnershipDictionary();
-            SetGridGroupOwnership(ownerId, gridList);
-            WriteGeneral(nameof(IterateGridGroup), $"Grid group owner determined to be {ownerId:D18}");
+            _mediator.ReturnReusableCubeGridList(gridList);
+            return CalculateOwnerFromOwnershipDictionary();
         }
 
         private void AddToOwnershipDictionary(long ownerId)
@@ -68,14 +71,21 @@ namespace HostileTakeover2.Thraxus.Controllers
             return ownerId;
         }
 
-        private void SetGridGroupOwnership(long ownerId, ReusableCubeGridList<IMyCubeGrid> reusableGridCollection)
+        private void SetGridGroupOwnership(IMyGridGroupData myGridGroupData, long ownerId)
         {
-            foreach (var myCubeGrid in reusableGridCollection)
+            var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
+            foreach (var myCubeGrid in gridList)
             {
                 Grid grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);
                 grid.GridOwnershipController.SetOwnership(ownerId);
             }
-            _mediator.GridGroupCollectionController.Return(reusableGridCollection);
+            _mediator.ReturnReusableCubeGridList(gridList);
+        }
+
+        public override void Reset()
+        {
+            _reusableOwnershipDictionary.Clear();
+            base.Reset();
         }
     }
 }

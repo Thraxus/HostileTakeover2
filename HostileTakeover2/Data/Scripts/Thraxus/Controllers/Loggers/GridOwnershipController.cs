@@ -4,7 +4,7 @@ using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 
-namespace HostileTakeover2.Thraxus.Controllers
+namespace HostileTakeover2.Thraxus.Controllers.Loggers
 {
     internal class GridOwnershipController : BaseLoggingClass
     {
@@ -64,6 +64,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             RightfulOwner = 0;
             SetOwnershipAction = null;
             OwnershipType = OwnershipType.None;
+            base.Reset();
         }
     }
 }

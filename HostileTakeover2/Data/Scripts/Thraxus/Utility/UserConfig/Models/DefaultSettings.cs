@@ -37,7 +37,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         public const int RecheckGridInterval = Common.References.TicksPerMinute * 3;
         
         // HighlightSettings
-        public int HighlightDuration = Common.References.TicksPerSecond * 60;
+        public int HighlightDuration = Common.References.TicksPerSecond * 10;
         public int HighlightPulseDuration = 120;
         public int EnabledThickness = 10;
         public int DisabledThickness = -1;

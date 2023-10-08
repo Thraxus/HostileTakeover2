@@ -14,14 +14,8 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 {
     internal class BlockTypeController : BaseLoggingClass
     {
-        private readonly Dictionary<BlockType, HashSet<Block>> _importantBlocks =
-            new Dictionary<BlockType, HashSet<Block>>
-            {
-                { BlockType.Control, new HashSet<Block>() },
-                { BlockType.Medical, new HashSet<Block>() },
-                { BlockType.Trap, new HashSet<Block>() },
-                { BlockType.Weapon, new HashSet<Block>() }
-            };
+        private readonly Dictionary<MyCubeBlock, Block> _importantBlocks =
+            new Dictionary<MyCubeBlock, Block>();
 
         private Mediator _mediator;
         private GridOwnershipController _ownershipController;
@@ -35,105 +29,157 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         public void AddGrid(MyCubeGrid grid)
         {
-            foreach (var block in grid.GetFatBlocks())
+            foreach (var fatBlock in grid.GetFatBlocks())
             {
-                AddBlock(block);
+                AddBlock(fatBlock);
             }
         }
 
+        public void RemoveOldBlocks(MyCubeGrid grid)
+        {
+            foreach (var fatBlock in grid.GetFatBlocks())
+            {
+                ResetBlock(fatBlock);
+            }
+        }
+        
         public void AddBlock(MyCubeBlock myCubeBlock)
         {
             _mediator.ActionQueue.Add(10, () =>
             {
                 var blockType = AssignBlock(myCubeBlock);
                 if (blockType == BlockType.None) return;
+                if (_importantBlocks.ContainsKey(myCubeBlock)) return;
                 IsClosed = false;
-                //Block block = _mediator.BlockPool.Get();
-                Block block = _mediator.GetBlock();
+                Block block = _mediator.GetBlock(myCubeBlock.EntityId);
                 block.Initialize(blockType, myCubeBlock, _ownershipController);
-                block.OnClose += CloseBlock;
-                _importantBlocks[blockType].Add(block);
+                RegisterBlockEvents(block);
+                AddToDictionary(myCubeBlock, block);
             });
         }
 
-        private void CloseBlock(IClose block)
+        private void AddToDictionary(MyCubeBlock myCubeBlock, Block block)
         {
-            _importantBlocks[((Block)block).BlockType].Remove((Block)block);
-            //_mediator.BlockPool.Return((Block)block);
-            _mediator.ReturnBlock((Block)block);
+            if (_importantBlocks.ContainsKey(myCubeBlock)) return;
+            _importantBlocks.Add(myCubeBlock, block);
+        }
+
+        private void RemoveFromDictionary(MyCubeBlock myCubeBlock)
+        {
+            if (!_importantBlocks.ContainsKey(myCubeBlock)) return;
+            _importantBlocks.Remove(myCubeBlock);
+        }
+
+        private void RegisterBlockEvents(Block block)
+        {
+            block.OnReset += OnResetBlock;
+            block.OnClose += BlockOnClose;
+        }
+
+        private void BlockOnClose(IClose block)
+        {
+            if (!_importantBlocks.ContainsKey(((Block)block).MyCubeBlock)) return;
+            OnResetBlock(_importantBlocks[((Block)block).MyCubeBlock]);
+        }
+
+        private void DeRegisterBlockEvents(Block block)
+        {
+            block.OnReset -= OnResetBlock;
+            block.OnClose -= BlockOnClose;
+        }
+
+        private void OnResetBlock(IReset block)
+        {
+            DeRegisterBlockEvents((Block)block);
+            RemoveFromDictionary(((Block)block).MyCubeBlock);
+            _mediator.ReturnBlock((Block)block, ((Block)block).EntityId);
+        }
+
+        private void ResetBlock(MyCubeBlock myCubeBlock)
+        {
+            if (!_importantBlocks.ContainsKey(myCubeBlock)) return;
+            OnResetBlock(_importantBlocks[myCubeBlock]);
         }
         
         private BlockType AssignBlock(MyCubeBlock block)
         {
-            WriteGeneral(nameof(AssignBlock), $"Attempting to classify new block...");
+            //WriteGeneral(nameof(AssignBlock), $"Attempting to classify new block...");
             var controller = block as IMyShipController;
             if (controller != null && controller.CanControlShip)
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Control}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Control}...");
                 return BlockType.Control;
             }
 
             var medical = block as IMyMedicalRoom;
             if (medical != null)
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
                 return BlockType.Medical;
             }
 
             var cryo = block as IMyCryoChamber;
             if (cryo != null)
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
                 return BlockType.Medical;
             }
 
             var weapon = block as IMyLargeTurretBase;
             if (weapon != null)
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
                 return BlockType.Weapon;
             }
 
             var sorter = block as MyConveyorSorter;
             if (sorter != null && !sorter.BlockDefinition.Context.IsBaseGame)
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
                 return BlockType.Weapon;
             }
 
             var warhead = block as IMyWarhead;
             if (warhead != null)
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Trap}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Trap}...");
                 return BlockType.Trap;
             }
 
             if (block.BlockDefinition.Id.TypeId == typeof(MyObjectBuilder_SurvivalKit))
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
                 return BlockType.Medical;
             }
 
             var upgrade = block as IMyUpgradeModule;
             if (upgrade != null && block.BlockDefinition.Id.SubtypeId == MyStringHash.GetOrCompute("BotSpawner"))
             {
-                WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
+                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
                 return BlockType.Weapon;
             }
-            WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.None}...");
+            //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.None}...");
             return BlockType.None;
+        }
+
+        private void SoftReset()
+        {
+            foreach (var kvp in _importantBlocks)
+            {
+                Block block = kvp.Value;
+                DeRegisterBlockEvents(block);
+                _mediator.ReturnBlock(block, block.EntityId);
+            }
+            _importantBlocks.Clear();
         }
 
         public override void Reset()
         {
             base.Reset();
-            foreach (var kvp in _importantBlocks)
-            {
-                kvp.Value.Clear();
-            }
+            SoftReset();
         }
 
-        public Dictionary<BlockType, HashSet<Block>> GetImportantBlockDictionary()
+        public Dictionary<MyCubeBlock, Block> GetImportantBlockDictionary()
         {
             return _importantBlocks;
         }

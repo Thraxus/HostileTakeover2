@@ -7,4 +7,12 @@
             return tf ? "T" : "F";
         }
     }
+
+    public static class Longs
+    {
+        public static string ToEntityIdFormat(this long tef)
+        {
+            return $"{tef:D18}";
+        }
+    }
 }

@@ -88,9 +88,9 @@ namespace HostileTakeover2.Thraxus
                 case GridValidationType.VanillaTrade:
                     break;
             }
-            //if (action != null)
-                //_mediator.ActionQueue.Add(delay, action);
-            action?.Invoke();
+            if (action != null)
+                _mediator.ActionQueue.Add(delay, action);
+            //action?.Invoke();
             WriteGeneral(nameof(CheckGrid), $"Check Grid returned type of {type}, Action was null? {action == null} {action?.Method}");
         }
 
@@ -111,7 +111,7 @@ namespace HostileTakeover2.Thraxus
         private void GridFactory(MyCubeGrid cubeGrid)
         {
             //var grid = _mediator.GridPool.Get();
-            var grid = _mediator.GetGrid();
+            var grid = _mediator.GetGrid(cubeGrid.EntityId);
             grid.Init(_mediator, cubeGrid);
             WriteGeneral(nameof(GridFactory), $"Grid Factory Engaged.  Created Grid.");
         }

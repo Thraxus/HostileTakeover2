@@ -16,17 +16,27 @@ namespace HostileTakeover2.Thraxus.Common.Generics
         }
 
         public int Count() => _objects.Count;
+        public long TotalObjectsServed;
+        public long MaxNewObjects;
 
         public T Get()
         {
             T item;
-            return _objects.TryTake(out item) ? item : _objectGenerator();
+            TotalObjectsServed++;
+            if (_objects.TryTake(out item)) return item;
+            MaxNewObjects++;
+            return _objectGenerator();
         }
 
         public void Return(T item)
         {
             item.Reset();
             _objects.Add(item);
+        }
+
+        public override string ToString()
+        {
+            return $"PoolType: [{typeof(T).Name}] Total Served: [{TotalObjectsServed:D4}] Max Created: [{MaxNewObjects:D4}] Current Pooled: [{Count():D4}]";
         }
     }
 }
