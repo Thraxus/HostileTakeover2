@@ -1,9 +1,11 @@
 ﻿namespace HostileTakeover2.Thraxus.Enums
 {
-    internal enum OwnershipType
+    internal enum OwnerType
     {
         None,
+        NotEvaluated,
         Npc,
-        Player
+        Player,
+        UnderReview
     }
 }

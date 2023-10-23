@@ -1,7 +1,6 @@
 ﻿using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
-using HostileTakeover2.Thraxus.Models.Loggers;
 using HostileTakeover2.Thraxus.Utility;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI.Weapons;
@@ -37,14 +36,18 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             }
         }
 
-        public Grid FilterToNearestGrid(Vector3D source)
+        public GridController FilterToNearestGrid(Vector3D source)
         {
             double distance = double.MaxValue;
-            Grid closestGrid = null;
+            GridController closestGrid = null;
             foreach (var entity in _reusableEntityList)
             {
-                Grid grid = _mediator.GridCollectionController.GetGrid(entity.EntityId);
-                if (grid.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
+                GridController grid = _mediator.GridCollectionController.GetGrid(entity.EntityId);
+                if (grid.GridOwnership.OwnershipType != OwnerType.Npc)
+                {
+                    WriteGeneral(nameof(FilterToNearestGrid), $"Grid has ownership type: {grid.GridOwnership.OwnershipType} [{grid.EntityId:D18}]");
+                    continue;
+                }
                 double abs = Math.Abs(((IMyCubeGrid)entity).GetPosition().LengthSquared() - source.LengthSquared());
                 Common.Utilities.Statics.Statics.AddGpsLocation(((IMyCubeGrid)entity).EntityId.ToEntityIdFormat(), ((IMyCubeGrid)entity).GetPosition());
                 WriteGeneral(nameof(FilterToNearestGrid), $"Validating possible grid as target: [{(abs > distance).ToSingleChar()}] [{abs:##.###}] [{distance:E3}] [{grid.EntityId:D18}]");
@@ -57,29 +60,17 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         public void RunGrinderLogic(IMyAngleGrinder grinder)
         {
-            if (grinder.OwnerIdentityId == 0) return;
+            WriteGeneral(nameof(RunGrinderLogic), $"Running: [{grinder.EntityId:D18}]");
+            if (grinder.OwnerIdentityId == 0)
+            {
+                WriteGeneral(nameof(RunGrinderLogic), $"Grinder was unowned!");
+                return;
+            }
             GrabAllNearbyGrids(grinder.GetPosition());
+            WriteGeneral(nameof(RunGrinderLogic), $"Grids Grabbed [{_reusableEntityList.Count:D2}]");
             var grid = FilterToNearestGrid(grinder.GetPosition());
             WriteGeneral(nameof(RunGrinderLogic), $"Found: [{grid.EntityId:D18}]");
             grid.TriggerHighlights(grinder.OwnerIdentityId);
-            //IMyEntity entityById = MyAPIGateway.Entities.GetEntityById(grinder.OwnerId);
-            //List<MyEntity> entList = GrabNearbyGrids(entityById?.GetPosition() ?? grinder.GetPosition());
-            //WriteGeneral(nameof(RunGrinderLogic), $"Grinder: [{grinder.OwnerIdentityId:D18}] [{grinder.OwnerId:D18}] [{entList.Count:D2}] [{grinder.GetPosition()}] [{entityById?.GetPosition()}]");
-            //Grid target = FilterToNearestGrid(grinder.GetPosition());
-            //Grid grid = _mediator.GridCollectionController.GetGrid(target.EntityId);
-            //WriteGeneral(nameof(RunGrinderLogic), $"Looking for: [{(grid == null ? "T" : "F")}] [{target.EntityId:D18}] [{grinder.OwnerIdentityId:D18}]");
-            //if (grid == null || grid.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
-            //WriteGeneral(nameof(RunGrinderLogic), $"Found Target: [{target.EntityId:D18}]");
-
-            //foreach (MyEntity target in entList)
-            //{
-            //    if (grinder.OwnerIdentityId == 0) break;
-            //    Grid grid = _mediator.GridCollectionController.GetGrid(target.EntityId);
-            //    WriteGeneral(nameof(RunGrinderLogic), $"Looking for: [{(grid == null ? "T" : "F")}] [{target.EntityId:D18}] [{grinder.OwnerIdentityId:D18}]");
-            //    if (grid == null || grid.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
-            //    WriteGeneral(nameof(RunGrinderLogic), $"Found: [{target.EntityId:D18}]");
-            //    grid.TriggerHighlights(grinder.OwnerIdentityId);
-            //}
         }
     }
 }

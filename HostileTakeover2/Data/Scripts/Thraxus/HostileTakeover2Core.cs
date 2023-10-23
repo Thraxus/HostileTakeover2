@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Enums;
 using HostileTakeover2.Thraxus.Common.Factions.Models;
-using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
@@ -24,7 +22,6 @@ namespace HostileTakeover2.Thraxus
         protected override CompType Type => CompType.Server;
         protected override MyUpdateOrder Schedule => MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation;
 
-        private readonly HashSet<ICommon> _commonObjects = new HashSet<ICommon>();
         private readonly Mediator _mediator = new Mediator();
         private SettingsController _settings;
         
@@ -111,7 +108,7 @@ namespace HostileTakeover2.Thraxus
         private void GridFactory(MyCubeGrid cubeGrid)
         {
             //var grid = _mediator.GridPool.Get();
-            var grid = _mediator.GetGrid(cubeGrid.EntityId);
+            var grid = _mediator.GetGridController(cubeGrid.EntityId);
             grid.Init(_mediator, cubeGrid);
             WriteGeneral(nameof(GridFactory), $"Grid Factory Engaged.  Created Grid.");
         }

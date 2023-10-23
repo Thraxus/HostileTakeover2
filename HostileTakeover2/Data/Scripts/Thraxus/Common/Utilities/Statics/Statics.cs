@@ -240,7 +240,7 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 			Vector3D missileToTarget = Vector3D.Normalize(targetPosition - missilePos);
 			Vector3D relativeVelocity = targetVelocity - missileVelocity;
 			Vector3D parallelVelocity = relativeVelocity.Dot(missileToTarget) * missileToTarget;
-			Vector3D normalVelocity = (relativeVelocity - parallelVelocity);
+			Vector3D normalVelocity = relativeVelocity - parallelVelocity;
 
 			Vector3D normalMissileAcceleration = normalVelocity * compensationFactor;
 
@@ -273,7 +273,7 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 
 		public static bool ValidateFactions(IMyFaction leftFaction, IMyFaction rightFaction)
 		{
-			return (leftFaction == null || rightFaction == null);
+			return leftFaction == null || rightFaction == null;
 		}
 
 		/// <summary>

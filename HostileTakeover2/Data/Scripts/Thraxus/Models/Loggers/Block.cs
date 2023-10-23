@@ -1,67 +1,88 @@
 ﻿using System;
-using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Controllers.Loggers;
+using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using VRage.Game;
+using VRage.Game.Entity;
 
 namespace HostileTakeover2.Thraxus.Models.Loggers
 {
-    internal class Block : BaseLoggingClass
+    internal class Block : IResetWithEvent
     {
+        public event Action<Block> OnBlockIsNotWorking;
+        public event Action<Block> OnBlockIsWorking;
+
         public MyCubeBlock MyCubeBlock;
-        private GridOwnershipController _gridOwnershipController;
-        public Action<Block> BlockHasBeenDisableAction;
+        private GridOwnership _gridOwnership;
+        
         public BlockType BlockType;
         public string Name => MyCubeBlock.Name;
-        public long EntityId => MyCubeBlock.EntityId;
+        public long EntityId;
 
-        public bool IsFunctional => MyCubeBlock.IsFunctional;
+        public bool IsFunctional => MyCubeBlock.IsFunctional; 
         
-        public void Initialize(BlockType blockType, MyCubeBlock block, GridOwnershipController gridOwnershipController)
+        public void Init(BlockType blockType, MyCubeBlock block, GridOwnership gridOwnershipController)
         {
             BlockType = blockType;
             MyCubeBlock = block;
-            _gridOwnershipController = gridOwnershipController;
+            EntityId = block.EntityId;
+            _gridOwnership = gridOwnershipController;
             RegisterEvents();
         }
 
         private void RegisterEvents()
         {
-            MyCubeBlock.OnClose += block => Close();
+            MyCubeBlock.OnClose += Reset;
             MyCubeBlock.IsWorkingChanged += BlockOnWorkingChanged;
-            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged += BlockOnOwnershipChanged;
+            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged += BlockOwnershipChanged;
         }
 
         private void DeRegisterEvents()
         {
+            MyCubeBlock.OnClose -= Reset;
             MyCubeBlock.IsWorkingChanged -= BlockOnWorkingChanged;
-            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged -= BlockOnOwnershipChanged;
+            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged -= BlockOwnershipChanged;
         }
 
-        private void BlockOnOwnershipChanged(IMyTerminalBlock block)
+        private void BlockOwnershipChanged(IMyTerminalBlock block)
         {
-            _gridOwnershipController.SetOwnership(MyCubeBlock);
+            SetOwnership(MyCubeBlock);
+        }
+
+        private void SetOwnership(MyCubeBlock block)
+        {
+            block.ChangeOwner(block.IsFunctional ? _gridOwnership.RightfulOwner : 0, MyOwnershipShareModeEnum.None);
         }
 
         private void BlockOnWorkingChanged(MyCubeBlock block)
         {
-            BlockOnOwnershipChanged((IMyTerminalBlock)block);
-            if (!block.IsFunctional)
-                BlockHasBeenDisable();
+            BlockOwnershipChanged((IMyTerminalBlock)block);
+            switch (block.IsFunctional)
+            {
+                case false:
+                    OnBlockIsNotWorking?.Invoke(this);
+                    break;
+                case true:
+                    OnBlockIsWorking?.Invoke(this);
+                    break;
+            }
+        }
+        
+        private void Reset(MyEntity unused)
+        {
+            Reset();
         }
 
-        private void BlockHasBeenDisable()
+        public void Reset()
         {
-            BlockHasBeenDisableAction?.Invoke(this);
-        }
-
-        public override void Reset()
-        {
-            base.Reset();
             DeRegisterEvents();
             MyCubeBlock = null;
             BlockType = BlockType.None;
+            EntityId = 0;
+            OnReset?.Invoke(this);
         }
+
+        public event Action<IResetWithEvent> OnReset;
     }
 }

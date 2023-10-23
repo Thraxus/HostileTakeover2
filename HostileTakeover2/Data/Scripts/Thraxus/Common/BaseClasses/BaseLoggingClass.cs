@@ -7,13 +7,18 @@ namespace HostileTakeover2.Thraxus.Common.BaseClasses
 	{
 		public event Action<string, string> OnWriteToLog;
 		public event Action<IClose> OnClose;
-        public event Action<IResetWithAction> OnReset;
+        public event Action<IResetWithEvent> OnReset;
 
         private string _logPrefix;
 
-        protected void SetLogPrefix(string prefix)
+        protected void OverrideLogPrefix(string prefix)
         {
             _logPrefix = "[" + prefix + "] ";
+        }
+
+        private void SetLogPrefix()
+        {
+            _logPrefix = "[" + GetType().Name + "] ";
         }
 
         public bool IsClosed { get; protected set; }
@@ -29,7 +34,9 @@ namespace HostileTakeover2.Thraxus.Common.BaseClasses
 
 		public virtual void WriteGeneral(string caller, string message)
 		{
-			OnWriteToLog?.Invoke($"{_logPrefix}{caller}", message);
+			if(string.IsNullOrEmpty(_logPrefix))
+                SetLogPrefix();
+            OnWriteToLog?.Invoke($"{_logPrefix}{caller}", message);
 		}
 
         public virtual void Reset()

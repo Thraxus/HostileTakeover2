@@ -4,15 +4,16 @@ using HostileTakeover2.Thraxus.Common.Interfaces;
 
 namespace HostileTakeover2.Thraxus.Common.Generics
 {
-    internal class ObjectPool<T> where T : IReset
+    internal class ObjectPool<T> where T : IReset, new()
     {
-        private readonly ConcurrentBag<T> _objects;
+        private readonly ConcurrentBag<T> _objects = new ConcurrentBag<T>();
         private readonly Func<T> _objectGenerator;
-        
+
+        public ObjectPool() { }
+
         public ObjectPool(Func<T> objectGenerator)
         {
             _objectGenerator = objectGenerator;
-            _objects = new ConcurrentBag<T>();
         }
 
         public int Count() => _objects.Count;
@@ -25,7 +26,7 @@ namespace HostileTakeover2.Thraxus.Common.Generics
             TotalObjectsServed++;
             if (_objects.TryTake(out item)) return item;
             MaxNewObjects++;
-            return _objectGenerator();
+            return _objectGenerator == null ? new T() : _objectGenerator();
         }
 
         public void Return(T item)
