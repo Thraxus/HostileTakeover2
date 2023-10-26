@@ -3,6 +3,7 @@ using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Generics;
 using HostileTakeover2.Thraxus.Common.Interfaces;
+using HostileTakeover2.Thraxus.Controllers;
 using HostileTakeover2.Thraxus.Controllers.Loggers;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Factories;
@@ -38,18 +39,16 @@ namespace HostileTakeover2.Thraxus.Utility
 
         public Mediator()
         {
+            RegisterCommonEvents(GridCollectionController);
             RegisterCommonEvents(GridGroupOwnerTypeCoordinationController);
             RegisterCommonEvents(GridGroupOwnershipCoordinationController);
             RegisterCommonEvents(GridGroupOwnershipTypeCoordinationController);
-            RegisterCommonEvents(GridCollectionController);
             RegisterCommonEvents(GrinderController);
             RegisterCommonEvents(HighlightController);
-            GridGroupOwnerTypeCoordinationController.Init(this);
             GridGroupOwnershipCoordinationController.Init(this);
             GridGroupOwnershipTypeCoordinationController.Init(this);
             HighlightController.Init(this);
             GrinderController.Init(this);
-            _gridFactory.Init(this);
         }
 
         public void AddSettings(SettingsController settingsController)
@@ -122,28 +121,29 @@ namespace HostileTakeover2.Thraxus.Utility
 
         public ReusableHashset<IMyCubeGrid> GetReusableMyCubeGridList(IMyGridGroupData myGridGroupData)
         {
-            WriteGeneral(nameof(Mediator), $"Get -- Lending a ReusableCubeGridList {_reusableMyCubeGridCollectionObjectPool}");
             var list = _reusableMyCubeGridCollectionObjectPool.Get();
             myGridGroupData.GetGrids(list);
+            WriteGeneral(nameof(Mediator), $"Get -- Lending a ReusableCubeGridList {_reusableMyCubeGridCollectionObjectPool}");
             return list;
         }
 
         public void ReturnReusableMyCubeGridList(ReusableHashset<IMyCubeGrid> list)
         {
-            WriteGeneral(nameof(Mediator), $"Return -- Returning a ReusableCubeGridList {_reusableMyCubeGridCollectionObjectPool}");
             _reusableMyCubeGridCollectionObjectPool.Return(list);
+            WriteGeneral(nameof(Mediator), $"Return -- Returning a ReusableCubeGridList {_reusableMyCubeGridCollectionObjectPool}");
         }
 
         public BaseGrid GetGrid(OwnerType type)
         {
+            BaseGrid grid = _gridFactory.GetGrid(type);
             WriteGeneral(nameof(Mediator), $"Get -- Lending a BaseGrid {_gridFactory}");
-            return _gridFactory.GetGrid(type);
+            return grid;
         }
 
         public void ReturnGrid(BaseGrid grid)
         {
-            WriteGeneral(nameof(Mediator), $"Get -- Returning a BaseGrid {_gridFactory}");
             _gridFactory.ReturnGrid(grid);
+            WriteGeneral(nameof(Mediator), $"Return -- Returning a BaseGrid {_gridFactory}");
         }
 
         #endregion

@@ -53,12 +53,13 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging
 		{
 			lock (_lockObject)
             {
-                MyAPIGateway.Utilities.InvokeOnGameThread(() =>
-                {
-                    var newMessage = $"{TimeStamp}{Indent}{caller}{Indent}{message}";
-                    WriteLine(newMessage);
-					MyLog.Default.WriteLineAndConsole(newMessage);
-                });
+                var newMessage = $"{TimeStamp}{Indent}{caller}{Indent}{message}";
+                WriteLine(newMessage);
+                MyLog.Default.WriteLineAndConsole(newMessage);
+                //MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                //{
+
+                //});
             }
 		}
 

@@ -20,14 +20,16 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
         public string Name => MyCubeBlock.Name;
         public long EntityId;
 
-        public bool IsFunctional => MyCubeBlock.IsFunctional; 
+        public bool IsFunctional => MyCubeBlock.IsFunctional;
+        public long OwnerId => MyCubeBlock.OwnerId;
         
-        public void Init(BlockType blockType, MyCubeBlock block, GridOwnership gridOwnershipController)
+        public void Init(BlockType blockType, MyCubeBlock block, GridOwnership gridOwnership)
         {
+            IsReset = false;
             BlockType = blockType;
             MyCubeBlock = block;
             EntityId = block.EntityId;
-            _gridOwnership = gridOwnershipController;
+            _gridOwnership = gridOwnership;
             RegisterEvents();
         }
 
@@ -40,6 +42,7 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
 
         private void DeRegisterEvents()
         {
+            if (MyCubeBlock == null) return;
             MyCubeBlock.OnClose -= Reset;
             MyCubeBlock.IsWorkingChanged -= BlockOnWorkingChanged;
             ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged -= BlockOwnershipChanged;
@@ -74,13 +77,16 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
             Reset();
         }
 
+        public bool IsReset { get; set; }
+
         public void Reset()
         {
+            IsReset = true;
+            OnReset?.Invoke(this);
             DeRegisterEvents();
             MyCubeBlock = null;
             BlockType = BlockType.None;
             EntityId = 0;
-            OnReset?.Invoke(this);
         }
 
         public event Action<IResetWithEvent> OnReset;

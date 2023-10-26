@@ -6,7 +6,7 @@ namespace HostileTakeover2.Thraxus.Common.Generics
 {
     internal class ObjectPool<T> where T : IReset, new()
     {
-        private readonly ConcurrentBag<T> _objects = new ConcurrentBag<T>();
+        private readonly ConcurrentStack<T> _objects = new ConcurrentStack<T>();
         private readonly Func<T> _objectGenerator;
 
         public ObjectPool() { }
@@ -24,15 +24,21 @@ namespace HostileTakeover2.Thraxus.Common.Generics
         {
             T item;
             TotalObjectsServed++;
-            if (_objects.TryTake(out item)) return item;
+            if (_objects.TryPop(out item)) return item;
             MaxNewObjects++;
             return _objectGenerator == null ? new T() : _objectGenerator();
         }
 
         public void Return(T item)
         {
-            item.Reset();
-            _objects.Add(item);
+            if(!item.IsReset)
+                item.Reset();
+            _objects.Push(item);
+        }
+
+        public void Clear()
+        {
+            _objects.Clear();
         }
 
         public override string ToString()

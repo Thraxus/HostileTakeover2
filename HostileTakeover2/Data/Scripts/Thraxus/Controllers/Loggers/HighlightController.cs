@@ -97,9 +97,14 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
         public void EnableHighlights(IMyGridGroupData myGridGroupData, long grinderOwnerIdentityId)
         {
             ClearReusableImportantBlockDictionary();
-            WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {grinderOwnerIdentityId.ToEntityIdFormat()}");
             var gridList = _mediator.GetReusableMyCubeGridList(myGridGroupData);
             int counter = 0;
+            WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group [{gridList.Count:D3}] against entity {grinderOwnerIdentityId.ToEntityIdFormat()}");
+            if (gridList.Count == 0)
+            {
+                _mediator.ReturnReusableMyCubeGridList(gridList);
+                return;
+            }
             foreach (var myCubeGrid in gridList)
             {
                 GridController grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);

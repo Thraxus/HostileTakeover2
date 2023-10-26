@@ -12,7 +12,9 @@ namespace HostileTakeover2.Thraxus.Models
         public Color Color;
         public long PlayerId;
 
+
         // I'm only here for the interface... below is unused
+        public bool IsReset { get; } = true;
         public void Reset() { }
     }
 }

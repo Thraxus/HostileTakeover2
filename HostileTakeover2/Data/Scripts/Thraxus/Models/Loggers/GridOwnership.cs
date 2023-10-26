@@ -1,39 +1,24 @@
-﻿using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Enums;
-using Sandbox.ModAPI;
+﻿using HostileTakeover2.Thraxus.Enums;
 
 namespace HostileTakeover2.Thraxus.Models.Loggers
 {
-    internal class GridOwnership : BaseLoggingClass
+    internal class GridOwnership
     {
+        public long GridId;
         public long RightfulOwner = 0;
-        public OwnerType OwnershipType = OwnerType.NotEvaluated;
+        public OwnerType OwnerType = OwnerType.NotEvaluated;
 
-        public void SetCurrentGridOwnership(long ownerId)
+        public void SetGridOwnership(long ownerId, long gridId, OwnerType ownerType)
         {
-            OwnershipType = ownerId == 0 ? OwnerType.None : MyAPIGateway.Players.TryGetSteamId(ownerId) <= 0
-                ? OwnerType.Npc : OwnerType.Player;
-            
-            WriteGeneral(nameof(SetCurrentGridOwnership), $"Owner determined to be {ownerId:D18} which is of type {OwnershipType}");
+            GridId = gridId;
+            RightfulOwner = ownerId;
+            OwnerType = ownerType;
         }
 
-        public bool HasOwnerChanged(long ownerId)
-        {
-            return RightfulOwner == ownerId;
-        }
-
-        public bool UpdateOwner(long newOwnerId)
-        {
-            if (!HasOwnerChanged(newOwnerId)) return false;
-            SetCurrentGridOwnership(newOwnerId);
-            return true;
-        }
-
-        public override void Reset()
+        public void Reset()
         {
             RightfulOwner = 0;
-            OwnershipType = OwnerType.NotEvaluated;
-            base.Reset();
+            OwnerType = OwnerType.NotEvaluated;
         }
     }
 }

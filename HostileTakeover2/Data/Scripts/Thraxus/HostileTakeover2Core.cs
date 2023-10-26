@@ -99,9 +99,10 @@ namespace HostileTakeover2.Thraxus
 
         protected override void Unload()
         {
+            WriteGeneral(nameof(Unload), $"Unloading {ModContext.ModName}");
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
-            _mediator.Close();
             _mediator.OnWriteToLog -= WriteGeneral;
+            _mediator.Close();
             base.Unload();
         }
         

@@ -5,22 +5,15 @@ using HostileTakeover2.Thraxus.Models.Loggers;
 using HostileTakeover2.Thraxus.Utility;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
+using VRage.Game;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Controllers.Loggers
 {
     internal class GridController : BaseLoggingClass
     {
-        /// <summary>
-        /// Systems required for different ownership types:
-        /// None / Player
-        /// - On ownership check, trigger Ignore Grid, which should set the following conditions
-        /// - Event for OnBlockOwnershipChanged (grid registration)
-        /// - BlockTypeController reset
-        /// NPC - All systems engaged
-        /// </summary>
-
-        private MyCubeGrid _me;
+        public MyCubeGrid ThisGrid;
         private IMyGridGroupData _myGridGroupData;
 
         public readonly GridOwnership GridOwnership = new GridOwnership();
@@ -29,32 +22,37 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
         public Mediator Mediator;
         public BaseGrid BaseGrid;
 
-        public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
         public long EntityId;
-
+        
         public void Init(Mediator mediator, MyCubeGrid grid)
         {
             OverrideLogPrefix(grid.EntityId.ToEntityIdFormat());
             WriteGeneral(nameof(Init), $"Primary Initialization for Grid [{grid.EntityId:D18}] starting.");
-            _me = grid;
+            ThisGrid = grid;
+            ThisGrid.OnClose += CloseGrid;
             EntityId = grid.EntityId;
             Mediator = mediator;
             RegisterControllerEvents();
-            Mediator.GridCollectionController.AddToGrids(_me.EntityId, this);
-            BlockTypeController.Init(Mediator, GridOwnership);
+            Mediator.GridCollectionController.AddToGrids(ThisGrid.EntityId, this);
+            BlockTypeController.Init(this);
             SetGridGroupData();
             RegisterGridGroupDataEvents();
-            WriteGeneral(nameof(Init), $"Primary Initialization for Grid [{_me.EntityId:D18}] complete.");
+            WriteGeneral(nameof(Init), $"Primary Initialization for Grid [{ThisGrid.EntityId:D18}] complete.");
             Mediator.ActionQueue.Add(DefaultSettings.EntityAddTickDelay, DelayedInit);
+        }
+
+        private void CloseGrid(MyEntity unused)
+        {
+            ThisGrid.OnClose -= CloseGrid;
+            Reset();
         }
 
         private void SetGridGroupData()
         {
-            WriteGeneral(nameof(SetGridGroupData), $"Setting up GridGroupData for [{(_myGridGroupData != null).ToSingleChar()}] [{_me.EntityId.ToEntityIdFormat()}].");
-            _myGridGroupData = _me.GetGridGroup(GridLinkTypeEnum.Logical);
+            _myGridGroupData = ThisGrid.GetGridGroup(GridLinkTypeEnum.Logical);
+            WriteGeneral(nameof(SetGridGroupData), $"Setting up GridGroupData for [{(_myGridGroupData != null).ToSingleChar()}] [{ThisGrid.EntityId.ToEntityIdFormat()}].");
         }
-
-
+        
         private void DelayedInit()
         {
             // Sequence! 
@@ -62,29 +60,52 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             // 2) ...
             // 3) Profit!
             
-            WriteGeneral(nameof(DelayedInit), $"Delayed Initialization for Grid [{_me.EntityId:D18}] starting.");
-            GridOwnership.SetCurrentGridOwnership(CurrentOwnerId);
+            WriteGeneral(nameof(DelayedInit), $"Delayed Initialization for Grid [{ThisGrid.EntityId:D18}] starting.");
+            //GridOwnership.SetCurrentGridOwnership(CurrentOwnerId, _me.EntityId);
             SetGridOwnership();
 
-            WriteGeneral(nameof(DelayedInit), $"Delayed Initialization for Grid [{_me.EntityId:D18}] complete.");
+            WriteGeneral(nameof(DelayedInit), $"Delayed Initialization for Grid [{ThisGrid.EntityId:D18}] complete.");
         }
 
         public void SetGridOwnership()
         {
-            Mediator.GridGroupOwnershipCoordinationController.SetGridOwnership(_myGridGroupData);
+            Mediator.GridGroupOwnershipTypeCoordinationController.SetGridGroupOwnership(_myGridGroupData);
+        }
+
+        public void SetGridOwnership(long ownerId, OwnerType ownerType)
+        {
+            GridOwnership.SetGridOwnership(ownerId, ThisGrid.EntityId, ownerType);
+            SetOwner(ownerType);
         }
         
         public void SetOwner(OwnerType newOwnerType)
         {
-            WriteGeneral(nameof(SetOwner), $"Setting owner for Grid [{_me.EntityId:D18}] complete.");
+            WriteGeneral(nameof(SetOwner), $"Setting owner [{newOwnerType}] for Grid [{ThisGrid.EntityId:D18}] engaging.");
             if (BaseGrid != null)
             {
                 DeRegisterGridEvents();
                 Mediator.ReturnGrid(BaseGrid);
+                BaseGrid = null;
             }
+
+            if (newOwnerType == OwnerType.None)
+            {
+                DisownGrid();
+            }
+
             BaseGrid = Mediator.GetGrid(newOwnerType);
-            BaseGrid.Init(_me, this);
+            BaseGrid.Init(ThisGrid, this);
             RegisterGridEvents();
+            WriteGeneral(nameof(SetOwner), $"Setting owner [{newOwnerType}] for Grid [{ThisGrid.EntityId:D18}] complete.");
+        }
+
+        private void DisownGrid()
+        {
+            foreach (var block in ThisGrid.GetFatBlocks())
+            {
+                if (!block.IsFunctional) continue;
+                block.ChangeOwner(0, MyOwnershipShareModeEnum.All);
+            }
         }
 
         public void TriggerHighlights(long grinderOwnerIdentityId)
@@ -96,24 +117,22 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
         private void RegisterControllerEvents()
         {
             BlockTypeController.OnWriteToLog += WriteGeneral;
-            GridOwnership.OnWriteToLog += WriteGeneral;
         }
 
         private void DeRegisterControllerEvents()
         {
-            BlockTypeController.OnWriteToLog += WriteGeneral;
-            GridOwnership.OnWriteToLog -= WriteGeneral;
+            BlockTypeController.OnWriteToLog -= WriteGeneral;
         }
 
         private void RegisterGridEvents()
         {
-            if (BaseGrid == null) return;
+            WriteGeneral(nameof(RegisterGridEvents), $"Registering Grid Events for Grid [{ThisGrid.EntityId:D18}] engaging.");
             BaseGrid.OnWriteToLog += WriteGeneral;
         }
 
         private void DeRegisterGridEvents()
         {
-            if (BaseGrid == null) return;
+            WriteGeneral(nameof(DeRegisterGridEvents), $"DeRegistering Grid Events for Grid [{ThisGrid.EntityId:D18}] engaging.");
             BaseGrid.OnWriteToLog -= WriteGeneral;
         }
 
@@ -133,14 +152,14 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         private void OnGridAdded(IMyGridGroupData newGridGroup, IMyCubeGrid newGrid, IMyGridGroupData oldGridGroup)
         {
-            WriteGeneral(nameof(OnGridAdded), $"Grid was added.  Adding to IMyGridGroupData for [{(_me.EntityId == newGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{newGrid.EntityId:D18}].");
+            WriteGeneral(nameof(OnGridAdded), $"Grid was added.  Adding to IMyGridGroupData for [{(ThisGrid.EntityId == newGrid.EntityId).ToSingleChar()}] [{ThisGrid.EntityId:D18}] [{newGrid.EntityId:D18}].");
             BlockTypeController.AddGrid((MyCubeGrid)newGrid);
         }
 
         private void OnGridRemoved(IMyGridGroupData thisGridGroup, IMyCubeGrid removedGrid, IMyGridGroupData newGridGroup)
         {
-            WriteGeneral(nameof(OnGridRemoved), $"Grid was removed.  Resetting IMyGridGroupData for [{(_me.EntityId == removedGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{removedGrid.EntityId:D18}].");
-            if (removedGrid == _me)
+            WriteGeneral(nameof(OnGridRemoved), $"Grid was removed.  Resetting IMyGridGroupData for [{(ThisGrid.EntityId == removedGrid.EntityId).ToSingleChar()}] [{ThisGrid.EntityId:D18}] [{removedGrid.EntityId:D18}].");
+            if (removedGrid == ThisGrid)
             {
                 Reset();
                 return;
@@ -155,127 +174,31 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         public override void Reset()
         {
+            WriteGeneral(nameof(Reset), $"Starting Reset Cycle for Grid [{ThisGrid.EntityId:D18}]");
             base.Reset();
             DeRegisterControllerEvents();
             DeRegisterGridGroupDataEvents();
             DeRegisterGridEvents();
-            GridOwnership.Reset();
-            BlockTypeController.Reset();
-            Mediator.GridCollectionController.RemoveFromGrids(_me.EntityId);
-            Mediator.ReturnGridController(this, _me.EntityId);
+            WriteGeneral(nameof(Reset), $"Reset1 complete, on to Reset2 for Grid [{ThisGrid.EntityId:D18}]");
+            Reset2();
         }
 
-        //public void DisownGrid()
-        //{
-        //    //TODO This needs to be worked up from the ground up. SetOwnership should have called this if the 
-        //    //TODO  grid group was once owned by a NPC and has now met the conditions of disownership, or if the 
-        //    //TODO  grid group does not meet the requirements for ownership by a NPC.
-        //    //TODO Certain systems do no need to do any work while this grid is not owned by a NPC
-        //    //TODO The only things that need to be monitored while a grid is NOT owned by a NPC are: 
-        //    //TODO  1) Ownership changes (MyCubeGrid.OnBlockOwnershipChanged)
-        //    //TODO  2) ... nothing else?
-        //    //TODO The GridOwnershipController and BlockTypeController should sit idle.
-        //    //TODO Ownership must be calculated from the GridGroupData level
-        //    //GridOwnershipController.Reset();
-        //    //BlockTypeController.Reset();
-        //    //SetOwnership();
-        //}
+        private void Reset2()
+        {
+            WriteGeneral(nameof(Reset), $"Starting Reset2 for Grid [{ThisGrid.EntityId:D18}]");
+            GridOwnership.Reset();
+            Mediator.ReturnGrid(BaseGrid);
+            BaseGrid = null;
+            BlockTypeController.Reset();
+            Mediator.GridCollectionController.RemoveFromGrids(ThisGrid.EntityId);
+            WriteGeneral(nameof(Reset), $"Reset2 complete, on to Reset3 for Grid [{ThisGrid.EntityId:D18}]");
+            Reset3();
+        }
 
-        //private void IgnoreGrid()
-        //{
-        //    //TODO This needs to be worked up from the ground up. SetOwnership should have called this if the 
-        //    //TODO  grid group was determined to be owned by a player, not owned, or called to be disowned by the GridGroupOwnershipTypeCoordinationController
-        //    //TODO Certain systems do no need to do any work while this grid is not owned by a NPC
-        //    //TODO The only things that need to be monitored while a grid is NOT owned by a NPC are: 
-        //    //TODO  1) Ownership changes (MyCubeGrid.OnBlockOwnershipChanged)
-        //    //TODO  2) ... nothing else?
-        //    //TODO The GridOwnershipController and BlockTypeController should sit idle.
-        //    //TODO Ownership must be calculated from the GridGroupData level
-        //    SetEvents();
-        //}
-
-        //private void TakeOverGrid()
-        //{
-        //    WriteGeneral(nameof(TakeOverGrid), $"Attempting to take over grid: [{(!_mediator.DefaultSettings.CapturePlayerBlocks.Current).ToSingleChar()}] [{(GridOwnership.OwnershipType == OwnerType.Npc).ToSingleChar()}]");
-        //    if (!_mediator.DefaultSettings.CapturePlayerBlocks.Current) return;
-        //    if (GridOwnership.OwnershipType != OwnerType.Npc) return;
-        //    //SetOwnership();
-        //    SetEvents();
-        //}
-
-        //private void SetEvents()
-        //{
-        //    DeRegisterGridEvents();
-        //    RegisterGridEvents();
-        //}
-
-        ////private void SetOwnership()
-        ////{
-        ////    BlockTypeController.AddGrid(_me);
-        ////}
-
-
-
-
-
-        //private void AddBlock(MyCubeBlock block)
-        //{
-        //    SetOwnership(block);
-        //    BlockTypeController.AddBlock(block);
-        //}
-
-        //private void OnBlockAdded(MyCubeBlock block)
-        //{
-        //    // TODO need to check here for the connector being added from a player ship.  We shouldn't be taking that over.  At the same time, we don't want it connected either. 
-        //    // TODO perhaps add logic that looks for store blocks on the NPC grid and if none found (or the mating connector has trade disabled?) then just unlatch the connectors
-        //    var connector = block as IMyShipConnector;
-        //    if (connector != null && connector.IsFunctional && connector.IsConnected) return; // maybe this works?  
-        //    if (GridOwnership.OwnershipType == OwnerType.Npc)
-        //        _mediator.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
-        //}
-
-        //private void OnBlockOwnershipChanged(MyCubeGrid unused)
-        //{
-        //    // This only needs to trigger if the grid is not owned by a NPC.  
-        //    // The check only exists to see if we need to take over monitoring the grid or not.
-        //    if (GridOwnership.OwnershipType != OwnerType.Npc)
-        //        _mediator.GridGroupOwnerCoordinationController.InitializeOwnership(_myGridGroupData);
-        //}
-
-        //private void RequestGridGroupOwnershipEvaluation()
-        //{
-        //    _mediator.GridGroupOwnershipTypeCoordinationController.GridGroupOwnershipEvaluation(_myGridGroupData);
-        //}
-
-        //private void ReEvaluateOwnership()
-        //{
-        //    WriteGeneral(nameof(ReEvaluateOwnership), $"Reevaluating ownership.  Current Rightful Owner: [{GridOwnership.RightfulOwner.ToEntityIdFormat()}]");
-        //    _mediator.GridGroupOwnerCoordinationController.ReEvaluateOwnership(_myGridGroupData, GridOwnership.RightfulOwner);
-        //}
-
-        //private void EvaluateOwnership()
-        //{
-        //    _mediator.GridGroupOwnerCoordinationController.InitializeOwnership(_myGridGroupData);
-        //}
-
-        //private void OnGridMerge(MyCubeGrid newGrid, MyCubeGrid oldGrid)
-        //{
-        //    WriteGeneral(nameof(OnGridMerge), $"Grid Merge -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
-        //    BlockTypeController.AddGrid(oldGrid);
-        //    SetGridGroupData();
-        //}
-
-        //private void OnGridSplit(MyCubeGrid oldGrid, MyCubeGrid newGrid)
-        //{
-        //    WriteGeneral(nameof(OnGridSplit), $"Grid Split -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
-        //    BlockTypeController.RemoveBlocks(newGrid);
-        //}
-
-        //private void OnMarkForClose(MyEntity myCubeGrid)
-        //{
-        //    Reset();
-        //}
-
-
+        private void Reset3()
+        {
+            WriteGeneral(nameof(Reset), $"Finalizing Reset Cycle for Grid [{ThisGrid.EntityId:D18}]");
+            Mediator.ReturnGridController(this, ThisGrid.EntityId);
+        }
     }
 }

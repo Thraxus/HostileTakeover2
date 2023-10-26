@@ -1,8 +1,8 @@
 ﻿using Sandbox.Game.Entities;
 
-namespace HostileTakeover2.Thraxus.Controllers.Loggers
+namespace HostileTakeover2.Thraxus.Controllers
 {
-    internal class PlayerGrid : BaseGrid
+    internal class UnownedGrid : BaseGrid
     {
         public override void RegisterEvents()
         {
@@ -11,6 +11,7 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         private void BlockOwnershipChanged(MyCubeGrid grid)
         {
+            if (ThisGrid.BigOwners != null && ThisGrid.BigOwners[0] == OwnerId) return;
             ThisGridController.SetGridOwnership();
         }
 

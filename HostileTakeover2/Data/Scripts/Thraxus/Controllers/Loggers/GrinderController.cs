@@ -43,9 +43,9 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             foreach (var entity in _reusableEntityList)
             {
                 GridController grid = _mediator.GridCollectionController.GetGrid(entity.EntityId);
-                if (grid.GridOwnership.OwnershipType != OwnerType.Npc)
+                if (grid.GridOwnership.OwnerType != OwnerType.Npc)
                 {
-                    WriteGeneral(nameof(FilterToNearestGrid), $"Grid has ownership type: {grid.GridOwnership.OwnershipType} [{grid.EntityId:D18}]");
+                    WriteGeneral(nameof(FilterToNearestGrid), $"Grid has ownership type: {grid.GridOwnership.OwnerType} [{grid.EntityId:D18}]");
                     continue;
                 }
                 double abs = Math.Abs(((IMyCubeGrid)entity).GetPosition().LengthSquared() - source.LengthSquared());

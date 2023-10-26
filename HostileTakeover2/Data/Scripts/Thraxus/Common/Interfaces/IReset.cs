@@ -2,6 +2,7 @@
 {
     public interface IReset
     {
+        bool IsReset { get; }
         void Reset();
     }
 }
