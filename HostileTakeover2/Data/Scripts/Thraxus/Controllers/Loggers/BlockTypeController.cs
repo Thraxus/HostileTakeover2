@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Interfaces;
@@ -14,20 +13,15 @@ using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Controllers.Loggers
 {
-    internal class BlockTypeController : BaseLoggingClass
+    public class BlockTypeController : BaseLoggingClass, IReset
     {
-        //private event Action RequestGridGroupOwnershipEvaluation;
-        //private void TriggerRequestGridGroupOwnershipEvaluation()
-        //{
-        //    RequestGridGroupOwnershipEvaluation?.Invoke();
-        //}
-
         public readonly Dictionary<long, Block> ImportantBlocks = new Dictionary<long, Block>();
         public Dictionary<long, Block> GetImportantBlockDictionary() => ImportantBlocks;
 
         private GridController _gridController;
-        
-        
+
+        public bool IsReset { get; private set; }
+
         public void Init(GridController gridController)
         {
             _gridController = gridController;
@@ -35,14 +29,11 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         public void AddGrid(MyCubeGrid grid)
         {
-            WriteGeneral(nameof(AddGrid), $"Adding grid! [{grid.EntityId.ToEntityIdFormat()}]");
+            //WriteGeneral(nameof(AddGrid), $"Adding grid! [{grid.EntityId.ToEntityIdFormat()}]");
             foreach (var fatBlock in grid.GetFatBlocks())
             {
                 AddBlock(fatBlock);
             }
-
-            //if (ImportantBlocks.Count == 0)
-            //    TriggerRequestGridGroupOwnershipEvaluation();
         }
 
         public void RemoveGrid(MyCubeGrid grid)
@@ -51,39 +42,41 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             {
                 RemoveBlock(fatBlock);
             }
-
-            //if (ImportantBlocks.Count == 0)
-            //    TriggerRequestGridGroupOwnershipEvaluation();
         }
-        
+
         public void AddBlock(MyCubeBlock myCubeBlock)
         {
-            _gridController.Mediator.ActionQueue.Add(10, () =>
-            {
-                var blockType = AssignBlock(myCubeBlock);
-                if (blockType == BlockType.None) return;
-                if (ImportantBlocks.ContainsKey(myCubeBlock.EntityId)) return;
-                Block block = _gridController.Mediator.GetBlock(myCubeBlock.EntityId);
-                block.Init(blockType, myCubeBlock, _gridController.GridOwnership);
-                RegisterBlockEvents(block);
-                AddToDictionary(block);
-            });
+            AssertProperOwner(myCubeBlock);
+            var blockType = AssignBlock(myCubeBlock);
+            if (blockType == BlockType.None) return;
+            if (ImportantBlocks.ContainsKey(myCubeBlock.EntityId)) return;
+            Block block = _gridController.Mediator.GetBlock(myCubeBlock.EntityId);
+            block.Init(blockType, myCubeBlock, _gridController.GridOwnership);
+            RegisterBlockEvents(block);
+            AddToDictionary(block);
         }
 
-        private void RemoveBlock(MyCubeBlock cubeBlock)
+        public void RemoveBlock(MyCubeBlock cubeBlock)
         {
-            WriteGeneral(nameof(RemoveBlock), $"Removing CubeBlock [{cubeBlock.EntityId.ToEntityIdFormat()}]");
+            //WriteGeneral(nameof(RemoveBlock), $"Removing CubeBlock [{cubeBlock.EntityId.ToEntityIdFormat()}]");
             if (!ImportantBlocks.ContainsKey(cubeBlock.EntityId)) return;
             RemoveBlock(ImportantBlocks[cubeBlock.EntityId]);
         }
 
         private void RemoveBlock(Block block)
         {
-            WriteGeneral(nameof(OnResetBlock), $"Removing Block [{block.IsReset.ToSingleChar()}] [{block.EntityId.ToEntityIdFormat()}]");
+            //WriteGeneral(nameof(OnResetBlock), $"Removing Block [{block.IsReset.ToSingleChar()}] [{block.EntityId.ToEntityIdFormat()}]");
             if (!ImportantBlocks.ContainsKey(block.EntityId)) return;
             DeRegisterBlockEvents(block);
             RemoveFromDictionary(block);
             _gridController.Mediator.ReturnBlock(block, block.EntityId);
+        }
+
+        private void AssertProperOwner(MyCubeBlock block)
+        {
+            if (block.IsFunctional && block.OwnerId != _gridController.GridOwnership.RightfulOwner)
+                block.ChangeOwner(_gridController.GridOwnership.RightfulOwner, MyOwnershipShareModeEnum.Faction);
+            WriteGeneral(nameof(AssertProperOwner), $"Asserting owner [{_gridController.GridOwnership.RightfulOwner.ToEntityIdFormat()}] on [{block.EntityId.ToEntityIdFormat()}] {block.DisplayNameText}");
         }
 
         private void AddToDictionary(Block block)
@@ -92,8 +85,6 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             //WriteGeneral(nameof(AddToDictionary), $"Adding block to Dictionary [{block.EntityId.ToEntityIdFormat()}] [{block.OwnerId.ToEntityIdFormat()}] [{_gridOwnership.RightfulOwner.ToEntityIdFormat()}] ");
             if (ImportantBlocks.ContainsKey(block.EntityId)) return;
             ImportantBlocks.Add(block.EntityId, block);
-            if(block.IsFunctional && block.OwnerId != _gridController.GridOwnership.RightfulOwner)
-                block.MyCubeBlock.ChangeOwner(_gridController.GridOwnership.RightfulOwner, MyOwnershipShareModeEnum.Faction);
             //WriteGeneral(nameof(AddToDictionary), $"Added block to Dictionary [{block.EntityId.ToEntityIdFormat()}] [{block.OwnerId.ToEntityIdFormat()}] [{_gridOwnership.RightfulOwner.ToEntityIdFormat()}] ");
         }
 
@@ -105,6 +96,9 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             ImportantBlocks.Remove(block.EntityId);
             if (!block.IsFunctional)
                 block.MyCubeBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
+            if (ImportantBlocks.Count == 0)
+                VerifyGridIsStillValid();
+            WriteGeneral(nameof(RemoveFromDictionary), $"ImportantBlocks remaining: [{ImportantBlocks.Count:D3}]");
             //if (ImportantBlocks.Count == 0)
             //    TriggerRequestGridGroupOwnershipEvaluation();
         }
@@ -118,22 +112,21 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         private void BlockIsNotWorking(Block block)
         {
-            WriteGeneral(nameof(BlockIsNotWorking), $"Event invoked for {block.EntityId.ToEntityIdFormat()}");
-            //RemoveFromDictionary(block);
-            if (GridHasImportantBlocks(_gridController.ThisGrid)) return;
-            _gridController.SetGridOwnership();
+            //WriteGeneral(nameof(BlockIsNotWorking), $"Event invoked for {block.EntityId.ToEntityIdFormat()}");
+            RemoveFromDictionary(block);
         }
 
         private void BlockIsWorking(Block block)
         {
-            WriteGeneral(nameof(BlockIsWorking), $"Event invoked for {block.EntityId.ToEntityIdFormat()}");
-            //AddToDictionary(block);
+            //WriteGeneral(nameof(BlockIsWorking), $"Event invoked for {block.EntityId.ToEntityIdFormat()}");
+            AssertProperOwner(block.MyCubeBlock);
+            AddToDictionary(block);
         }
 
-        private void OnResetBlock(IReset reset)
+        private void OnResetBlock(IResetWithEvent<Block> reset)
         {
-            Block block = (Block)reset;
-            WriteGeneral(nameof(OnResetBlock), $"Reset triggered for [{block?.IsReset.ToSingleChar()}] [{block?.EntityId.ToEntityIdFormat()}]");
+            var block = (Block)reset;
+            //WriteGeneral(nameof(OnResetBlock), $"Reset triggered for [{block?.IsReset.ToSingleChar()}] [{block?.EntityId.ToEntityIdFormat()}]");
             if (block == null) return;
             RemoveBlock(block);
         }
@@ -145,18 +138,29 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             block.OnReset -= OnResetBlock;
         }
 
+        private void VerifyGridIsStillValid()
+        {
+            var hasImportantBlocks = GridHasImportantBlocks(_gridController.ThisGrid);
+            if (hasImportantBlocks && ImportantBlocks.Count > 0) return;
+            if (hasImportantBlocks && ImportantBlocks.Count == 0)
+            {
+                AddGrid(_gridController.ThisGrid);
+                return;
+            }
+            _gridController.SetGridOwnership();
+        }
+
         public bool GridHasImportantBlocks(MyCubeGrid grid)
         {
             foreach (var block in grid.GetFatBlocks())
             {
                 if (!block.IsFunctional) continue;
-                var type = AssignBlock(block);
-                if (type == BlockType.None) continue;
+                if (AssignBlock(block) == BlockType.None) continue;
                 return true;
             }
             return false;
         }
-        
+
         private BlockType AssignBlock(MyCubeBlock block)
         {
             //WriteGeneral(nameof(AssignBlock), $"Attempting to classify new block...");
@@ -218,15 +222,26 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             return BlockType.None;
         }
 
-        public override void Reset()
+        public override void Close()
         {
             if (ImportantBlocks.Count == 0) return;
-            base.Reset();
             foreach (var kvp in ImportantBlocks)
             {
                 Block block = kvp.Value;
                 DeRegisterBlockEvents(block);
                 _gridController.Mediator.ReturnBlock(block, block.EntityId);
+            }
+            ImportantBlocks.Clear();
+        }
+
+
+        public void Reset()
+        {
+            foreach (var block in ImportantBlocks)
+            {
+                if (block.Value.IsReset) continue;
+                DeRegisterBlockEvents(block.Value);
+                block.Value.Reset();
             }
             ImportantBlocks.Clear();
         }

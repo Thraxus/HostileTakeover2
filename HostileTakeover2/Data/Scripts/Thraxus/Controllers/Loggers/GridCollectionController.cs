@@ -3,7 +3,7 @@ using HostileTakeover2.Thraxus.Common.BaseClasses;
 
 namespace HostileTakeover2.Thraxus.Controllers.Loggers
 {
-    internal class GridCollectionController : BaseLoggingClass
+    public class GridCollectionController : BaseLoggingClass
     {
         private readonly Dictionary<long, GridController> _grids = new Dictionary<long, GridController>();
 
@@ -21,6 +21,12 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
             if (!_grids.ContainsKey(entityId)) return;
             WriteGeneral(nameof(AddToGrids), $"Removing Grid with EntityId: {entityId:D18}");
             _grids.Remove(entityId);
+        }
+
+        public override void Close()
+        {
+            base.Close();
+            _grids.Clear();
         }
     }
 }

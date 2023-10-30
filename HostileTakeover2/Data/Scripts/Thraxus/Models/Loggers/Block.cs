@@ -8,10 +8,11 @@ using VRage.Game.Entity;
 
 namespace HostileTakeover2.Thraxus.Models.Loggers
 {
-    internal class Block : IResetWithEvent
+    public class Block : IResetWithEvent<Block>
     {
         public event Action<Block> OnBlockIsNotWorking;
         public event Action<Block> OnBlockIsWorking;
+        public event Action<Block> OnReset;
 
         public MyCubeBlock MyCubeBlock;
         private GridOwnership _gridOwnership;
@@ -19,7 +20,8 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
         public BlockType BlockType;
         public string Name => MyCubeBlock.Name;
         public long EntityId;
-
+        
+        public bool IsReset { get; set; }
         public bool IsFunctional => MyCubeBlock.IsFunctional;
         public long OwnerId => MyCubeBlock.OwnerId;
         
@@ -35,15 +37,21 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
 
         private void RegisterEvents()
         {
-            MyCubeBlock.OnClose += Reset;
+            MyCubeBlock.OnClose += OnClose;
             MyCubeBlock.IsWorkingChanged += BlockOnWorkingChanged;
             ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged += BlockOwnershipChanged;
+        }
+
+        private void OnClose(MyEntity entity)
+        {
+            var block = (MyCubeBlock)entity;
+            OnReset?.Invoke(this);
         }
 
         private void DeRegisterEvents()
         {
             if (MyCubeBlock == null) return;
-            MyCubeBlock.OnClose -= Reset;
+            MyCubeBlock.OnClose -= OnClose;
             MyCubeBlock.IsWorkingChanged -= BlockOnWorkingChanged;
             ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged -= BlockOwnershipChanged;
         }
@@ -71,24 +79,14 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
                     break;
             }
         }
-        
-        private void Reset(MyEntity unused)
-        {
-            Reset();
-        }
-
-        public bool IsReset { get; set; }
 
         public void Reset()
         {
             IsReset = true;
-            OnReset?.Invoke(this);
             DeRegisterEvents();
             MyCubeBlock = null;
             BlockType = BlockType.None;
             EntityId = 0;
         }
-
-        public event Action<IResetWithEvent> OnReset;
     }
 }

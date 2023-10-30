@@ -1,5 +1,4 @@
 ﻿using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
 using Sandbox.Game.Entities;
@@ -13,16 +12,15 @@ using VRageMath;
 
 namespace HostileTakeover2.Thraxus.Controllers.Loggers
 {
-    internal class GrinderController : BaseLoggingClass, IInit<Mediator>
+    public class GrinderController : BaseLoggingClass
     {
-        private Mediator _mediator;
+        private readonly Mediator _mediator;
+        private readonly List<MyEntity> _reusableEntityList = new List<MyEntity>();
 
-        public void Init(Mediator mediator)
+        public GrinderController(Mediator mediator)
         {
             _mediator = mediator;
         }
-
-        private readonly List<MyEntity> _reusableEntityList = new List<MyEntity>();
 
         private void GrabAllNearbyGrids(Vector3D center)
         {
@@ -45,12 +43,12 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
                 GridController grid = _mediator.GridCollectionController.GetGrid(entity.EntityId);
                 if (grid.GridOwnership.OwnerType != OwnerType.Npc)
                 {
-                    WriteGeneral(nameof(FilterToNearestGrid), $"Grid has ownership type: {grid.GridOwnership.OwnerType} [{grid.EntityId:D18}]");
+                    //WriteGeneral(nameof(FilterToNearestGrid), $"Grid has ownership type: {grid.GridOwnership.OwnerType} [{grid.EntityId:D18}]");
                     continue;
                 }
                 double abs = Math.Abs(((IMyCubeGrid)entity).GetPosition().LengthSquared() - source.LengthSquared());
                 Common.Utilities.Statics.Statics.AddGpsLocation(((IMyCubeGrid)entity).EntityId.ToEntityIdFormat(), ((IMyCubeGrid)entity).GetPosition());
-                WriteGeneral(nameof(FilterToNearestGrid), $"Validating possible grid as target: [{(abs > distance).ToSingleChar()}] [{abs:##.###}] [{distance:E3}] [{grid.EntityId:D18}]");
+                //WriteGeneral(nameof(FilterToNearestGrid), $"Validating possible grid as target: [{(abs > distance).ToSingleChar()}] [{abs:##.###}] [{distance:E3}] [{grid.EntityId:D18}]");
                 if (abs > distance) continue;
                 distance = abs;
                 closestGrid = grid;
@@ -60,17 +58,17 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         public void RunGrinderLogic(IMyAngleGrinder grinder)
         {
-            WriteGeneral(nameof(RunGrinderLogic), $"Running: [{grinder.EntityId:D18}]");
+            //WriteGeneral(nameof(RunGrinderLogic), $"Running: [{grinder.EntityId:D18}]");
             if (grinder.OwnerIdentityId == 0)
             {
-                WriteGeneral(nameof(RunGrinderLogic), $"Grinder was unowned!");
+                //WriteGeneral(nameof(RunGrinderLogic), $"Grinder was unowned!");
                 return;
             }
             GrabAllNearbyGrids(grinder.GetPosition());
-            WriteGeneral(nameof(RunGrinderLogic), $"Grids Grabbed [{_reusableEntityList.Count:D2}]");
+            //WriteGeneral(nameof(RunGrinderLogic), $"Grids Grabbed [{_reusableEntityList.Count:D2}]");
             var grid = FilterToNearestGrid(grinder.GetPosition());
-            WriteGeneral(nameof(RunGrinderLogic), $"Found: [{grid.EntityId:D18}]");
-            grid.TriggerHighlights(grinder.OwnerIdentityId);
+            //WriteGeneral(nameof(RunGrinderLogic), $"Found: [{grid.EntityId:D18}]");
+            _mediator.HighlightController.EnableHighlights(grid.MyGridGroupData, grinder.OwnerIdentityId);
         }
     }
 }

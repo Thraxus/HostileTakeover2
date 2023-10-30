@@ -11,7 +11,7 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void BlockOwnershipChanged(MyCubeGrid grid)
         {
-            if (ThisGrid.BigOwners != null && ThisGrid.BigOwners[0] == OwnerId) return;
+            if (ThisGrid.BigOwners != null && ThisGrid.BigOwners[0] == 0) return;
             ThisGridController.SetGridOwnership();
         }
 

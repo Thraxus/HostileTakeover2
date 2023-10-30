@@ -198,9 +198,9 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestScreen.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Profiler.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\BaseGrid.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\Loggers\EntityController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\Loggers\GridCollectionController.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\Loggers\GridGroupOwnerTypeCoordinationController.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\Loggers\GridGroupOwnershipCoordinationController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\Loggers\GridGroupController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\Loggers\GridGroupOwnershipTypeCoordinationController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\Loggers\GrinderController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\NpcGrid.cs" />

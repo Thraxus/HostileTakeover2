@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Generics;
@@ -15,45 +16,56 @@ using VRage.Game.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Utility
 {
-    internal class Mediator : BaseLoggingClass
+    public class Mediator : BaseLoggingClass
     {
         private readonly HashSet<ICommon> _commons = new HashSet<ICommon>();
         public readonly ActionQueue ActionQueue = new ActionQueue();
-        
-        private readonly ObjectPool<GridController> _gridPool = new ObjectPool<GridController>();
+
         private readonly ObjectPool<Block> _blockPool = new ObjectPool<Block>();
+        private readonly ObjectPool<GridController> _gridPool = new ObjectPool<GridController>();
         private readonly ObjectPool<HighlightSettings> _highlightSettingsPool = new ObjectPool<HighlightSettings>();
         private readonly ObjectPool<ReusableHashset<IMyCubeGrid>> _reusableMyCubeGridCollectionObjectPool = new ObjectPool<ReusableHashset<IMyCubeGrid>>();
 
         private readonly GridFactory _gridFactory = new GridFactory();
+        public readonly GridGroupController GridGroupController;
 
-        public readonly GridCollectionController GridCollectionController = new GridCollectionController();
-        public readonly GridGroupOwnerTypeCoordinationController GridGroupOwnerTypeCoordinationController = new GridGroupOwnerTypeCoordinationController();
-        public readonly GridGroupOwnershipCoordinationController GridGroupOwnershipCoordinationController = new GridGroupOwnershipCoordinationController();
-        public readonly GridGroupOwnershipTypeCoordinationController GridGroupOwnershipTypeCoordinationController = new GridGroupOwnershipTypeCoordinationController();
-        public readonly GrinderController GrinderController = new GrinderController();
-        public readonly HighlightController HighlightController = new HighlightController();
+        public readonly GridCollectionController GridCollectionController;
+        public readonly GridGroupOwnershipTypeCoordinationController GridGroupOwnershipTypeCoordinationController;
+        public readonly GrinderController GrinderController;
+        public readonly HighlightController HighlightController;
         public SettingsController SettingsController;
 
         public DefaultSettings DefaultSettings => SettingsController.DefaultSettings;
 
-        public Mediator()
-        {
-            RegisterCommonEvents(GridCollectionController);
-            RegisterCommonEvents(GridGroupOwnerTypeCoordinationController);
-            RegisterCommonEvents(GridGroupOwnershipCoordinationController);
-            RegisterCommonEvents(GridGroupOwnershipTypeCoordinationController);
-            RegisterCommonEvents(GrinderController);
-            RegisterCommonEvents(HighlightController);
-            GridGroupOwnershipCoordinationController.Init(this);
-            GridGroupOwnershipTypeCoordinationController.Init(this);
-            HighlightController.Init(this);
-            GrinderController.Init(this);
-        }
-
-        public void AddSettings(SettingsController settingsController)
+        public Mediator(SettingsController settingsController)
         {
             SettingsController = settingsController;
+            
+            var entityController = new EntityController(this);
+            RegisterCommonEvents(entityController);
+
+            GridCollectionController = new GridCollectionController();
+            RegisterCommonEvents(GridCollectionController);
+
+            GridGroupOwnershipTypeCoordinationController = new GridGroupOwnershipTypeCoordinationController(this);
+            RegisterCommonEvents(GridGroupOwnershipTypeCoordinationController);
+
+            GrinderController = new GrinderController(this);
+            RegisterCommonEvents(GrinderController);
+
+            HighlightController = new HighlightController(this);
+            RegisterCommonEvents(HighlightController);
+
+            GridGroupController = new GridGroupController(this);
+            RegisterCommonEvents(GridGroupController);
+
+            ActionQueue.Add(1, InitGridGroupController);
+        }
+
+        private void InitGridGroupController()
+        {
+            GridGroupController.Init();
+            WriteGeneral(nameof(Mediator), "GridGroupController online");
         }
 
         private void RegisterCommonEvents(ICommon common)
@@ -66,17 +78,29 @@ namespace HostileTakeover2.Thraxus.Utility
         {
             foreach (var common in _commons)
             {
+                WriteGeneral(nameof(DeRegisterCommonEvents), $"DeRegistering {common.GetType()}");
+                common.Close();
                 common.OnWriteToLog -= WriteGeneral;
             }
+            WriteGeneral(nameof(DeRegisterCommonEvents), $"DeRegistering complete.");
         }
 
         public override void Close()
         {
-            DeRegisterCommonEvents();
             base.Close();
+            ActionQueue.Reset();
+            DeRegisterCommonEvents();
+            var sb = new StringBuilder();
+            sb.AppendLine("Pool Stats:");
+            sb.AppendLine(_blockPool.ToString());
+            sb.AppendLine(_gridPool.ToString());
+            sb.AppendLine(_highlightSettingsPool.ToString());
+            sb.AppendLine(_reusableMyCubeGridCollectionObjectPool.ToString());
+            sb.AppendLine(_gridFactory.ToString());
+            WriteGeneral(nameof(Close), sb.ToString());
         }
 
-        #region The methods below can be deleted before release. They are for Debug only
+        #region The methods below deal with get's and returns for the various pools
 
         public GridController GetGridController(long entityId)
         {
@@ -136,6 +160,7 @@ namespace HostileTakeover2.Thraxus.Utility
         public BaseGrid GetGrid(OwnerType type)
         {
             BaseGrid grid = _gridFactory.GetGrid(type);
+            grid.OnWriteToLog += WriteGeneral;
             WriteGeneral(nameof(Mediator), $"Get -- Lending a BaseGrid {_gridFactory}");
             return grid;
         }
@@ -143,7 +168,14 @@ namespace HostileTakeover2.Thraxus.Utility
         public void ReturnGrid(BaseGrid grid)
         {
             _gridFactory.ReturnGrid(grid);
+            grid.OnWriteToLog -= WriteGeneral;
             WriteGeneral(nameof(Mediator), $"Return -- Returning a BaseGrid {_gridFactory}");
+        }
+
+        public ReusableHashset<IMyCubeGrid> GetGridGroupCollection(IMyGridGroupData myGridGroupData)
+        {
+            WriteGeneral(nameof(Mediator), $"Get -- Loaning a GridGroupCollection");
+            return GridGroupController.GetGridGroup(myGridGroupData);
         }
 
         #endregion

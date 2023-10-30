@@ -2,7 +2,7 @@
 
 namespace HostileTakeover2.Thraxus.Models.Loggers
 {
-    internal class GridOwnership
+    public class GridOwnership
     {
         public long GridId;
         public long RightfulOwner = 0;
@@ -11,7 +11,7 @@ namespace HostileTakeover2.Thraxus.Models.Loggers
         public void SetGridOwnership(long ownerId, long gridId, OwnerType ownerType)
         {
             GridId = gridId;
-            RightfulOwner = ownerId;
+            RightfulOwner = ownerType == OwnerType.None ? 0 : ownerId;
             OwnerType = ownerType;
         }
 

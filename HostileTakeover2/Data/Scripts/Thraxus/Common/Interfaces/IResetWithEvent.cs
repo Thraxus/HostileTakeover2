@@ -2,8 +2,8 @@
 
 namespace HostileTakeover2.Thraxus.Common.Interfaces
 {
-    public interface IResetWithEvent : IReset
+    public interface IResetWithEvent<out T> : IReset
     {
-        event Action<IResetWithEvent> OnReset;
+        event Action<T> OnReset;
     }
 }

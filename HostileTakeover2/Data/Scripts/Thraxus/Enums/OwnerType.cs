@@ -1,6 +1,6 @@
 ﻿namespace HostileTakeover2.Thraxus.Enums
 {
-    internal enum OwnerType
+    public enum OwnerType
     {
         None,
         NotEvaluated,

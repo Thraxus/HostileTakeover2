@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using HostileTakeover2.Thraxus.Common.Enums;
-using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
@@ -94,26 +93,26 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 			return identityList.FirstOrDefault(x => x.IdentityId == playerId);
 		}
 
-		public static void CreateFakeSmallExplosion(Vector3D position)
-		{
-			MyExplosionInfo explosionInfo = new MyExplosionInfo()
-			{
-				PlayerDamage = 0.0f,
-				Damage = 0f,
-				ExplosionType = MyExplosionTypeEnum.WARHEAD_EXPLOSION_02,
-				ExplosionSphere = new BoundingSphereD(position, 0d),
-				LifespanMiliseconds = 0,
-				ParticleScale = 1f,
-				Direction = Vector3.Down,
-				VoxelExplosionCenter = position,
-				ExplosionFlags = MyExplosionFlags.CREATE_PARTICLE_EFFECT,
-				VoxelCutoutScale = 0f,
-				PlaySound = true,
-				ApplyForceAndDamage = false,
-				ObjectsRemoveDelayInMiliseconds = 0
-			};
-			MyExplosions.AddExplosion(ref explosionInfo);
-		}
+		//public static void CreateFakeSmallExplosion(Vector3D position)
+		//{
+		//	MyExplosionInfo explosionInfo = new MyExplosionInfo()
+		//	{
+		//		PlayerDamage = 0.0f,
+		//		Damage = 0f,
+		//		ExplosionType = MyExplosionTypeEnum.WARHEAD_EXPLOSION_02,
+		//		ExplosionSphere = new BoundingSphereD(position, 0d),
+		//		LifespanMiliseconds = 0,
+		//		ParticleScale = 1f,
+		//		Direction = Vector3.Down,
+		//		VoxelExplosionCenter = position,
+		//		ExplosionFlags = MyExplosionFlags.CREATE_PARTICLE_EFFECT,
+		//		VoxelCutoutScale = 0f,
+		//		PlaySound = true,
+		//		ApplyForceAndDamage = false,
+		//		ObjectsRemoveDelayInMiliseconds = 0
+		//	};
+		//	MyExplosions.AddExplosion(ref explosionInfo);
+		//}
 
 		public static int CalculateGridThreat(MyCubeGrid grid)
 		{

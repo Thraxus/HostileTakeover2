@@ -5,7 +5,7 @@ using Sandbox.Game.Entities;
 
 namespace HostileTakeover2.Thraxus.Controllers
 {
-    internal abstract class BaseGrid : BaseLoggingClass, IHaveEvents, IInit<MyCubeGrid, GridController>
+    public abstract class BaseGrid : BaseLoggingClass, IReset
     {
         protected MyCubeGrid ThisGrid;
         protected GridController ThisGridController;
@@ -13,6 +13,7 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public virtual void Init(MyCubeGrid myCubeGrid, GridController gridController)
         {
+            IsReset = false;
             ThisGrid = myCubeGrid;
             ThisGridController = gridController;
             OwnerId = ThisGrid.BigOwners == null ? 0 : ThisGrid.BigOwners[0];
@@ -23,9 +24,11 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public abstract void DeRegisterEvents();
 
-        public override void Reset()
+        public bool IsReset { get; private set; }
+
+        public void Reset()
         {
-            base.Reset();
+            IsReset = true;
             DeRegisterEvents();
             ThisGrid = null;
             ThisGridController = null;

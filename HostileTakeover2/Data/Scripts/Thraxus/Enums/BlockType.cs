@@ -1,12 +1,11 @@
 ﻿namespace HostileTakeover2.Thraxus.Enums
 {
-    internal enum BlockType
+    public enum BlockType
     {
         Control,
         Medical,
         None,
         Trap,
         Weapon
-        
     }
 }

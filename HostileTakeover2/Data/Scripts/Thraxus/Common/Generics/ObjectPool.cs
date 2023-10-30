@@ -31,6 +31,7 @@ namespace HostileTakeover2.Thraxus.Common.Generics
 
         public void Return(T item)
         {
+            if (item == null) return;
             if(!item.IsReset)
                 item.Reset();
             _objects.Push(item);

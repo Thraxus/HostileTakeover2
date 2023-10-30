@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Sandbox.ModAPI;
+using VRage;
 using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging
@@ -42,25 +43,27 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Logging
 			BuildLogLine(caller, message);
 		}
 
-		public void WriteException(string caller = "", string message = "")
-		{
-			BuildLogLine(caller, "Exception!\n\n" + message);
-		}
-
-		private readonly object _lockObject = new object();
+        private readonly FastResourceLock _lockObject = new FastResourceLock();
+        //private readonly object _lockObject = new object();
 
 		private void BuildLogLine(string caller, string message)
 		{
-			lock (_lockObject)
+            using (_lockObject.AcquireExclusiveUsing())
             {
                 var newMessage = $"{TimeStamp}{Indent}{caller}{Indent}{message}";
                 WriteLine(newMessage);
                 MyLog.Default.WriteLineAndConsole(newMessage);
-                //MyAPIGateway.Utilities.InvokeOnGameThread(() =>
-                //{
-
-                //});
             }
+			//lock ()
+            //{
+            //    var newMessage = $"{TimeStamp}{Indent}{caller}{Indent}{message}";
+            //    WriteLine(newMessage);
+            //    MyLog.Default.WriteLineAndConsole(newMessage);
+            //    //MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+            //    //{
+
+            //    //});
+            //}
 		}
 
 		private void WriteLine(string line)

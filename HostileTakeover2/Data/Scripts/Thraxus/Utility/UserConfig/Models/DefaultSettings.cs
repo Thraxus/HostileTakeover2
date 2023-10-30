@@ -33,7 +33,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         public const int BlockAddTickDelay = 10;
         public const int EntityAddTickDelay = 10;
         public const int GrinderTickDelay = 10;
-        public const int MinorTickDelay = 2;
+        public const int MinorTickDelay = 5;
         public const int RecheckGridInterval = Common.References.TicksPerMinute * 3;
         
         // HighlightSettings

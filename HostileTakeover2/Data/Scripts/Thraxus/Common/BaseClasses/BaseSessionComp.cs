@@ -158,7 +158,8 @@ namespace HostileTakeover2.Thraxus.Common.BaseClasses
 			if (BlockUpdates()) return;
 			WriteGeneral("Unload", $"Retired.");
 			_generalLog?.Close();
-		}
+            _generalLog = null;
+        }
 
 		/// <summary>
 		///  Gets called 60 times a second before all other update methods, regardless of frame rate, game pause or MyUpdateOrder.
@@ -193,13 +194,7 @@ namespace HostileTakeover2.Thraxus.Common.BaseClasses
 		{
 			base.UpdatingStopped();
 		}
-
-
-		public void WriteException(string caller, string message)
-		{
-			_generalLog?.WriteException($"{CompName}: {caller}", message);
-		}
-
+		
 		public void WriteGeneral(string caller = "", string message = "")
 		{
 			_generalLog?.WriteGeneral($"{CompName}: {caller}", message);
