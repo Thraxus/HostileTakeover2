@@ -13,11 +13,13 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.OnScreenDisplay
 
 		private readonly Dictionary<string, int> _questLog = new Dictionary<string, int>();
 
-		private readonly long _sendTo = MyAPIGateway.Session.Player.IdentityId;
+		private readonly long _sendTo;
 
 		public QuestScreen(string questName)
 		{
 			_questName = questName;
+			_sendTo = MyAPIGateway.Session?.Player?.IdentityId ?? 0;
+			if (_sendTo == 0) return;
 			MyVisualScriptLogicProvider.SetQuestlog(true, questName, _sendTo);
 		}
 

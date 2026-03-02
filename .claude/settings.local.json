@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "WebSearch",
+      "WebFetch(domain:spaceengineers.wiki.gg)",
+      "Bash(git:*)",
+      "Bash(dotnet build:*)"
+    ]
+  }
+}

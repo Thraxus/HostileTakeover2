@@ -159,6 +159,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseLoggingClass.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseSessionComp.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\BaseXmlUserSettings.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\BaseClasses\LogCategory.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Enums\CompType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Enums\FactionRelationship.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Enums\LogType.cs" />
@@ -182,7 +183,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\ExistingFactions.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\GameSettings.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\InstalledMods.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\StoredItentities.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Reporting\StoredIdentities.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\FileHandlers\Load.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\FileHandlers\Save.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Statics\Statics.cs" />
