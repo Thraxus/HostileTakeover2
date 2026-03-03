@@ -40,6 +40,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             foreach (var myCubeGrid in gridList)
             {
                 Grid grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);
+                if (grid == null) continue;
                 AddToOwnershipDictionary(grid.CurrentOwnerId);
             }
             _mediator.ReturnReusableCubeGridList(gridList);

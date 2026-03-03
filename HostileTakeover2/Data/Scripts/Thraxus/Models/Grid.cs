@@ -8,6 +8,7 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Models
 {
@@ -28,7 +29,6 @@ namespace HostileTakeover2.Thraxus.Models
         public readonly GridOwnershipController GridOwnershipController = new GridOwnershipController();
         public readonly BlockTypeController BlockTypeController = new BlockTypeController();
         private Mediator _mediator;
-        private bool _initialized;
 
         public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
         public long EntityId => _me?.EntityId ?? 0;
@@ -38,11 +38,16 @@ namespace HostileTakeover2.Thraxus.Models
             SetLogPrefix(grid.EntityId.ToEntityIdFormat());
             WriteGeneral(nameof(Init), $"Primary Initialization for Grid [{grid.EntityId:D18}] starting.");
             IsClosed = false;
-            _initialized = true;
             _me = grid;
             _mediator = mediator;
+            _me.OnMarkForClose += OnGridMarkedForClose;
             WriteGeneral(nameof(Init), $"Primary Initialization for Grid [{_me.EntityId:D18}] complete.");
             Init();
+        }
+
+        private void OnGridMarkedForClose(IMyEntity entity)
+        {
+            Close();
         }
 
         private void Init()
@@ -195,9 +200,6 @@ namespace HostileTakeover2.Thraxus.Models
 
             _me.OnGridSplit += OnGridSplit;
             _me.OnGridMerge += OnGridMerge;
-
-            if (_initialized) return;
-            _me.OnMarkForClose += entity => Close();
         }
 
         private void DeRegisterEvents()
@@ -230,6 +232,7 @@ namespace HostileTakeover2.Thraxus.Models
         {
             base.Reset();
             IsClosed = true;
+            _me.OnMarkForClose -= OnGridMarkedForClose;
             DeRegisterEvents();
             GridOwnershipController.Reset();
             BlockTypeController.Reset();

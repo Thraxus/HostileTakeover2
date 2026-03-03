@@ -107,15 +107,19 @@ namespace HostileTakeover2.Thraxus.Controllers
             if (grinder.OwnerIdentityId == 0) return;
             GrabAllNearbyGrids(grinder.GetPosition());
             var grid = FilterToNearestGrid(grinder.GetPosition());
+            if (grid == null)
+            {
+                WriteGeneral(nameof(RunGrinderLogic), $"No NPC grid found near grinder [{grinder.EntityId:D18}]");
+                return;
+            }
             WriteGeneral(nameof(RunGrinderLogic), $"Found: [{grid.EntityId:D18}]");
             grid.TriggerHighlights(grinder.OwnerIdentityId);
-
 
             //if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
             if (_mediator.DefaultSettings.IsDebugActive)
             {
                 long playerId = grinder.OwnerIdentityId;
-                DebugVisualizeDetection(grinder.GetPosition(), playerId, FilterToNearestGrid(grinder.GetPosition()).EntityId);
+                DebugVisualizeDetection(grinder.GetPosition(), playerId, grid.EntityId);
                 long capturedPlayerId = playerId;
                 grinder.OnMarkForClose += entity => ClearDebugMarkersForPlayer(capturedPlayerId);
             }
