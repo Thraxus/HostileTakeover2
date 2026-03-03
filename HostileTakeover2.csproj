@@ -207,7 +207,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\GridValidationType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\HostileTakeover2Core.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Block.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\BlockTypeController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\BlockController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\BlockType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Construct.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\HighlightController.cs" />

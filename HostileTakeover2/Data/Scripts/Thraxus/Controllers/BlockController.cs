@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Interfaces;
@@ -13,7 +13,7 @@ using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Controllers
 {
-    internal class BlockTypeController : BaseLoggingClass
+    internal class BlockController : BaseLoggingClass
     {
         private readonly Dictionary<MyCubeBlock, Block> _importantBlocks =
             new Dictionary<MyCubeBlock, Block>();
@@ -45,7 +45,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                 ResetBlock(fatBlock);
             }
         }
-        
+
         public void AddBlock(MyCubeBlock myCubeBlock)
         {
             _mediator.ActionQueue.Add(10, () =>
@@ -117,7 +117,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             if (!_importantBlocks.ContainsKey(myCubeBlock)) return;
             OnResetBlock(_importantBlocks[myCubeBlock]);
         }
-        
+
         private BlockType AssignBlock(MyCubeBlock block)
         {
             //WriteGeneral(nameof(AssignBlock), $"Attempting to classify new block...");

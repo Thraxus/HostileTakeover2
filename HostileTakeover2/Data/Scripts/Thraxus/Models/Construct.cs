@@ -18,7 +18,7 @@ namespace HostileTakeover2.Thraxus.Models
         private Mediator _mediator;
 
         public readonly GridOwnershipController GridOwnershipController = new GridOwnershipController();
-        public readonly BlockTypeController BlockTypeController = new BlockTypeController();
+        public readonly BlockController BlockController = new BlockController();
         public readonly GridGroupManager GridGroupManager = new GridGroupManager();
 
         public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
@@ -45,9 +45,9 @@ namespace HostileTakeover2.Thraxus.Models
         {
             WriteGeneral(nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] starting.");
             _mediator.ConstructController.Add(_me.EntityId, this);
-            BlockTypeController.OnWriteToLog += WriteGeneral;
-            BlockTypeController.Init(_mediator, GridOwnershipController);
-            BlockTypeController.OnImportantBlocksEmpty += OnAllImportantBlocksGone;
+            BlockController.OnWriteToLog += WriteGeneral;
+            BlockController.Init(_mediator, GridOwnershipController);
+            BlockController.OnImportantBlocksEmpty += OnAllImportantBlocksGone;
             GridOwnershipController.OnWriteToLog += WriteGeneral;
             GridOwnershipController.SetOwnershipAction += SetOwnership;
             GridOwnershipController.DisownGridAction += DisownGrid;
@@ -83,14 +83,14 @@ namespace HostileTakeover2.Thraxus.Models
         private void OnGridSplit(MyCubeGrid oldGrid, MyCubeGrid newGrid)
         {
             WriteGeneral(nameof(OnGridSplit), $"Grid Split -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
-            BlockTypeController.RemoveOldBlocks(newGrid);
+            BlockController.RemoveOldBlocks(newGrid);
             ReEvaluateOwnership();
         }
 
         private void OnGridMerge(MyCubeGrid newGrid, MyCubeGrid oldGrid)
         {
             WriteGeneral(nameof(OnGridMerge), $"Grid Merge -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
-            BlockTypeController.AddGrid(oldGrid);
+            BlockController.AddGrid(oldGrid);
             GridGroupManager.Refresh();
         }
 
@@ -114,20 +114,48 @@ namespace HostileTakeover2.Thraxus.Models
         private void OnGridAdded(IMyCubeGrid newGrid)
         {
             WriteGeneral(nameof(OnGridAdded), $"Grid was added.  Adding to IMyGridGroupData for [{(_me.EntityId == newGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{newGrid.EntityId:D18}].");
-            BlockTypeController.AddGrid((MyCubeGrid)newGrid);
         }
 
         private void OnAllImportantBlocksGone()
         {
-            foreach (var fatBlock in _me.GetFatBlocks())
-                fatBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
-            DisownGrid();
+            var groupData = GridGroupManager.GridGroupData;
+            if (groupData == null)
+            {
+                foreach (var fatBlock in _me.GetFatBlocks())
+                    fatBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
+                DisownGrid();
+                return;
+            }
+
+            var gridList = _mediator.GetReusableCubeGridList(groupData);
+            bool anyHasBlocks = false;
+            foreach (var grid in gridList)
+            {
+                Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                if (construct != null && construct.BlockController.GetImportantBlockCount() > 0)
+                {
+                    anyHasBlocks = true;
+                    break;
+                }
+            }
+
+            if (!anyHasBlocks)
+            {
+                foreach (var grid in gridList)
+                {
+                    foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
+                        fatBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
+                    Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                    construct?.DisownGrid();
+                }
+            }
+            _mediator.ReturnReusableCubeGridList(gridList);
         }
 
         public void DisownGrid()
         {
             GridOwnershipController.Reset();
-            BlockTypeController.Reset();
+            BlockController.Reset();
             SetOwnership();
             SetEvents();
         }
@@ -139,8 +167,8 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void TakeOverGrid()
         {
-            WriteGeneral(nameof(TakeOverGrid), $"Attempting to take over grid: [{(GridOwnershipController.OwnershipType == OwnershipType.Npc).ToSingleChar()}] [{(!BlockTypeController.IsClosed).ToSingleChar()}]");
-            if (GridOwnershipController.OwnershipType != OwnershipType.Npc || BlockTypeController.IsClosed) return;
+            WriteGeneral(nameof(TakeOverGrid), $"Attempting to take over grid: [{(GridOwnershipController.OwnershipType == OwnershipType.Npc).ToSingleChar()}] [{(!BlockController.IsClosed).ToSingleChar()}]");
+            if (GridOwnershipController.OwnershipType != OwnershipType.Npc || BlockController.IsClosed) return;
             SetOwnership();
             SetEvents();
         }
@@ -154,8 +182,8 @@ namespace HostileTakeover2.Thraxus.Models
         private void SetOwnership()
         {
             WriteGeneral(nameof(SetOwnership), $"Grabbing some blocks...");
-            BlockTypeController.AddGrid(_me);
-            WriteGeneral(nameof(SetOwnership), $"Grabbed some blocks.. {BlockTypeController.GetImportantBlockCount()}");
+            BlockController.AddGrid(_me);
+            WriteGeneral(nameof(SetOwnership), $"Grabbed some blocks.. {BlockController.GetImportantBlockCount()}");
         }
 
         private void SetOwnership(MyCubeBlock block)
@@ -173,7 +201,7 @@ namespace HostileTakeover2.Thraxus.Models
         private void AddBlock(MyCubeBlock block)
         {
             SetOwnership(block);
-            BlockTypeController.AddBlock(block);
+            BlockController.AddBlock(block);
         }
 
         private void RegisterEvents()
@@ -218,10 +246,10 @@ namespace HostileTakeover2.Thraxus.Models
             _me.OnMarkForClose -= OnGridMarkedForClose;
             DeRegisterEvents();
             GridOwnershipController.Reset();
-            BlockTypeController.Reset();
+            BlockController.Reset();
             _mediator.ConstructController.Remove(_me.EntityId);
-            BlockTypeController.OnImportantBlocksEmpty -= OnAllImportantBlocksGone;
-            BlockTypeController.OnWriteToLog -= WriteGeneral;
+            BlockController.OnImportantBlocksEmpty -= OnAllImportantBlocksGone;
+            BlockController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.SetOwnershipAction -= SetOwnership;
             GridOwnershipController.DisownGridAction -= DisownGrid;
