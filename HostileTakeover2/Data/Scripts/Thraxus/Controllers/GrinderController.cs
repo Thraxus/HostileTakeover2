@@ -113,7 +113,10 @@ namespace HostileTakeover2.Thraxus.Controllers
                 return;
             }
             WriteGeneral(nameof(RunGrinderLogic), $"Found: [{grid.EntityId:D18}]");
-            grid.TriggerHighlights(grinder.OwnerIdentityId);
+            if (_mediator.DefaultSettings.HighlightAllGridsInRange.Current)
+                TriggerHighlightsForAllNearbyNpcGrids(grinder.OwnerIdentityId);
+            else
+                grid.TriggerHighlights(grinder.OwnerIdentityId);
 
             //if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
             if (_mediator.DefaultSettings.IsDebugActive)
@@ -142,6 +145,17 @@ namespace HostileTakeover2.Thraxus.Controllers
             //    WriteGeneral(nameof(RunGrinderLogic), $"Found: [{target.EntityId:D18}]");
             //    grid.TriggerHighlights(grinder.OwnerIdentityId);
             //}
+        }
+
+        private void TriggerHighlightsForAllNearbyNpcGrids(long grinderOwnerIdentityId)
+        {
+            foreach (var entity in _reusableEntityList)
+            {
+                var topMost = entity.GetTopMostParent() as MyCubeGrid;
+                Grid npcGrid = _mediator.GridCollectionController.GetGrid(topMost?.EntityId ?? entity.EntityId);
+                if (npcGrid == null || npcGrid.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
+                npcGrid.TriggerHighlights(grinderOwnerIdentityId);
+            }
         }
 
         // ── Debug utilities ──────────────────────────────────────────────────────────
