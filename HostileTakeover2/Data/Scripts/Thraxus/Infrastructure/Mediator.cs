@@ -25,7 +25,6 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             new ObjectPool<ReusableCubeGridList<IMyCubeGrid>>(() => new ReusableCubeGridList<IMyCubeGrid>());
 
         public readonly ConstructController ConstructController = new ConstructController();
-        public readonly GridGroupCoordinationController GridGroupCoordinationController = new GridGroupCoordinationController();
         public readonly GrinderController GrinderController = new GrinderController();
         public readonly HighlightController HighlightController = new HighlightController();
         public UserConfigController UserConfigController;
@@ -34,11 +33,9 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public Mediator()
         {
-            RegisterCommonEvents(GridGroupCoordinationController);
             RegisterCommonEvents(ConstructController);
             RegisterCommonEvents(GrinderController);
             RegisterCommonEvents(HighlightController);
-            GridGroupCoordinationController.Init(this);
             HighlightController.Init(this);
             GrinderController.Init(this);
         }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Controllers;
@@ -20,6 +21,7 @@ namespace HostileTakeover2.Thraxus.Models
         public readonly GridOwnershipController GridOwnershipController = new GridOwnershipController();
         public readonly BlockController BlockController = new BlockController();
         public readonly GridGroupManager GridGroupManager = new GridGroupManager();
+        private readonly Dictionary<long, int> _ownershipTally = new Dictionary<long, int>();
 
         public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
         public long EntityId => _me?.EntityId ?? 0;
@@ -70,14 +72,56 @@ namespace HostileTakeover2.Thraxus.Models
         private void ReEvaluateOwnership()
         {
             if (GridGroupManager.GridGroupData == null) return;
+            long ownerId = CalculateGroupOwnerId(GridGroupManager.GridGroupData);
             WriteGeneral(nameof(ReEvaluateOwnership), $"Reevaluating ownership.  Current Rightful Owner: [{GridOwnershipController.RightfulOwner.ToEntityIdFormat()}]");
-            _mediator.GridGroupCoordinationController.ReEvaluateOwnership(GridGroupManager.GridGroupData, GridOwnershipController.RightfulOwner);
+            if (GridOwnershipController.RightfulOwner == ownerId) return;
+            SetGroupOwnership(GridGroupManager.GridGroupData, ownerId);
         }
 
         private void EvaluateOwnership()
         {
             if (GridGroupManager.GridGroupData == null) return;
-            _mediator.GridGroupCoordinationController.InitializeOwnership(GridGroupManager.GridGroupData);
+            long ownerId = CalculateGroupOwnerId(GridGroupManager.GridGroupData);
+            WriteGeneral(nameof(EvaluateOwnership), $"Grid group owner determined to be {ownerId:D18}");
+            SetGroupOwnership(GridGroupManager.GridGroupData, ownerId);
+        }
+
+        private long CalculateGroupOwnerId(IMyGridGroupData groupData)
+        {
+            _ownershipTally.Clear();
+            var gridList = _mediator.GetReusableCubeGridList(groupData);
+            foreach (var grid in gridList)
+            {
+                Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                if (construct == null) continue;
+                long id = construct.CurrentOwnerId;
+                if (_ownershipTally.ContainsKey(id))
+                    _ownershipTally[id]++;
+                else
+                    _ownershipTally.Add(id, 1);
+            }
+            _mediator.ReturnReusableCubeGridList(gridList);
+            long ownerId = 0;
+            int count = 0;
+            foreach (var kvp in _ownershipTally)
+            {
+                if (kvp.Value <= count) continue;
+                ownerId = kvp.Key;
+                count = kvp.Value;
+            }
+            return ownerId;
+        }
+
+        private void SetGroupOwnership(IMyGridGroupData groupData, long ownerId)
+        {
+            var gridList = _mediator.GetReusableCubeGridList(groupData);
+            foreach (var grid in gridList)
+            {
+                Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                if (construct == null) continue;
+                construct.GridOwnershipController.SetOwnership(ownerId);
+            }
+            _mediator.ReturnReusableCubeGridList(gridList);
         }
 
         private void OnGridSplit(MyCubeGrid oldGrid, MyCubeGrid newGrid)
@@ -236,7 +280,7 @@ namespace HostileTakeover2.Thraxus.Models
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
         {
             if (GridOwnershipController.OwnershipType != OwnershipType.Npc && GridGroupManager.GridGroupData != null)
-                _mediator.GridGroupCoordinationController.InitializeOwnership(GridGroupManager.GridGroupData);
+                EvaluateOwnership();
         }
 
         public override void Reset()
