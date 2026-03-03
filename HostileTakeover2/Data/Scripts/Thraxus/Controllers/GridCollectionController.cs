@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Models.Loggers;
+using HostileTakeover2.Thraxus.Models;
 
-namespace HostileTakeover2.Thraxus.Controllers.Loggers
+namespace HostileTakeover2.Thraxus.Controllers
 {
     internal class GridCollectionController : BaseLoggingClass
     {

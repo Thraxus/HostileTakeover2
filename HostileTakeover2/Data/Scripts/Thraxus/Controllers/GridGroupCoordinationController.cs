@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
-using HostileTakeover2.Thraxus.Models.Loggers;
-using HostileTakeover2.Thraxus.Utility;
+using HostileTakeover2.Thraxus.Infrastructure;
+using HostileTakeover2.Thraxus.Models;
 using VRage.Game.ModAPI;
 
-namespace HostileTakeover2.Thraxus.Controllers.Loggers
+namespace HostileTakeover2.Thraxus.Controllers
 {
     internal class GridGroupCoordinationController : BaseLoggingClass
     {

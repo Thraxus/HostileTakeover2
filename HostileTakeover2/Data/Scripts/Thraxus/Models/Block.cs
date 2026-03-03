@@ -1,11 +1,11 @@
 ﻿using System;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Controllers.Loggers;
+using HostileTakeover2.Thraxus.Controllers;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 
-namespace HostileTakeover2.Thraxus.Models.Loggers
+namespace HostileTakeover2.Thraxus.Models
 {
     internal class Block : BaseLoggingClass
     {

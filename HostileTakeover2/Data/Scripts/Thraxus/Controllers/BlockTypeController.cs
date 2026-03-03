@@ -2,15 +2,15 @@
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
-using HostileTakeover2.Thraxus.Models.Loggers;
-using HostileTakeover2.Thraxus.Utility;
+using HostileTakeover2.Thraxus.Infrastructure;
+using HostileTakeover2.Thraxus.Models;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game.ModAPI;
 using VRage.Utils;
 
-namespace HostileTakeover2.Thraxus.Controllers.Loggers
+namespace HostileTakeover2.Thraxus.Controllers
 {
     internal class BlockTypeController : BaseLoggingClass
     {
@@ -66,7 +66,6 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         private void RemoveFromDictionary(MyCubeBlock myCubeBlock)
         {
-            if (!_importantBlocks.ContainsKey(myCubeBlock)) return;
             _importantBlocks.Remove(myCubeBlock);
         }
 
@@ -182,6 +181,11 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
         public Dictionary<MyCubeBlock, Block> GetImportantBlockDictionary()
         {
             return _importantBlocks;
+        }
+
+        public int GetImportantBlockCount()
+        {
+            return _importantBlocks.Count;
         }
     }
 }

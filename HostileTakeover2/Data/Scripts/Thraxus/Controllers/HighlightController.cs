@@ -3,14 +3,14 @@ using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
+using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Models;
-using HostileTakeover2.Thraxus.Models.Loggers;
-using HostileTakeover2.Thraxus.Utility;
+using HostileTakeover2.Thraxus.Settings;
 using Sandbox.Game;
 using VRage.Game.ModAPI;
 using VRageMath;
 
-namespace HostileTakeover2.Thraxus.Controllers.Loggers
+namespace HostileTakeover2.Thraxus.Controllers
 {
     internal class HighlightController : BaseLoggingClass
     {
@@ -80,7 +80,8 @@ namespace HostileTakeover2.Thraxus.Controllers.Loggers
 
         private static void SetHighlight(HighlightSettings settings)
         {
-            MyVisualScriptLogicProvider.SetHighlight(settings.Name, settings.Enabled, settings.LineThickness, settings.PulseDuration, settings.Color, settings.PlayerId);
+            //MyVisualScriptLogicProvider.SetHighlight(settings.Name, settings.Enabled, settings.LineThickness, settings.PulseDuration, settings.Color, settings.PlayerId);
+            MyVisualScriptLogicProvider.SetHighlight(settings.Name, settings.Enabled, settings.LineThickness, 0, settings.Color, settings.PlayerId);
         }
 
         private Color GetHighlightColor(BlockType type)

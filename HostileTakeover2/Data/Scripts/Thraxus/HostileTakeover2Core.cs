@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HostileTakeover2.Thraxus.Common;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Enums;
 using HostileTakeover2.Thraxus.Common.Factions.Models;
@@ -11,6 +10,9 @@ using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
+using System;
+using System.Collections.Generic;
+using HostileTakeover2.Thraxus.Infrastructure;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -26,16 +28,31 @@ namespace HostileTakeover2.Thraxus
 
         private readonly HashSet<ICommon> _commonObjects = new HashSet<ICommon>();
         private readonly Mediator _mediator = new Mediator();
-        private SettingsController _settings;
-        
+        private UserConfigController _userConfigController;
+
+        protected override void EarlyInit()
+        {
+            DebugType.Initialize();
+        }
+
         protected override void SuperEarlySetup()
         {
             base.SuperEarlySetup();
-            _settings = new SettingsController(ModContext.ModName);
-            _mediator.OnWriteToLog += WriteGeneral;
-            _mediator.AddSettings(_settings);
-            _settings.Initialize();
-            MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
+            _userConfigController = new UserConfigController(ModContext.ModName);
+            if (References.IsServer)
+            {
+                // Route settings and mediator log output up to the session-level log.
+                _userConfigController.OnWriteToLog += WriteGeneral;
+                _userConfigController.InitializeServer();
+                WriteGeneral(nameof(SuperEarlySetup), _userConfigController.DefaultSettings.PrintSettings().ToString());
+                _mediator.OnWriteToLog += WriteGeneral;
+                _mediator.AddSettings(_userConfigController);
+                MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
+            }
+            else
+            {
+                _userConfigController.InitializeClient();
+            }
         }
 
         private void OnEntityAdd(IMyEntity entity)
@@ -50,7 +67,7 @@ namespace HostileTakeover2.Thraxus
         {
             var grid = entity as MyCubeGrid;
             if (grid == null) return false;
-            WriteGeneral("OnEntityAdd", $"Grid: [{grid.EntityId:D18}] {grid.DisplayName}");
+            //WriteGeneral("OnEntityAdd", $"Grid: [{grid.EntityId:D18}] {grid.DisplayName}");
             CheckGrid(grid);
             return true;
         }
@@ -90,8 +107,7 @@ namespace HostileTakeover2.Thraxus
             }
             if (action != null)
                 _mediator.ActionQueue.Add(delay, action);
-            //action?.Invoke();
-            WriteGeneral(nameof(CheckGrid), $"Check Grid returned type of {type}, Action was null? {action == null} {action?.Method}");
+            //WriteGeneral(nameof(CheckGrid), $"Check Grid returned type of {type}, Action was null? {action == null} {action?.Method}");
         }
 
         protected override void UpdateBeforeSim()
