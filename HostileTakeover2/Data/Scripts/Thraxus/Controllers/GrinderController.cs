@@ -52,18 +52,18 @@ namespace HostileTakeover2.Thraxus.Controllers
             }
         }
 
-        private Grid FilterToNearestGrid(Vector3D source)
+        private Construct FilterToNearestConstruct(Vector3D source)
         {
             double distance = double.MaxValue;
-            Grid closestGrid = null;
+            Construct closestConstruct = null;
             foreach (var entity in _reusableEntityList)
             {
                 // Resolve the topmost parent so that subgrids (rotor heads, piston heads)
                 // map to the Construct registered under the parent's EntityId.
                 var topMost = entity.GetTopMostParent() as MyCubeGrid;
-                Grid grid = _mediator.GridCollectionController.GetGrid(topMost?.EntityId ?? entity.EntityId);
+                Construct construct = _mediator.ConstructController.GetConstruct(topMost?.EntityId ?? entity.EntityId);
                 // Skip untracked entities and non-NPC grids.
-                if (grid == null || grid.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
+                if (construct == null || construct.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
 
                 // Transform source into the grid's local space, clamp to the local AABB
                 // (grid-axis-aligned, so it hugs the actual block geometry), then bring
@@ -76,12 +76,12 @@ namespace HostileTakeover2.Thraxus.Controllers
                 double abs = (nearestWorld - source).LengthSquared();
 
                 if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Grinder))
-                    WriteGeneral(DebugType.Grinder, nameof(FilterToNearestGrid), $"Validating possible grid as target: [{(abs > distance).ToSingleChar()}] [{abs:##.###}] [{distance:E3}] [{grid.EntityId:D18}]");
+                    WriteGeneral(DebugType.Grinder, nameof(FilterToNearestConstruct), $"Validating possible grid as target: [{(abs > distance).ToSingleChar()}] [{abs:##.###}] [{distance:E3}] [{construct.EntityId:D18}]");
                 if (abs > distance) continue;
                 distance = abs;
-                closestGrid = grid;
+                closestConstruct = construct;
             }
-            return closestGrid;
+            return closestConstruct;
         }
 
         //public Grid FilterToNearestGrid(Vector3D source)
@@ -106,23 +106,22 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             if (grinder.OwnerIdentityId == 0) return;
             GrabAllNearbyGrids(grinder.GetPosition());
-            var grid = FilterToNearestGrid(grinder.GetPosition());
-            if (grid == null)
+            var construct = FilterToNearestConstruct(grinder.GetPosition());
+            if (construct == null)
             {
                 WriteGeneral(nameof(RunGrinderLogic), $"No NPC grid found near grinder [{grinder.EntityId:D18}]");
                 return;
             }
-            WriteGeneral(nameof(RunGrinderLogic), $"Found: [{grid.EntityId:D18}]");
+            WriteGeneral(nameof(RunGrinderLogic), $"Found: [{construct.EntityId:D18}]");
             if (_mediator.DefaultSettings.HighlightAllGridsInRange.Current)
                 TriggerHighlightsForAllNearbyNpcGrids(grinder.OwnerIdentityId);
             else
-                grid.TriggerHighlights(grinder.OwnerIdentityId);
+                construct.TriggerHighlights(grinder.OwnerIdentityId);
 
-            //if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
             if (_mediator.DefaultSettings.IsDebugActive)
             {
                 long playerId = grinder.OwnerIdentityId;
-                DebugVisualizeDetection(grinder.GetPosition(), playerId, grid.EntityId);
+                DebugVisualizeDetection(grinder.GetPosition(), playerId, construct.EntityId);
                 long capturedPlayerId = playerId;
                 grinder.OnMarkForClose += entity => ClearDebugMarkersForPlayer(capturedPlayerId);
             }
@@ -152,9 +151,9 @@ namespace HostileTakeover2.Thraxus.Controllers
             foreach (var entity in _reusableEntityList)
             {
                 var topMost = entity.GetTopMostParent() as MyCubeGrid;
-                Grid npcGrid = _mediator.GridCollectionController.GetGrid(topMost?.EntityId ?? entity.EntityId);
-                if (npcGrid == null || npcGrid.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
-                npcGrid.TriggerHighlights(grinderOwnerIdentityId);
+                Construct npcConstruct = _mediator.ConstructController.GetConstruct(topMost?.EntityId ?? entity.EntityId);
+                if (npcConstruct == null || npcConstruct.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
+                npcConstruct.TriggerHighlights(grinderOwnerIdentityId);
             }
         }
 
@@ -219,10 +218,10 @@ namespace HostileTakeover2.Thraxus.Controllers
             foreach (var entity in _reusableEntityList)
             {
                 var topMost = entity.GetTopMostParent() as MyCubeGrid;
-                var trackedGrid = _mediator.GridCollectionController.GetGrid(topMost?.EntityId ?? entity.EntityId);
-                bool isNpc = trackedGrid != null &&
-                             trackedGrid.GridOwnershipController.OwnershipType == OwnershipType.Npc;
-                string tag = isNpc ? "NPC" : (trackedGrid != null ? "TRK" : "UNK");
+                var trackedConstruct = _mediator.ConstructController.GetConstruct(topMost?.EntityId ?? entity.EntityId);
+                bool isNpc = trackedConstruct != null &&
+                             trackedConstruct.GridOwnershipController.OwnershipType == OwnershipType.Npc;
+                string tag = isNpc ? "NPC" : (trackedConstruct != null ? "TRK" : "UNK");
 
                 // Verbose-only: world AABB corners (8 per grid is too noisy at debug level).
                 if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Grinder))

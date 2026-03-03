@@ -111,8 +111,8 @@ namespace HostileTakeover2.Thraxus.Controllers
             int counter = 0;
             foreach (var myCubeGrid in gridList)
             {
-                Grid grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);
-                foreach (var kvp in grid.BlockTypeController.GetImportantBlockDictionary())
+                Construct construct = _mediator.ConstructController.GetConstruct(myCubeGrid.EntityId);
+                foreach (var kvp in construct.BlockTypeController.GetImportantBlockDictionary())
                 {
                     Block block = kvp.Value;
                     if (!block.IsFunctional || block.IsClosed || block.BlockType == BlockType.None)

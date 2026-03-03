@@ -100,7 +100,7 @@ namespace HostileTakeover2.Thraxus
                     break;
                 case GridValidationType.Valid:
                     delay = DefaultSettings.MinorTickDelay;
-                    action = () => GridFactory(grid);
+                    action = () => ConstructFactory(grid);
                     break;
                 case GridValidationType.VanillaTrade:
                     break;
@@ -124,12 +124,11 @@ namespace HostileTakeover2.Thraxus
             base.Unload();
         }
         
-        private void GridFactory(MyCubeGrid cubeGrid)
+        private void ConstructFactory(MyCubeGrid cubeGrid)
         {
-            //var grid = _mediator.GridPool.Get();
-            var grid = _mediator.GetGrid(cubeGrid.EntityId);
-            grid.Init(_mediator, cubeGrid);
-            WriteGeneral(nameof(GridFactory), $"Grid Factory Engaged.  Created Grid.");
+            var construct = _mediator.GetConstruct(cubeGrid.EntityId);
+            construct.Init(_mediator, cubeGrid);
+            WriteGeneral(nameof(ConstructFactory), $"Construct Factory Engaged.  Created Construct.");
         }
 
         private GridValidationType ValidateGrid(MyCubeGrid grid)

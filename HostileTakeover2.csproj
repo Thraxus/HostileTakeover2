@@ -197,7 +197,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestlogDetail.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestScreen.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Profiler.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridCollectionController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\ConstructController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridGroupCoordinationController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GrinderController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\DebugType.cs" />
@@ -208,7 +208,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Block.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\BlockTypeController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\BlockType.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Grid.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Construct.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\HighlightController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridOwnershipController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\OwnershipType.cs" />

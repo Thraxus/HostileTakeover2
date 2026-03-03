@@ -39,9 +39,9 @@ namespace HostileTakeover2.Thraxus.Controllers
 
             foreach (var myCubeGrid in gridList)
             {
-                Grid grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);
-                if (grid == null) continue;
-                AddToOwnershipDictionary(grid.CurrentOwnerId);
+                Construct construct = _mediator.ConstructController.GetConstruct(myCubeGrid.EntityId);
+                if (construct == null) continue;
+                AddToOwnershipDictionary(construct.CurrentOwnerId);
             }
             _mediator.ReturnReusableCubeGridList(gridList);
             return CalculateOwnerFromOwnershipDictionary();
@@ -77,8 +77,9 @@ namespace HostileTakeover2.Thraxus.Controllers
             var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
             foreach (var myCubeGrid in gridList)
             {
-                Grid grid = _mediator.GridCollectionController.GetGrid(myCubeGrid.EntityId);
-                grid.GridOwnershipController.SetOwnership(ownerId);
+                Construct construct = _mediator.ConstructController.GetConstruct(myCubeGrid.EntityId);
+                if (construct == null) continue;
+                construct.GridOwnershipController.SetOwnership(ownerId);
             }
             _mediator.ReturnReusableCubeGridList(gridList);
         }

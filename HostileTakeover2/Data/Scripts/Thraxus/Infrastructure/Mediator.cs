@@ -18,13 +18,13 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         private readonly HashSet<ICommon> _commons = new HashSet<ICommon>();
         public readonly ActionQueue ActionQueue = new ActionQueue();
 
-        private readonly ObjectPool<Grid> _gridPool = new ObjectPool<Grid>(() => new Grid());
+        private readonly ObjectPool<Construct> _constructPool = new ObjectPool<Construct>(() => new Construct());
         private readonly ObjectPool<Block> _blockPool = new ObjectPool<Block>(() => new Block());
         private readonly ObjectPool<HighlightSettings> _highlightSettingsPool = new ObjectPool<HighlightSettings>(() => new HighlightSettings());
         private readonly ObjectPool<ReusableCubeGridList<IMyCubeGrid>> _reusableMyCubeGridCollectionObjectPool =
             new ObjectPool<ReusableCubeGridList<IMyCubeGrid>>(() => new ReusableCubeGridList<IMyCubeGrid>());
 
-        public readonly GridCollectionController GridCollectionController = new GridCollectionController();
+        public readonly ConstructController ConstructController = new ConstructController();
         public readonly GridGroupCoordinationController GridGroupCoordinationController = new GridGroupCoordinationController();
         public readonly GrinderController GrinderController = new GrinderController();
         public readonly HighlightController HighlightController = new HighlightController();
@@ -35,7 +35,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         public Mediator()
         {
             RegisterCommonEvents(GridGroupCoordinationController);
-            RegisterCommonEvents(GridCollectionController);
+            RegisterCommonEvents(ConstructController);
             RegisterCommonEvents(GrinderController);
             RegisterCommonEvents(HighlightController);
             GridGroupCoordinationController.Init(this);
@@ -71,19 +71,19 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         #region The methods below can be deleted before release. They are for Debug only
 
-        public Grid GetGrid(long entityId)
+        public Construct GetConstruct(long entityId)
         {
-            Grid grid = _gridPool.Get();
-            WriteGeneral(nameof(Mediator), $"Get -- Lending a Grid [{entityId.ToEntityIdFormat()}] [{(grid == null).ToSingleChar()}] {_gridPool}");
-            grid.OnWriteToLog += WriteGeneral;
-            return grid;
+            Construct construct = _constructPool.Get();
+            WriteGeneral(nameof(Mediator), $"Get -- Lending a Construct [{entityId.ToEntityIdFormat()}] [{(construct == null).ToSingleChar()}] {_constructPool}");
+            construct.OnWriteToLog += WriteGeneral;
+            return construct;
         }
 
-        public void ReturnGrid(Grid grid, long entityId)
+        public void ReturnConstruct(Construct construct, long entityId)
         {
-            grid.OnWriteToLog -= WriteGeneral;
-            _gridPool.Return(grid);
-            WriteGeneral(nameof(Mediator), $"Return -- Returning a Grid [{entityId.ToEntityIdFormat()}] {_gridPool}");
+            construct.OnWriteToLog -= WriteGeneral;
+            _constructPool.Return(construct);
+            WriteGeneral(nameof(Mediator), $"Return -- Returning a Construct [{entityId.ToEntityIdFormat()}] {_constructPool}");
         }
 
         public Block GetBlock(long blockId)

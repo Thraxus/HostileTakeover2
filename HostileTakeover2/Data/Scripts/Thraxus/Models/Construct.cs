@@ -1,4 +1,4 @@
-﻿using HostileTakeover2.Thraxus.Common.BaseClasses;
+using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Controllers;
 using HostileTakeover2.Thraxus.Enums;
@@ -12,17 +12,8 @@ using VRage.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Models
 {
-    internal class Grid : BaseLoggingClass
+    internal class Construct : BaseLoggingClass
     {
-        /// <summary>
-        /// Systems required for different ownership types:
-        /// None / Player
-        /// - On ownership check, trigger Ignore Grid, which should set the following conditions
-        /// - Event for OnBlockOwnershipChanged (grid registration)
-        /// - BlockTypeController reset
-        /// NPC - All systems engaged
-        /// </summary>
-
         private MyCubeGrid _me;
         private IMyGridGroupData _myGridGroupData;
 
@@ -36,12 +27,12 @@ namespace HostileTakeover2.Thraxus.Models
         public void Init(Mediator mediator, MyCubeGrid grid)
         {
             SetLogPrefix(grid.EntityId.ToEntityIdFormat());
-            WriteGeneral(nameof(Init), $"Primary Initialization for Grid [{grid.EntityId:D18}] starting.");
+            WriteGeneral(nameof(Init), $"Primary Initialization for Construct [{grid.EntityId:D18}] starting.");
             IsClosed = false;
             _me = grid;
             _mediator = mediator;
             _me.OnMarkForClose += OnGridMarkedForClose;
-            WriteGeneral(nameof(Init), $"Primary Initialization for Grid [{_me.EntityId:D18}] complete.");
+            WriteGeneral(nameof(Init), $"Primary Initialization for Construct [{_me.EntityId:D18}] complete.");
             Init();
         }
 
@@ -52,8 +43,8 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void Init()
         {
-            WriteGeneral(nameof(Init), $"Secondary Initialization for Grid [{_me.EntityId:D18}] starting.");
-            _mediator.GridCollectionController.AddToGrids(_me.EntityId, this);
+            WriteGeneral(nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] starting.");
+            _mediator.ConstructController.Add(_me.EntityId, this);
             BlockTypeController.OnWriteToLog += WriteGeneral;
             BlockTypeController.Init(_mediator, GridOwnershipController);
             BlockTypeController.OnImportantBlocksEmpty += OnAllImportantBlocksGone;
@@ -63,7 +54,7 @@ namespace HostileTakeover2.Thraxus.Models
             GridOwnershipController.TakeOverGridAction += TakeOverGrid;
             GridOwnershipController.IgnoreGridAction += IgnoreGrid;
             SetupGridGroup();
-            WriteGeneral(nameof(Init), $"Secondary Initialization for Grid [{_me.EntityId:D18}] complete.");
+            WriteGeneral(nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] complete.");
         }
 
         private void SetupGridGroup()
@@ -132,7 +123,7 @@ namespace HostileTakeover2.Thraxus.Models
             {
                 if (newGridGroup == null)
                 {
-                    _mediator.ReturnGrid(this, _me.EntityId);
+                    _mediator.ReturnConstruct(this, _me.EntityId);
                     return;
                 }
                 SetGridGroupData();
@@ -227,18 +218,16 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void OnBlockAdded(MyCubeBlock block)
         {
-            // TODO need to check here for the connector being added from a player ship.  We shouldn't be taking that over.  At the same time, we don't want it connected either. 
+            // TODO need to check here for the connector being added from a player ship.  We shouldn't be taking that over.  At the same time, we don't want it connected either.
             // TODO perhaps add logic that looks for store blocks on the NPC grid and if none found (or the mating connector has trade disabled?) then just unlatch the connectors
             var connector = block as IMyShipConnector;
-            if (connector != null && connector.IsFunctional && connector.IsConnected) return; // maybe this works?  
+            if (connector != null && connector.IsFunctional && connector.IsConnected) return;
             if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
                 _mediator.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
         }
 
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
         {
-            // This only needs to trigger if the grid is not owned by a NPC.  
-            // The check only exists to see if we need to take over monitoring the grid or not.
             if (GridOwnershipController.OwnershipType != OwnershipType.Npc)
                 _mediator.GridGroupCoordinationController.InitializeOwnership(_myGridGroupData);
         }
@@ -251,7 +240,7 @@ namespace HostileTakeover2.Thraxus.Models
             DeRegisterEvents();
             GridOwnershipController.Reset();
             BlockTypeController.Reset();
-            _mediator.GridCollectionController.RemoveFromGrids(_me.EntityId);
+            _mediator.ConstructController.Remove(_me.EntityId);
             BlockTypeController.OnImportantBlocksEmpty -= OnAllImportantBlocksGone;
             BlockTypeController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.OnWriteToLog -= WriteGeneral;
@@ -260,17 +249,5 @@ namespace HostileTakeover2.Thraxus.Models
             GridOwnershipController.TakeOverGridAction -= TakeOverGrid;
             GridOwnershipController.IgnoreGridAction -= IgnoreGrid;
         }
-
-        //public override void Close()
-        //{
-        //    if (IsClosed) return;
-            
-        //    //base.Close();
-        //}
-
-        //public override void WriteGeneral(string caller, string message)
-        //{
-        //    base.WriteGeneral($"[{_me.EntityId.ToEntityIdFormat()}] {caller}", message);
-        //}
     }
 }
