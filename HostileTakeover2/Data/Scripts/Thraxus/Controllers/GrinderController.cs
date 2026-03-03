@@ -24,6 +24,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         }
 
         private readonly List<MyEntity> _reusableEntityList = new List<MyEntity>();
+        private readonly HashSet<IMyGridGroupData> _seenGroupData = new HashSet<IMyGridGroupData>();
 
         //private void GrabAllNearbyGrids(Vector3D center)
         //{
@@ -148,12 +149,16 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void TriggerHighlightsForAllNearbyNpcGrids(long grinderOwnerIdentityId)
         {
+            if (!_mediator.DefaultSettings.UseHighlights.Current) return;
+            _seenGroupData.Clear();
             foreach (var entity in _reusableEntityList)
             {
                 var topMost = entity.GetTopMostParent() as MyCubeGrid;
                 Construct npcConstruct = _mediator.ConstructController.GetConstruct(topMost?.EntityId ?? entity.EntityId);
                 if (npcConstruct == null || npcConstruct.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
-                npcConstruct.TriggerHighlights(grinderOwnerIdentityId);
+                var groupData = npcConstruct.GridGroupManager.GridGroupData;
+                if (groupData == null || !_seenGroupData.Add(groupData)) continue;
+                _mediator.HighlightController.EnableHighlights(groupData, grinderOwnerIdentityId);
             }
         }
 
