@@ -198,6 +198,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\OnScreenDisplay\QuestScreen.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Profiler.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\ConstructController.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridGroupManager.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GridGroupCoordinationController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GrinderController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\DebugType.cs" />
