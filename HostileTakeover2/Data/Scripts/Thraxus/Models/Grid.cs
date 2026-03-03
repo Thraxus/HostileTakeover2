@@ -56,6 +56,7 @@ namespace HostileTakeover2.Thraxus.Models
             _mediator.GridCollectionController.AddToGrids(_me.EntityId, this);
             BlockTypeController.OnWriteToLog += WriteGeneral;
             BlockTypeController.Init(_mediator, GridOwnershipController);
+            BlockTypeController.OnImportantBlocksEmpty += OnAllImportantBlocksGone;
             GridOwnershipController.OnWriteToLog += WriteGeneral;
             GridOwnershipController.SetOwnershipAction += SetOwnership;
             GridOwnershipController.DisownGridAction += DisownGrid;
@@ -147,11 +148,19 @@ namespace HostileTakeover2.Thraxus.Models
             BlockTypeController.AddGrid((MyCubeGrid)newGrid);
         }
 
+        private void OnAllImportantBlocksGone()
+        {
+            foreach (var fatBlock in _me.GetFatBlocks())
+                fatBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
+            DisownGrid();
+        }
+
         public void DisownGrid()
         {
             GridOwnershipController.Reset();
             BlockTypeController.Reset();
             SetOwnership();
+            SetEvents();
         }
 
         private void IgnoreGrid()
@@ -243,6 +252,7 @@ namespace HostileTakeover2.Thraxus.Models
             GridOwnershipController.Reset();
             BlockTypeController.Reset();
             _mediator.GridCollectionController.RemoveFromGrids(_me.EntityId);
+            BlockTypeController.OnImportantBlocksEmpty -= OnAllImportantBlocksGone;
             BlockTypeController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.SetOwnershipAction -= SetOwnership;

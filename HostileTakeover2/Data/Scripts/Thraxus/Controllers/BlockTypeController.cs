@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
@@ -16,6 +17,8 @@ namespace HostileTakeover2.Thraxus.Controllers
     {
         private readonly Dictionary<MyCubeBlock, Block> _importantBlocks =
             new Dictionary<MyCubeBlock, Block>();
+
+        public Action OnImportantBlocksEmpty;
 
         private Mediator _mediator;
         private GridOwnershipController _ownershipController;
@@ -73,6 +76,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             block.OnReset += OnResetBlock;
             block.OnClose += BlockOnClose;
+            block.BlockHasBeenDisableAction += OnBlockDisabled;
         }
 
         private void BlockOnClose(IClose block)
@@ -81,10 +85,22 @@ namespace HostileTakeover2.Thraxus.Controllers
             OnResetBlock(_importantBlocks[((Block)block).MyCubeBlock]);
         }
 
+        private void OnBlockDisabled(Block block)
+        {
+            if (!_importantBlocks.ContainsKey(block.MyCubeBlock)) return;
+            long entityId = block.EntityId;
+            DeRegisterBlockEvents(block);
+            RemoveFromDictionary(block.MyCubeBlock);
+            _mediator.ActionQueue.Add(1, () => _mediator.ReturnBlock(block, entityId));
+            if (_importantBlocks.Count == 0)
+                OnImportantBlocksEmpty?.Invoke();
+        }
+
         private void DeRegisterBlockEvents(Block block)
         {
             block.OnReset -= OnResetBlock;
             block.OnClose -= BlockOnClose;
+            block.BlockHasBeenDisableAction -= OnBlockDisabled;
         }
 
         private void OnResetBlock(IReset block)
@@ -92,6 +108,8 @@ namespace HostileTakeover2.Thraxus.Controllers
             DeRegisterBlockEvents((Block)block);
             RemoveFromDictionary(((Block)block).MyCubeBlock);
             _mediator.ReturnBlock((Block)block, ((Block)block).EntityId);
+            if (_importantBlocks.Count == 0)
+                OnImportantBlocksEmpty?.Invoke();
         }
 
         private void ResetBlock(MyCubeBlock myCubeBlock)
