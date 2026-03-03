@@ -14,7 +14,6 @@ namespace HostileTakeover2.Thraxus.Controllers
 {
     internal class HighlightController : BaseLoggingClass
     {
-        //private readonly List<IMyCubeGrid> _reusableGridCollection = new List<IMyCubeGrid>();
         private readonly Dictionary<BlockType, HashSet<Block>> _reusableImportantBlocksDictionary =
             new Dictionary<BlockType, HashSet<Block>>
             {
@@ -36,7 +35,6 @@ namespace HostileTakeover2.Thraxus.Controllers
         private void HighlightBlock(Block block, BlockType type, long grinderOwnerIdentityId)
         {
             if (_currentHighlightedBlocks.ContainsKey(block)) return;
-            //HighlightSettings hls = _mediator.HighlightSettingsPool.Get();
             var hls = _mediator.GetHighlightSetting();
             hls.Name = block.Name;
             hls.Color = GetHighlightColor(type);
@@ -64,7 +62,6 @@ namespace HostileTakeover2.Thraxus.Controllers
             hls.Enabled = false;
             hls.LineThickness = _mediator.DefaultSettings.DisabledThickness;
             SetHighlight(hls);
-            //_mediator.HighlightSettingsPool.Return(hls);
             _mediator.ReturnHighlightSetting(hls);
         }
 
@@ -80,7 +77,6 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private static void SetHighlight(HighlightSettings settings)
         {
-            //MyVisualScriptLogicProvider.SetHighlight(settings.Name, settings.Enabled, settings.LineThickness, settings.PulseDuration, settings.Color, settings.PlayerId);
             MyVisualScriptLogicProvider.SetHighlight(settings.Name, settings.Enabled, settings.LineThickness, 0, settings.Color, settings.PlayerId);
         }
 
@@ -103,10 +99,8 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public void EnableHighlights(IMyGridGroupData myGridGroupData, long grinderOwnerIdentityId)
         {
-            //_reusableGridCollection.Clear();
             ClearReusableImportantBlockDictionary();
             WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {grinderOwnerIdentityId.ToEntityIdFormat()}");
-            //myGridGroupData.GetGrids(_reusableGridCollection);
             var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
             int counter = 0;
             foreach (var myCubeGrid in gridList)
