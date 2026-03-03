@@ -125,11 +125,17 @@ namespace HostileTakeover2.Thraxus.Models
         }
 
         private void OnGridRemoved(IMyGridGroupData thisGridGroup, IMyCubeGrid removedGrid, IMyGridGroupData newGridGroup)
-        { 
+        {
             WriteGeneral(nameof(OnGridRemoved), $"Grid was removed.  Resetting IMyGridGroupData for [{(_me.EntityId == removedGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{removedGrid.EntityId:D18}].");
             if (removedGrid == _me)
             {
-                _mediator.ReturnGrid(this, _me.EntityId);
+                if (newGridGroup == null)
+                {
+                    _mediator.ReturnGrid(this, _me.EntityId);
+                    return;
+                }
+                SetGridGroupData();
+                ReEvaluateOwnership();
                 return;
             }
             SetGridGroupData();
