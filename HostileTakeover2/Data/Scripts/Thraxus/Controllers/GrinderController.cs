@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Interfaces;
@@ -8,6 +9,7 @@ using HostileTakeover2.Thraxus.Models;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
+using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -77,6 +79,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             if (grinder.OwnerIdentityId == 0) return;
             GrabAllNearbyGrids(grinder.GetPosition());
+            DebugLogGridConnectivity();
             var construct = FilterToNearestConstruct(grinder.GetPosition());
             if (construct == null)
             {
@@ -230,6 +233,75 @@ namespace HostileTakeover2.Thraxus.Controllers
             gps.GPSColor = color;
             MyAPIGateway.Session.GPS.AddLocalGps(gps);
             markers.Add(gps);
+        }
+
+        // ── Grid connectivity experiment ──────────────────────────────────────────────
+        // Dumps GetGridGroup and GetConnectedGrids results for both GridLinkTypeEnum
+        // values across every entity in the detection sphere.  Runs once per grinder
+        // equip when DebugMode is active.
+
+        private readonly List<IMyCubeGrid> _debugGridList = new List<IMyCubeGrid>();
+
+        private void DebugLogGridConnectivity()
+        {
+            if (!_mediator.DefaultSettings.IsDebugActive) return;
+            WriteGeneral(nameof(DebugLogGridConnectivity), $"=== Grid Connectivity Dump | {_reusableEntityList.Count} entity/entities in sphere ===");
+            foreach (var entity in _reusableEntityList)
+            {
+                var grid = entity as MyCubeGrid;
+                if (grid == null) continue;
+                WriteGeneral(nameof(DebugLogGridConnectivity), $"  Grid [{grid.EntityId:D18}] '{grid.DisplayName}':");
+
+                // GetGridGroup ─────────────────────────────────────────────────────────
+                var logicalGroup = grid.GetGridGroup(GridLinkTypeEnum.Logical);
+                _debugGridList.Clear();
+                logicalGroup?.GetGrids(_debugGridList);
+                WriteGeneral(nameof(DebugLogGridConnectivity),
+                    $"    GetGridGroup(Logical):         {(logicalGroup == null ? "NULL" : FormatGridList(_debugGridList))}");
+
+                var ncdGroup = grid.GetGridGroup(GridLinkTypeEnum.NoContactDamage);
+                _debugGridList.Clear();
+                ncdGroup?.GetGrids(_debugGridList);
+                WriteGeneral(nameof(DebugLogGridConnectivity),
+                    $"    GetGridGroup(NCD):             {(ncdGroup == null ? "NULL" : FormatGridList(_debugGridList))}");
+
+                // GetConnectedGrids ────────────────────────────────────────────────────
+                var logicalConnected = grid.GetConnectedGrids(GridLinkTypeEnum.Logical);
+                WriteGeneral(nameof(DebugLogGridConnectivity),
+                    $"    GetConnectedGrids(Logical):    {FormatConnectedGrids(logicalConnected)}");
+
+                var ncdConnected = grid.GetConnectedGrids(GridLinkTypeEnum.NoContactDamage);
+                WriteGeneral(nameof(DebugLogGridConnectivity),
+                    $"    GetConnectedGrids(NCD):        {FormatConnectedGrids(ncdConnected)}");
+            }
+            WriteGeneral(nameof(DebugLogGridConnectivity), $"=== End Grid Connectivity Dump ===");
+        }
+
+        private static string FormatGridList(List<IMyCubeGrid> grids)
+        {
+            if (grids.Count == 0) return "0 grids";
+            var sb = new StringBuilder();
+            sb.Append(grids.Count).Append(" grid(s): ");
+            for (int i = 0; i < grids.Count; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append(grids[i].EntityId.ToEntityIdFormat());
+            }
+            return sb.ToString();
+        }
+
+        private static string FormatConnectedGrids(IEnumerable<MyCubeGrid> grids)
+        {
+            if (grids == null) return "NULL";
+            var sb = new StringBuilder();
+            int count = 0;
+            foreach (var g in grids)
+            {
+                if (count > 0) sb.Append(", ");
+                sb.Append(g.EntityId.ToEntityIdFormat());
+                count++;
+            }
+            return count == 0 ? "0 grids" : $"{count} grid(s): {sb}";
         }
     }
 }
