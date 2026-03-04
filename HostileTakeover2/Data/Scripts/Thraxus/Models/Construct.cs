@@ -176,6 +176,7 @@ namespace HostileTakeover2.Thraxus.Models
                     return;
                 }
                 GridGroupManager.Refresh();
+                WriteGeneral(nameof(OnGridRemoved), $"Group refreshed. ImportantBlockCount: [{BlockController.GetImportantBlockCount()}] BlockControllerClosed: [{BlockController.IsClosed.ToSingleChar()}]");
             }
             catch (Exception e) { WriteGeneral(nameof(OnGridRemoved), $"Exception: {e}"); }
         }
@@ -194,6 +195,7 @@ namespace HostileTakeover2.Thraxus.Models
             try
             {
                 var groupData = GridGroupManager.GridGroupData;
+                WriteGeneral(nameof(OnAllImportantBlocksGone), $"Fired for [{_me.EntityId:D18}]. GroupData null: [{(groupData == null).ToSingleChar()}]");
                 if (groupData == null)
                 {
                     _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
@@ -206,12 +208,15 @@ namespace HostileTakeover2.Thraxus.Models
                 foreach (var grid in gridList)
                 {
                     Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                    if (construct != null && construct.BlockController.GetImportantBlockCount() > 0)
+                    int blockCount = construct != null ? construct.BlockController.GetImportantBlockCount() : -1;
+                    WriteGeneral(nameof(OnAllImportantBlocksGone), $"  Grid [{grid.EntityId:D18}] construct: [{(construct != null).ToSingleChar()}] blocks: [{blockCount}]");
+                    if (construct != null && blockCount > 0)
                     {
                         anyHasBlocks = true;
                         break;
                     }
                 }
+                WriteGeneral(nameof(OnAllImportantBlocksGone), $"Group scan complete. GroupSize: [{gridList.Count}] anyHasBlocks: [{anyHasBlocks.ToSingleChar()}]");
 
                 if (!anyHasBlocks)
                 {

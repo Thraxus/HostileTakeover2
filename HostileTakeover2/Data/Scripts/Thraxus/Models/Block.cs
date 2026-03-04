@@ -4,6 +4,7 @@ using HostileTakeover2.Thraxus.Controllers;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using VRage.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Models
 {
@@ -26,15 +27,18 @@ namespace HostileTakeover2.Thraxus.Models
             RegisterEvents();
         }
 
+        private void OnCubeBlockClose(IMyEntity entity) => Close();
+
         private void RegisterEvents()
         {
-            MyCubeBlock.OnClose += block => Close();
+            MyCubeBlock.OnClose += OnCubeBlockClose;
             MyCubeBlock.IsWorkingChanged += BlockOnWorkingChanged;
             ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged += BlockOnOwnershipChanged;
         }
 
         private void DeRegisterEvents()
         {
+            MyCubeBlock.OnClose -= OnCubeBlockClose;
             MyCubeBlock.IsWorkingChanged -= BlockOnWorkingChanged;
             ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged -= BlockOnOwnershipChanged;
         }

@@ -8,7 +8,11 @@ namespace HostileTakeover2.Thraxus.Controllers
     {
         private readonly Dictionary<long, Construct> _constructs = new Dictionary<long, Construct>();
 
-        public Construct GetConstruct(long entityId) => !_constructs.ContainsKey(entityId) ? null : _constructs[entityId];
+        public Construct GetConstruct(long entityId)
+        {
+            Construct c;
+            return _constructs.TryGetValue(entityId, out c) ? c : null;
+        }
 
         public void Add(long entityId, Construct construct)
         {

@@ -94,7 +94,10 @@ namespace HostileTakeover2.Thraxus.Controllers
             RemoveFromDictionary(block.MyCubeBlock);
             _mediator.ActionQueue.Add(1, () => _mediator.ReturnBlock(block, entityId));
             if (_importantBlocks.Count == 0)
+            {
+                WriteGeneral(nameof(OnBlockDisabled), $"Important block count reached zero — firing OnImportantBlocksEmpty.");
                 OnImportantBlocksEmpty?.Invoke();
+            }
         }
 
         private void DeRegisterBlockEvents(Block block)

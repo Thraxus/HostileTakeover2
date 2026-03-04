@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Collections;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Generics;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Controllers;
@@ -66,12 +65,9 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             base.Close();
         }
 
-        #region The methods below can be deleted before release. They are for Debug only
-
         public Construct GetConstruct(long entityId)
         {
             Construct construct = _constructPool.Get();
-            WriteGeneral(nameof(Mediator), $"Get -- Lending a Construct [{entityId.ToEntityIdFormat()}] [{(construct == null).ToSingleChar()}] {_constructPool}");
             construct.OnWriteToLog += WriteGeneral;
             return construct;
         }
@@ -80,13 +76,11 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         {
             construct.OnWriteToLog -= WriteGeneral;
             _constructPool.Return(construct);
-            WriteGeneral(nameof(Mediator), $"Return -- Returning a Construct [{entityId.ToEntityIdFormat()}] {_constructPool}");
         }
 
         public Block GetBlock(long blockId)
         {
             Block block = _blockPool.Get();
-            WriteGeneral(nameof(Mediator), $"Get -- Lending a Block [{blockId.ToEntityIdFormat()}] [{(block == null).ToSingleChar()}] {_blockPool}");
             block.OnWriteToLog += WriteGeneral;
             return block;
         }
@@ -95,25 +89,20 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         {
             block.OnWriteToLog -= WriteGeneral;
             _blockPool.Return(block);
-            WriteGeneral(nameof(Mediator), $"Return -- Returning a Block [{blockId.ToEntityIdFormat()}] {_blockPool}");
         }
 
         public HighlightSettings GetHighlightSetting()
         {
-            HighlightSettings highlightSettings = _highlightSettingsPool.Get();
-            WriteGeneral(nameof(Mediator), $"Get -- Lending a HighlightSetting [{(highlightSettings == null).ToSingleChar()}] {_highlightSettingsPool}");
-            return highlightSettings;
+            return _highlightSettingsPool.Get();
         }
 
         public void ReturnHighlightSetting(HighlightSettings highlightSettings)
         {
             _highlightSettingsPool.Return(highlightSettings);
-            WriteGeneral(nameof(Mediator), $"Return -- Returning a HighlightSetting {_highlightSettingsPool}");
         }
 
         public ReusableCubeGridList<IMyCubeGrid> GetReusableCubeGridList(IMyGridGroupData myGridGroupData)
         {
-            WriteGeneral(nameof(Mediator), $"Get -- Lending a ReusableCubeGridList {_reusableMyCubeGridCollectionObjectPool}");
             var list = _reusableMyCubeGridCollectionObjectPool.Get();
             myGridGroupData.GetGrids(list);
             return list;
@@ -121,10 +110,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public void ReturnReusableCubeGridList(ReusableCubeGridList<IMyCubeGrid> list)
         {
-            WriteGeneral(nameof(Mediator), $"Return -- Returning a ReusableCubeGridList {_reusableMyCubeGridCollectionObjectPool}");
             _reusableMyCubeGridCollectionObjectPool.Return(list);
         }
-
-        #endregion
     }
 }
