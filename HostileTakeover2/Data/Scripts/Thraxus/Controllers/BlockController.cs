@@ -52,6 +52,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             {
                 var blockType = AssignBlock(myCubeBlock);
                 if (blockType == BlockType.None) return;
+                if (!myCubeBlock.IsFunctional) return;
                 if (_importantBlocks.ContainsKey(myCubeBlock)) return;
                 IsClosed = false;
                 Block block = _mediator.GetBlock(myCubeBlock.EntityId);

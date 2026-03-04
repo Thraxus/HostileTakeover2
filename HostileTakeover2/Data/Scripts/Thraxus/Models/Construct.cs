@@ -143,8 +143,10 @@ namespace HostileTakeover2.Thraxus.Models
             WriteGeneral(nameof(OnGridRemoved), $"Grid was removed.  Resetting IMyGridGroupData for [{(_me.EntityId == removedGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{removedGrid.EntityId:D18}].");
             if (removedGrid == _me)
             {
+                WriteGeneral(nameof(OnGridRemoved), $"This construct's grid was the removed grid. NewGridGroup null: [{(newGridGroup == null).ToSingleChar()}]");
                 if (newGridGroup == null)
                 {
+                    WriteGeneral(nameof(OnGridRemoved), $"No new grid group — returning construct to pool: [{_me.EntityId:D18}]");
                     _mediator.ReturnConstruct(this, _me.EntityId);
                     return;
                 }
