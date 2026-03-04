@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
@@ -40,7 +41,8 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void OnGridMarkedForClose(IMyEntity entity)
         {
-            Close();
+            try { Close(); }
+            catch (Exception e) { WriteGeneral(nameof(OnGridMarkedForClose), $"Exception: {e}"); }
         }
 
         private void Init()
@@ -135,74 +137,94 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void OnGridSplit(MyCubeGrid oldGrid, MyCubeGrid newGrid)
         {
-            WriteGeneral(nameof(OnGridSplit), $"Grid Split -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
-            BlockController.RemoveOldBlocks(newGrid);
-            ReEvaluateOwnership();
+            try
+            {
+                WriteGeneral(nameof(OnGridSplit), $"Grid Split -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
+                BlockController.RemoveOldBlocks(newGrid);
+                ReEvaluateOwnership();
+            }
+            catch (Exception e) { WriteGeneral(nameof(OnGridSplit), $"Exception: {e}"); }
         }
 
         private void OnGridMerge(MyCubeGrid newGrid, MyCubeGrid oldGrid)
         {
-            WriteGeneral(nameof(OnGridMerge), $"Grid Merge -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
-            BlockController.AddGrid(oldGrid);
-            GridGroupManager.Refresh();
+            try
+            {
+                WriteGeneral(nameof(OnGridMerge), $"Grid Merge -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
+                BlockController.AddGrid(oldGrid);
+                GridGroupManager.Refresh();
+            }
+            catch (Exception e) { WriteGeneral(nameof(OnGridMerge), $"Exception: {e}"); }
         }
 
         private void OnGridRemoved(IMyCubeGrid removedGrid, IMyGridGroupData newGridGroup)
         {
-            WriteGeneral(nameof(OnGridRemoved), $"Grid was removed.  Resetting IMyGridGroupData for [{(_me.EntityId == removedGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{removedGrid.EntityId:D18}].");
-            if (removedGrid == _me)
+            try
             {
-                WriteGeneral(nameof(OnGridRemoved), $"This construct's grid was the removed grid. NewGridGroup null: [{(newGridGroup == null).ToSingleChar()}]");
-                if (newGridGroup == null)
+                WriteGeneral(nameof(OnGridRemoved), $"Grid was removed.  Resetting IMyGridGroupData for [{(_me.EntityId == removedGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{removedGrid.EntityId:D18}].");
+                if (removedGrid == _me)
                 {
-                    WriteGeneral(nameof(OnGridRemoved), $"No new grid group — returning construct to pool: [{_me.EntityId:D18}]");
-                    _mediator.ReturnConstruct(this, _me.EntityId);
+                    WriteGeneral(nameof(OnGridRemoved), $"This construct's grid was the removed grid. NewGridGroup null: [{(newGridGroup == null).ToSingleChar()}]");
+                    if (newGridGroup == null)
+                    {
+                        WriteGeneral(nameof(OnGridRemoved), $"No new grid group — returning construct to pool: [{_me.EntityId:D18}]");
+                        _mediator.ReturnConstruct(this, _me.EntityId);
+                        return;
+                    }
+                    GridGroupManager.Refresh(newGridGroup);
+                    ReEvaluateOwnership();
                     return;
                 }
-                GridGroupManager.Refresh(newGridGroup);
-                ReEvaluateOwnership();
-                return;
+                GridGroupManager.Refresh();
             }
-            GridGroupManager.Refresh();
+            catch (Exception e) { WriteGeneral(nameof(OnGridRemoved), $"Exception: {e}"); }
         }
 
         private void OnGridAdded(IMyCubeGrid newGrid)
         {
-            WriteGeneral(nameof(OnGridAdded), $"Grid was added.  Adding to IMyGridGroupData for [{(_me.EntityId == newGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{newGrid.EntityId:D18}].");
+            try
+            {
+                WriteGeneral(nameof(OnGridAdded), $"Grid was added.  Adding to IMyGridGroupData for [{(_me.EntityId == newGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{newGrid.EntityId:D18}].");
+            }
+            catch (Exception e) { WriteGeneral(nameof(OnGridAdded), $"Exception: {e}"); }
         }
 
         private void OnAllImportantBlocksGone()
         {
-            var groupData = GridGroupManager.GridGroupData;
-            if (groupData == null)
+            try
             {
-                _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
-                DisownGrid();
-                return;
-            }
-
-            var gridList = _mediator.GetReusableCubeGridList(groupData);
-            bool anyHasBlocks = false;
-            foreach (var grid in gridList)
-            {
-                Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                if (construct != null && construct.BlockController.GetImportantBlockCount() > 0)
+                var groupData = GridGroupManager.GridGroupData;
+                if (groupData == null)
                 {
-                    anyHasBlocks = true;
-                    break;
+                    _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
+                    DisownGrid();
+                    return;
                 }
-            }
 
-            if (!anyHasBlocks)
-            {
+                var gridList = _mediator.GetReusableCubeGridList(groupData);
+                bool anyHasBlocks = false;
                 foreach (var grid in gridList)
                 {
-                    ((MyCubeGrid)grid).ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
                     Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                    construct?.DisownGrid();
+                    if (construct != null && construct.BlockController.GetImportantBlockCount() > 0)
+                    {
+                        anyHasBlocks = true;
+                        break;
+                    }
                 }
+
+                if (!anyHasBlocks)
+                {
+                    foreach (var grid in gridList)
+                    {
+                        ((MyCubeGrid)grid).ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
+                        Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                        construct?.DisownGrid();
+                    }
+                }
+                _mediator.ReturnReusableCubeGridList(gridList);
             }
-            _mediator.ReturnReusableCubeGridList(gridList);
+            catch (Exception e) { WriteGeneral(nameof(OnAllImportantBlocksGone), $"Exception: {e}"); }
         }
 
         public void DisownGrid()
@@ -286,28 +308,38 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void OnBlockAdded(MyCubeBlock block)
         {
-            // TODO need to check here for the connector being added from a player ship.  We shouldn't be taking that over.  At the same time, we don't want it connected either.
-            // TODO perhaps add logic that looks for store blocks on the NPC grid and if none found (or the mating connector has trade disabled?) then just unlatch the connectors
-            var connector = block as IMyShipConnector;
-            if (connector != null && connector.IsFunctional && connector.IsConnected) return;
-            if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
-                _mediator.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
+            try
+            {
+                var connector = block as IMyShipConnector;
+                if (connector != null && connector.IsFunctional && connector.IsConnected) return;
+                if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
+                    _mediator.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
+            }
+            catch (Exception e) { WriteGeneral(nameof(OnBlockAdded), $"Exception: {e}"); }
         }
 
         private void ReclaimHackedBlocks(MyCubeGrid grid)
         {
-            foreach (var fatBlock in _me.GetFatBlocks())
+            try
             {
-                long expected = fatBlock.IsFunctional ? GridOwnershipController.RightfulOwner : 0;
-                if (fatBlock.OwnerId != expected)
-                    fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.None);
+                foreach (var fatBlock in _me.GetFatBlocks())
+                {
+                    long expected = fatBlock.IsFunctional ? GridOwnershipController.RightfulOwner : 0;
+                    if (fatBlock.OwnerId != expected)
+                        fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.None);
+                }
             }
+            catch (Exception e) { WriteGeneral(nameof(ReclaimHackedBlocks), $"Exception: {e}"); }
         }
 
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
         {
-            if (GridOwnershipController.OwnershipType != OwnershipType.Npc && GridGroupManager.GridGroupData != null)
-                EvaluateOwnership();
+            try
+            {
+                if (GridOwnershipController.OwnershipType != OwnershipType.Npc && GridGroupManager.GridGroupData != null)
+                    EvaluateOwnership();
+            }
+            catch (Exception e) { WriteGeneral(nameof(OnBlockOwnershipChanged), $"Exception: {e}"); }
         }
 
         public override void Reset()
