@@ -25,9 +25,14 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public void Refresh()
         {
+            Refresh(_me.GetGridGroup(GridLinkTypeEnum.Logical));
+        }
+
+        public void Refresh(IMyGridGroupData newGroup)
+        {
             WriteGeneral(nameof(Refresh), $"Refreshing grid group data for [{_me.EntityId.ToEntityIdFormat()}].");
             if (_gridGroupData != null) DeRegister();
-            _gridGroupData = _me.GetGridGroup(GridLinkTypeEnum.Logical);
+            _gridGroupData = newGroup;
             if (_gridGroupData == null)
             {
                 WriteGeneral(nameof(Refresh), $"Grid group data was null for [{_me.EntityId.ToEntityIdFormat()}].");

@@ -150,7 +150,7 @@ namespace HostileTakeover2.Thraxus.Models
                     _mediator.ReturnConstruct(this, _me.EntityId);
                     return;
                 }
-                GridGroupManager.Refresh();
+                GridGroupManager.Refresh(newGridGroup);
                 ReEvaluateOwnership();
                 return;
             }
