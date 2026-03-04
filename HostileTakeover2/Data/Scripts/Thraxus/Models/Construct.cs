@@ -215,6 +215,8 @@ namespace HostileTakeover2.Thraxus.Models
         {
             WriteGeneral(nameof(TakeOverGrid), $"Attempting to take over grid: [{(GridOwnershipController.OwnershipType == OwnershipType.Npc).ToSingleChar()}] [{(!BlockController.IsClosed).ToSingleChar()}]");
             if (GridOwnershipController.OwnershipType != OwnershipType.Npc || BlockController.IsClosed) return;
+            GridOwnershipController.SetOwnershipAction -= SetOwnership;
+            GridOwnershipController.SetOwnershipAction += SetOwnership;
             SetOwnership();
             SetEvents();
         }
@@ -234,6 +236,7 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void SetOwnership(MyCubeBlock block)
         {
+            if (_mediator.DefaultSettings.AllowPlayerHacking.Current) return;
             block.ChangeOwner(block.IsFunctional ? GridOwnershipController.RightfulOwner : 0, MyOwnershipShareModeEnum.None);
         }
 
@@ -254,7 +257,11 @@ namespace HostileTakeover2.Thraxus.Models
         {
             WriteGeneral(nameof(RegisterEvents), $"Registering Events for OwnershipType {GridOwnershipController.OwnershipType}");
             if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
+            {
                 _me.OnFatBlockAdded += OnBlockAdded;
+                if (!_mediator.DefaultSettings.AllowPlayerHacking.Current)
+                    _me.OnBlockOwnershipChanged += ReclaimHackedBlocks;
+            }
             else _me.OnBlockOwnershipChanged += OnBlockOwnershipChanged;
 
             _me.OnGridSplit += OnGridSplit;
@@ -265,6 +272,7 @@ namespace HostileTakeover2.Thraxus.Models
         {
             _me.OnFatBlockAdded -= OnBlockAdded;
             _me.OnBlockOwnershipChanged -= OnBlockOwnershipChanged;
+            _me.OnBlockOwnershipChanged -= ReclaimHackedBlocks;
             _me.OnGridSplit -= OnGridSplit;
             _me.OnGridMerge -= OnGridMerge;
         }
@@ -277,6 +285,16 @@ namespace HostileTakeover2.Thraxus.Models
             if (connector != null && connector.IsFunctional && connector.IsConnected) return;
             if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
                 _mediator.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
+        }
+
+        private void ReclaimHackedBlocks(MyCubeGrid grid)
+        {
+            foreach (var fatBlock in _me.GetFatBlocks())
+            {
+                long expected = fatBlock.IsFunctional ? GridOwnershipController.RightfulOwner : 0;
+                if (fatBlock.OwnerId != expected)
+                    fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.None);
+            }
         }
 
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
