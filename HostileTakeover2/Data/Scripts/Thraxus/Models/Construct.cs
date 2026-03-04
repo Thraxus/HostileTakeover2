@@ -71,7 +71,7 @@ namespace HostileTakeover2.Thraxus.Models
             _mediator.ActionQueue.Add(180, ReEvaluateOwnership);
         }
 
-        private void ReEvaluateOwnership()
+        public void ReEvaluateOwnership()
         {
             if (GridGroupManager.GridGroupData == null) return;
             long ownerId = CalculateGroupOwnerId(GridGroupManager.GridGroupData);
@@ -106,6 +106,12 @@ namespace HostileTakeover2.Thraxus.Models
                 }
             }
             _mediator.ReturnReusableCubeGridList(gridList);
+            // DIAG: log tally contents to diagnose load-time ownership detection
+            if (_ownershipTally.Count == 0)
+                WriteGeneral(nameof(CalculateGroupOwnerId), "DIAG tally EMPTY (no fat blocks, or all filtered)");
+            else
+                foreach (var kvp in _ownershipTally)
+                    WriteGeneral(nameof(CalculateGroupOwnerId), $"DIAG tally id=[{kvp.Key:D18}] TryGetSteamId=[{MyAPIGateway.Players.TryGetSteamId(kvp.Key):D18}] count=[{kvp.Value:D4}]");
             long ownerId = 0;
             int count = 0;
             foreach (var kvp in _ownershipTally)
