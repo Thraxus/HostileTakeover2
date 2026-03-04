@@ -77,7 +77,6 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             if (grinder.OwnerIdentityId == 0) return;
             GrabAllNearbyGrids(grinder.GetPosition());
-            ReEvaluateNearbyConstructs();
             var construct = FilterToNearestConstruct(grinder.GetPosition());
             if (construct == null)
             {
@@ -112,20 +111,6 @@ namespace HostileTakeover2.Thraxus.Controllers
                 var groupData = npcConstruct.GridGroupManager.GridGroupData;
                 if (groupData == null || !_seenGroupData.Add(groupData)) continue;
                 _mediator.HighlightController.EnableHighlights(groupData, grinderOwnerIdentityId);
-            }
-        }
-
-        private void ReEvaluateNearbyConstructs()
-        {
-            _seenGroupData.Clear();
-            foreach (var entity in _reusableEntityList)
-            {
-                var topMost = entity.GetTopMostParent() as MyCubeGrid;
-                var construct = _mediator.ConstructController.GetConstruct(topMost?.EntityId ?? entity.EntityId);
-                if (construct == null) continue;
-                var groupData = construct.GridGroupManager.GridGroupData;
-                if (groupData != null && !_seenGroupData.Add(groupData)) continue;
-                construct.ReEvaluateOwnership();
             }
         }
 

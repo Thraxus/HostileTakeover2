@@ -71,7 +71,7 @@ namespace HostileTakeover2.Thraxus.Models
             _mediator.ActionQueue.Add(180, ReEvaluateOwnership);
         }
 
-        public void ReEvaluateOwnership()
+        private void ReEvaluateOwnership()
         {
             if (GridGroupManager.GridGroupData == null) return;
             long ownerId = CalculateGroupOwnerId(GridGroupManager.GridGroupData);
