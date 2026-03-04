@@ -172,7 +172,10 @@ namespace HostileTakeover2.Thraxus.Models
                         return;
                     }
                     GridGroupManager.Refresh(newGridGroup);
-                    ReEvaluateOwnership();
+                    if (BlockController.GetImportantBlockCount() == 0 && !BlockController.IsClosed)
+                        OnAllImportantBlocksGone();
+                    else
+                        ReEvaluateOwnership();
                     return;
                 }
                 GridGroupManager.Refresh();
