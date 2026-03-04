@@ -219,7 +219,10 @@ namespace HostileTakeover2.Thraxus.Models
                 {
                     foreach (var grid in gridList)
                     {
-                        ((MyCubeGrid)grid).ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
+                        var cubeGrid = (MyCubeGrid)grid;
+                        if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0)
+                            continue;
+                        cubeGrid.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
                         Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                         construct?.DisownGrid();
                     }
