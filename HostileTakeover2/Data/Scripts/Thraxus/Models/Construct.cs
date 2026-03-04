@@ -83,6 +83,7 @@ namespace HostileTakeover2.Thraxus.Models
             if (GridGroupManager.GridGroupData == null) return;
             long ownerId = CalculateGroupOwnerId(GridGroupManager.GridGroupData);
             WriteGeneral(nameof(EvaluateOwnership), $"Grid group owner determined to be {ownerId:D18}");
+            if (GridOwnershipController.RightfulOwner == ownerId) return;
             SetGroupOwnership(GridGroupManager.GridGroupData, ownerId);
         }
 
@@ -92,13 +93,14 @@ namespace HostileTakeover2.Thraxus.Models
             var gridList = _mediator.GetReusableCubeGridList(groupData);
             foreach (var grid in gridList)
             {
-                Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                if (construct == null) continue;
-                long id = construct.CurrentOwnerId;
-                if (_ownershipTally.ContainsKey(id))
-                    _ownershipTally[id]++;
-                else
-                    _ownershipTally.Add(id, 1);
+                foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
+                {
+                    long id = fatBlock.OwnerId;
+                    if (_ownershipTally.ContainsKey(id))
+                        _ownershipTally[id]++;
+                    else
+                        _ownershipTally.Add(id, 1);
+                }
             }
             _mediator.ReturnReusableCubeGridList(gridList);
             long ownerId = 0;
