@@ -98,7 +98,7 @@ namespace HostileTakeover2.Thraxus.Models
                 foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
                 {
                     long id = fatBlock.OwnerId;
-                    if (id != 0 && MyAPIGateway.Players.TryGetSteamId(id) > 0) continue;
+                    if (id == 0 || MyAPIGateway.Players.TryGetSteamId(id) > 0) continue;
                     if (_ownershipTally.ContainsKey(id))
                         _ownershipTally[id]++;
                     else
@@ -106,12 +106,6 @@ namespace HostileTakeover2.Thraxus.Models
                 }
             }
             _mediator.ReturnReusableCubeGridList(gridList);
-            // DIAG: log tally contents to diagnose load-time ownership detection
-            if (_ownershipTally.Count == 0)
-                WriteGeneral(nameof(CalculateGroupOwnerId), "DIAG tally EMPTY (no fat blocks, or all filtered)");
-            else
-                foreach (var kvp in _ownershipTally)
-                    WriteGeneral(nameof(CalculateGroupOwnerId), $"DIAG tally id=[{kvp.Key:D18}] TryGetSteamId=[{MyAPIGateway.Players.TryGetSteamId(kvp.Key):D18}] count=[{kvp.Value:D4}]");
             long ownerId = 0;
             int count = 0;
             foreach (var kvp in _ownershipTally)
@@ -129,7 +123,10 @@ namespace HostileTakeover2.Thraxus.Models
             foreach (var grid in gridList)
             {
                 var cubeGrid = (MyCubeGrid)grid;
-                if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0) continue;
+                bool hasOwnerBlocks = false;
+                foreach (var fatBlock in cubeGrid.GetFatBlocks())
+                    if (fatBlock.OwnerId == ownerId) { hasOwnerBlocks = true; break; }
+                if (!hasOwnerBlocks) continue;
                 Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                 if (construct == null) continue;
                 construct.GridOwnershipController.SetOwnership(ownerId);
