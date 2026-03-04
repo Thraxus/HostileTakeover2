@@ -169,8 +169,7 @@ namespace HostileTakeover2.Thraxus.Models
             var groupData = GridGroupManager.GridGroupData;
             if (groupData == null)
             {
-                foreach (var fatBlock in _me.GetFatBlocks())
-                    fatBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
+                _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
                 DisownGrid();
                 return;
             }
@@ -191,8 +190,7 @@ namespace HostileTakeover2.Thraxus.Models
             {
                 foreach (var grid in gridList)
                 {
-                    foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
-                        fatBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
+                    ((MyCubeGrid)grid).ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
                     Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                     construct?.DisownGrid();
                 }
