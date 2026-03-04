@@ -67,6 +67,8 @@ namespace HostileTakeover2.Thraxus.Models
             if (IsClosed) return;
             GridGroupManager.Init(_me);
             EvaluateOwnership();
+            SetEvents();
+            _mediator.ActionQueue.Add(180, ReEvaluateOwnership);
         }
 
         private void ReEvaluateOwnership()
