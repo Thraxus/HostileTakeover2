@@ -23,6 +23,7 @@ namespace HostileTakeover2.Thraxus.Models
         public readonly BlockController BlockController = new BlockController();
         public readonly GridGroupManager GridGroupManager = new GridGroupManager();
         private readonly Dictionary<long, int> _ownershipTally = new Dictionary<long, int>();
+        private bool _ownershipChangePending;
 
         public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
         public long EntityId => _me?.EntityId ?? 0;
@@ -334,8 +335,14 @@ namespace HostileTakeover2.Thraxus.Models
         {
             try
             {
-                if (GridOwnershipController.OwnershipType != OwnershipType.Npc && GridGroupManager.GridGroupData != null)
+                if (GridOwnershipController.OwnershipType == OwnershipType.Npc || GridGroupManager.GridGroupData == null) return;
+                if (_ownershipChangePending) return;
+                _ownershipChangePending = true;
+                _mediator.ActionQueue.Add(DefaultSettings.OwnershipChangeDebounceDelay, () =>
+                {
+                    _ownershipChangePending = false;
                     EvaluateOwnership();
+                });
             }
             catch (Exception e) { WriteGeneral(nameof(OnBlockOwnershipChanged), $"Exception: {e}"); }
         }
@@ -344,6 +351,7 @@ namespace HostileTakeover2.Thraxus.Models
         {
             base.Reset();
             IsClosed = true;
+            _ownershipChangePending = false;
             _me.OnMarkForClose -= OnGridMarkedForClose;
             DeRegisterEvents();
             GridOwnershipController.Reset();

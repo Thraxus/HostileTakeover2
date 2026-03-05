@@ -111,6 +111,9 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         public const int MinorTickDelay = 2;
         /// <summary>Ticks between re-checks of temporarily-invalid grids (3 minutes at 60 tps).</summary>
         public const int RecheckGridInterval = Common.References.TicksPerMinute * 3;
+        /// <summary>Ticks to wait after the first ownership-change event before evaluating group ownership.
+        /// Batches rapid-fire OnBlockOwnershipChanged callbacks that arrive during a grind pass.</summary>
+        public const int OwnershipChangeDebounceDelay = 30;
 
         // ── Highlight visual constants ───────────────────────────────────────────────
         // These control the appearance of the block highlights shown to the grinder user.
