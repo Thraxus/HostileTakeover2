@@ -15,11 +15,11 @@ namespace HostileTakeover2.Thraxus.Utility.Research
                 foreach (var def in MyDefinitionManager.Static.GetAllDefinitions())
                 {
                     var cubeDef = def as MyCubeBlockDefinition;
-                    if (cubeDef == null) continue;
-                    string source = cubeDef.Context.IsBaseGame ? "Vanilla" : cubeDef.Context.ModName;
+                    if (cubeDef == null || !cubeDef.Public) continue;
+                    string source = cubeDef.Context?.ModName ?? "Vanilla";
                     log.WriteGeneral(
-                        cubeDef.Id.TypeId.ToString(),
-                        $"[{source}] [{cubeDef.CubeSize}] [{cubeDef.Id.SubtypeId.String}] [{cubeDef.DisplayNameText}]"
+                        cubeDef.GetType().Name,
+                        $"[{cubeDef.Id.TypeId}] [{cubeDef.Id.SubtypeId.String}] [{cubeDef.CubeSize}] [{source}] [{cubeDef.DisplayNameText}]"
                     );
                 }
             }
