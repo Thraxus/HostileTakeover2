@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Collections;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
+using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Common.Generics;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Controllers;
@@ -65,15 +66,19 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             base.Close();
         }
 
+        private bool IsPoolLoggingActive => UserConfigController != null && DefaultSettings.IsVerboseActiveFor(DebugType.Pool);
+
         public Construct GetConstruct(long entityId)
         {
             Construct construct = _constructPool.Get();
             construct.OnWriteToLog += WriteGeneral;
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(GetConstruct), $"Construct retrieved from pool for [{entityId:D18}]");
             return construct;
         }
 
         public void ReturnConstruct(Construct construct)
         {
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(ReturnConstruct), $"Construct returned to pool [{construct.EntityId:D18}]");
             construct.OnWriteToLog -= WriteGeneral;
             _constructPool.Return(construct);
         }
@@ -82,27 +87,32 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         {
             Block block = _blockPool.Get();
             block.OnWriteToLog += WriteGeneral;
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(GetBlock), $"Block retrieved from pool for [{blockId:D18}]");
             return block;
         }
 
         public void ReturnBlock(Block block)
         {
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(ReturnBlock), $"Block returned to pool [{block.EntityId:D18}]");
             block.OnWriteToLog -= WriteGeneral;
             _blockPool.Return(block);
         }
 
         public HighlightSettings GetHighlightSetting()
         {
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(GetHighlightSetting), "HighlightSettings retrieved from pool");
             return _highlightSettingsPool.Get();
         }
 
         public void ReturnHighlightSetting(HighlightSettings highlightSettings)
         {
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(ReturnHighlightSetting), "HighlightSettings returned to pool");
             _highlightSettingsPool.Return(highlightSettings);
         }
 
         public ReusableCubeGridList<IMyCubeGrid> GetReusableCubeGridList(IMyGridGroupData myGridGroupData)
         {
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(GetReusableCubeGridList), "ReusableCubeGridList retrieved from pool");
             var list = _reusableMyCubeGridCollectionObjectPool.Get();
             myGridGroupData.GetGrids(list);
             return list;
@@ -110,6 +120,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public void ReturnReusableCubeGridList(ReusableCubeGridList<IMyCubeGrid> list)
         {
+            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(ReturnReusableCubeGridList), "ReusableCubeGridList returned to pool");
             _reusableMyCubeGridCollectionObjectPool.Return(list);
         }
     }
