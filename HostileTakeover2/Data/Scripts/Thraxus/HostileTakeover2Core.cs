@@ -76,7 +76,7 @@ namespace HostileTakeover2.Thraxus
             var grinder = entity as IMyAngleGrinder;
             if (grinder == null) return false;
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
-                WriteGeneral(DebugType.Grinder, "OnEntityAdd", $"Grinder: [{grinder.EntityId:D18}]");
+                WriteGeneral(DebugType.Grinder, nameof(CheckForGrinder), $"Grinder: [{grinder.EntityId:D18}]");
             _mediator.GrinderController.RunGrinderLogic(grinder);
             return true;
         }
