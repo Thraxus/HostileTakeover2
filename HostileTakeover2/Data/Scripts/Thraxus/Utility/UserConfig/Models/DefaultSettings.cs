@@ -57,7 +57,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         /// <summary>Master toggle for the visual highlight system.</summary>
         public UserSetting<bool> UseHighlights = new UserSetting<bool>(false, true, true, true);
         /// <summary>When true, every NPC-owned grid in detection range is highlighted simultaneously.  When false, only the nearest NPC grid is highlighted.</summary>
-        public UserSetting<bool> HighlightAllGridsInRange = new UserSetting<bool>(false, true, false, false);
+        public UserSetting<bool> HighlightAllGridsInRange = new UserSetting<bool>(false, true, true, true);
         /// <summary>Whether weapon blocks (turrets, modded weapons) are included in the highlight group.</summary>
         public UserSetting<bool> UseWeaponGroup = new UserSetting<bool>(false, true, true, true);
         /// <summary>Whether medical / cryo / survival-kit blocks are included in the highlight group.</summary>
