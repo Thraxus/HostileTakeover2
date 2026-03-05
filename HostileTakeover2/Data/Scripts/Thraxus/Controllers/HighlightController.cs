@@ -56,17 +56,21 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void RemoveFromHighlightedBlocks(Block block)
         {
-            WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Attempting to remove a block: [{(_currentHighlightedBlocks.ContainsKey(block)).ToSingleChar()}] {block.EntityId.ToEntityIdFormat()}");
-            if (!_currentHighlightedBlocks.ContainsKey(block)) return;
-            HighlightSettings hls = _currentHighlightedBlocks[block];
-            _currentHighlightedBlocks.Remove(block);
-            block.OnClose -= RemoveFromHighlightedBlocks;
-            block.OnReset -= RemoveFromHighlightedBlocks;
-            block.BlockHasBeenDisableAction -= RemoveFromHighlightedBlocks;
-            hls.Enabled = false;
-            hls.LineThickness = _mediator.DefaultSettings.DisabledThickness;
-            SetHighlight(hls);
-            _mediator.ReturnHighlightSetting(hls);
+            try
+            {
+                WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Attempting to remove a block: [{(_currentHighlightedBlocks.ContainsKey(block)).ToSingleChar()}] {block.EntityId.ToEntityIdFormat()}");
+                if (!_currentHighlightedBlocks.ContainsKey(block)) return;
+                HighlightSettings hls = _currentHighlightedBlocks[block];
+                _currentHighlightedBlocks.Remove(block);
+                block.OnClose -= RemoveFromHighlightedBlocks;
+                block.OnReset -= RemoveFromHighlightedBlocks;
+                block.BlockHasBeenDisableAction -= RemoveFromHighlightedBlocks;
+                hls.Enabled = false;
+                hls.LineThickness = _mediator.DefaultSettings.DisabledThickness;
+                SetHighlight(hls);
+                _mediator.ReturnHighlightSetting(hls);
+            }
+            catch (Exception e) { WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Exception: {e}"); }
         }
 
         private void RemoveFromHighlightedBlocks(IResetWithAction block)
