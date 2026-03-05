@@ -5,6 +5,7 @@ using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.ModAPI;
+using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Models
 {
@@ -27,7 +28,11 @@ namespace HostileTakeover2.Thraxus.Models
             RegisterEvents();
         }
 
-        private void OnCubeBlockClose(IMyEntity entity) => Close();
+        private void OnCubeBlockClose(IMyEntity entity)
+        {
+            try { Close(); }
+            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Block.{nameof(OnCubeBlockClose)}: Exception: {e}"); }
+        }
 
         private void RegisterEvents()
         {
@@ -45,14 +50,19 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void BlockOnOwnershipChanged(IMyTerminalBlock block)
         {
-            _gridOwnershipController.SetOwnership(MyCubeBlock);
+            try { _gridOwnershipController.SetOwnership(MyCubeBlock); }
+            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Block.{nameof(BlockOnOwnershipChanged)}: Exception: {e}"); }
         }
 
         private void BlockOnWorkingChanged(MyCubeBlock block)
         {
-            BlockOnOwnershipChanged((IMyTerminalBlock)block);
-            if (!block.IsFunctional)
-                BlockHasBeenDisable();
+            try
+            {
+                BlockOnOwnershipChanged((IMyTerminalBlock)block);
+                if (!block.IsFunctional)
+                    BlockHasBeenDisable();
+            }
+            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Block.{nameof(BlockOnWorkingChanged)}: Exception: {e}"); }
         }
 
         private void BlockHasBeenDisable()

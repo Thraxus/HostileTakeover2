@@ -11,6 +11,7 @@ using Sandbox.Game;
 using Sandbox.ModAPI.Weapons;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using VRage.Utils;
 using VRageMath;
 
 namespace HostileTakeover2.Thraxus.Controllers
@@ -70,7 +71,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                 SetHighlight(hls);
                 _mediator.ReturnHighlightSetting(hls);
             }
-            catch (Exception e) { WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Exception: {e}"); }
+            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] HighlightController.{nameof(RemoveFromHighlightedBlocks)}: Exception: {e}"); }
         }
 
         private void RemoveFromHighlightedBlocks(IResetWithAction block)

@@ -4,6 +4,7 @@ using HostileTakeover2.Thraxus.Common.Extensions;
 using Sandbox.Game.Entities;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Controllers
 {
@@ -57,18 +58,24 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void OnReleased(IMyGridGroupData data)
         {
-            DeRegister();
-            _gridGroupData = null;
+            try
+            {
+                DeRegister();
+                _gridGroupData = null;
+            }
+            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] GridGroupManager.{nameof(OnReleased)}: Exception: {e}"); }
         }
 
         private void OnGridAdded(IMyGridGroupData newGroup, IMyCubeGrid addedGrid, IMyGridGroupData oldGroup)
         {
-            GridAddedAction?.Invoke(addedGrid);
+            try { GridAddedAction?.Invoke(addedGrid); }
+            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] GridGroupManager.{nameof(OnGridAdded)}: Exception: {e}"); }
         }
 
         private void OnGridRemoved(IMyGridGroupData thisGroup, IMyCubeGrid removedGrid, IMyGridGroupData newGroup)
         {
-            GridRemovedAction?.Invoke(removedGrid, newGroup);
+            try { GridRemovedAction?.Invoke(removedGrid, newGroup); }
+            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] GridGroupManager.{nameof(OnGridRemoved)}: Exception: {e}"); }
         }
 
         public override void Reset()
