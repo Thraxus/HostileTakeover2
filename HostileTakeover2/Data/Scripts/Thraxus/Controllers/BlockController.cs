@@ -57,6 +57,8 @@ namespace HostileTakeover2.Thraxus.Controllers
                 IsClosed = false;
                 Block block = _mediator.GetBlock(myCubeBlock.EntityId);
                 block.Initialize(blockType, myCubeBlock, _ownershipController);
+                if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
+                    WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block classified [{blockType}]: {myCubeBlock.EntityId:D18}");
                 RegisterBlockEvents(block);
                 AddToDictionary(myCubeBlock, block);
             });
@@ -91,6 +93,8 @@ namespace HostileTakeover2.Thraxus.Controllers
         private void OnBlockDisabled(Block block)
         {
             if (!_importantBlocks.ContainsKey(block.MyCubeBlock)) return;
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
+                WriteGeneral(DebugType.Blocks, nameof(OnBlockDisabled), $"Block disabled [{block.BlockType}]: {block.EntityId:D18}");
             long entityId = block.EntityId;
             DeRegisterBlockEvents(block);
             RemoveFromDictionary(block.MyCubeBlock);

@@ -80,10 +80,12 @@ namespace HostileTakeover2.Thraxus.Controllers
             var construct = FilterToNearestConstruct(grinder.GetPosition());
             if (construct == null)
             {
-                WriteGeneral(nameof(RunGrinderLogic), $"No NPC grid found near grinder [{grinder.EntityId:D18}]");
+                if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
+                    WriteGeneral(DebugType.Grinder, nameof(RunGrinderLogic), $"No NPC grid found near grinder [{grinder.EntityId:D18}]");
                 return;
             }
-            WriteGeneral(nameof(RunGrinderLogic), $"Found: [{construct.EntityId:D18}]");
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
+                WriteGeneral(DebugType.Grinder, nameof(RunGrinderLogic), $"Found: [{construct.EntityId:D18}]");
             if (_mediator.DefaultSettings.HighlightAllGridsInRange.Current)
                 TriggerHighlightsForAllNearbyNpcGrids(grinder);
             else

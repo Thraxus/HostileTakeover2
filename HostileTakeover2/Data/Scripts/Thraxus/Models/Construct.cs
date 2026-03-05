@@ -32,12 +32,14 @@ namespace HostileTakeover2.Thraxus.Models
         public void Init(Mediator mediator, MyCubeGrid grid)
         {
             SetLogPrefix(grid.EntityId.ToEntityIdFormat());
-            WriteGeneral(nameof(Init), $"Primary Initialization for Construct [{grid.EntityId:D18}] starting.");
+            if (mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
+                WriteGeneral(DebugType.Construct, nameof(Init), $"Primary Initialization for Construct [{grid.EntityId:D18}] starting.");
             IsClosed = false;
             _me = grid;
             _mediator = mediator;
             _me.OnMarkForClose += OnGridMarkedForClose;
-            WriteGeneral(nameof(Init), $"Primary Initialization for Construct [{_me.EntityId:D18}] complete.");
+            if (mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
+                WriteGeneral(DebugType.Construct, nameof(Init), $"Primary Initialization for Construct [{_me.EntityId:D18}] complete.");
             Init();
         }
 
@@ -49,7 +51,8 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void Init()
         {
-            WriteGeneral(nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] starting.");
+            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
+                WriteGeneral(DebugType.Construct, nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] starting.");
             _mediator.ConstructController.Add(_me.EntityId, this);
             BlockController.OnWriteToLog += WriteGeneral;
             BlockController.Init(_mediator, GridOwnershipController);
@@ -62,7 +65,8 @@ namespace HostileTakeover2.Thraxus.Models
             GridGroupManager.OnWriteToLog += WriteGeneral;
             GridGroupManager.GridRemovedAction += OnGridRemoved;
             SetupGridGroup();
-            WriteGeneral(nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] complete.");
+            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
+                WriteGeneral(DebugType.Construct, nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] complete.");
         }
 
         private void SetupGridGroup()
@@ -77,7 +81,8 @@ namespace HostileTakeover2.Thraxus.Models
         {
             if (GridGroupManager.GridGroupData == null) return;
             long ownerId = CalculateGroupOwnerId(GridGroupManager.GridGroupData);
-            WriteGeneral(nameof(ReEvaluateOwnership), $"Reevaluating ownership.  Current Rightful Owner: [{GridOwnershipController.RightfulOwner.ToEntityIdFormat()}]");
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Ownership))
+                WriteGeneral(DebugType.Ownership, nameof(ReEvaluateOwnership), $"Reevaluating ownership.  Current Rightful Owner: [{GridOwnershipController.RightfulOwner.ToEntityIdFormat()}]");
             if (GridOwnershipController.RightfulOwner == ownerId) return;
             SetGroupOwnership(GridGroupManager.GridGroupData, ownerId);
         }
@@ -86,7 +91,8 @@ namespace HostileTakeover2.Thraxus.Models
         {
             if (GridGroupManager.GridGroupData == null) return;
             long ownerId = CalculateGroupOwnerId(GridGroupManager.GridGroupData);
-            WriteGeneral(nameof(EvaluateOwnership), $"Grid group owner determined to be {ownerId:D18}");
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Ownership))
+                WriteGeneral(DebugType.Ownership, nameof(EvaluateOwnership), $"Grid group owner determined to be {ownerId:D18}");
             if (GridOwnershipController.RightfulOwner == ownerId) return;
             SetGroupOwnership(GridGroupManager.GridGroupData, ownerId);
         }
@@ -261,9 +267,11 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void SetOwnership()
         {
-            WriteGeneral(nameof(SetOwnership), $"Grabbing some blocks...");
+            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
+                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Grabbing some blocks...");
             BlockController.AddGrid(_me);
-            WriteGeneral(nameof(SetOwnership), $"Grabbed some blocks.. {BlockController.GetImportantBlockCount()}");
+            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
+                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Grabbed some blocks.. {BlockController.GetImportantBlockCount()}");
         }
 
         private void SetOwnership(MyCubeBlock block)
@@ -287,7 +295,8 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void RegisterEvents()
         {
-            WriteGeneral(nameof(RegisterEvents), $"Registering Events for OwnershipType {GridOwnershipController.OwnershipType}");
+            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
+                WriteGeneral(DebugType.Construct, nameof(RegisterEvents), $"Registering Events for OwnershipType {GridOwnershipController.OwnershipType}");
             if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
             {
                 _me.OnFatBlockAdded += OnBlockAdded;

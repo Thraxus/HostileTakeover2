@@ -58,7 +58,8 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             try
             {
-                WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Attempting to remove a block: [{(_currentHighlightedBlocks.ContainsKey(block)).ToSingleChar()}] {block.EntityId.ToEntityIdFormat()}");
+                if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
+                    WriteGeneral(DebugType.Highlight, nameof(RemoveFromHighlightedBlocks), $"Attempting to remove a block: [{(_currentHighlightedBlocks.ContainsKey(block)).ToSingleChar()}] {block.EntityId.ToEntityIdFormat()}");
                 if (!_currentHighlightedBlocks.ContainsKey(block)) return;
                 HighlightSettings hls = _currentHighlightedBlocks[block];
                 _currentHighlightedBlocks.Remove(block);
@@ -109,7 +110,8 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             ClearReusableImportantBlockDictionary();
             long playerId = grinder.OwnerIdentityId;
-            WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {playerId.ToEntityIdFormat()}");
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
+                WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {playerId.ToEntityIdFormat()}");
             var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
             int counter = 0;
             foreach (var myCubeGrid in gridList)
@@ -121,14 +123,16 @@ namespace HostileTakeover2.Thraxus.Controllers
                     Block block = kvp.Value;
                     if (!block.IsFunctional || block.IsClosed || block.BlockType == BlockType.None)
                     {
-                        WriteGeneral(nameof(EnableHighlights), $"Block rejected!  Type: {block.BlockType} | Functional: {block.IsFunctional} | Closed: {block.IsClosed}");
+                        if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
+                        WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Block rejected!  Type: {block.BlockType} | Functional: {block.IsFunctional} | Closed: {block.IsClosed}");
                         continue;
                     }
                     _reusableImportantBlocksDictionary[block.BlockType].Add(block);
                     counter++;
                 }
             }
-            WriteGeneral(nameof(EnableHighlights), $"Attempting to highlight {counter:D3} blocks [{_reusableImportantBlocksDictionary[BlockType.Control].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Medical].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Weapon].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Trap].Count:D2}]");
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
+                WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Attempting to highlight {counter:D3} blocks [{_reusableImportantBlocksDictionary[BlockType.Control].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Medical].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Weapon].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Trap].Count:D2}]");
             _mediator.ReturnReusableCubeGridList(gridList);
             HighlightNextSet(grinder, playerId);
         }
