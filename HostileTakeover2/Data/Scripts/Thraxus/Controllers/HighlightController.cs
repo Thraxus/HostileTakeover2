@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Extensions;
 using HostileTakeover2.Thraxus.Common.Interfaces;
@@ -7,6 +8,8 @@ using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Models;
 using HostileTakeover2.Thraxus.Settings;
 using Sandbox.Game;
+using Sandbox.ModAPI.Weapons;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
 
@@ -24,21 +27,22 @@ namespace HostileTakeover2.Thraxus.Controllers
             };
 
         private readonly Dictionary<Block, HighlightSettings> _currentHighlightedBlocks = new Dictionary<Block, HighlightSettings>();
+        private readonly List<Block> _sortBuffer = new List<Block>();
 
         private Mediator _mediator;
-        
+
         public void Init(Mediator mediator)
         {
             _mediator = mediator;
         }
 
-        private void HighlightBlock(Block block, BlockType type, long grinderOwnerIdentityId)
+        private void HighlightBlock(Block block, BlockType type, long playerId)
         {
             if (_currentHighlightedBlocks.ContainsKey(block)) return;
             var hls = _mediator.GetHighlightSetting();
             hls.Name = block.Name;
             hls.Color = GetHighlightColor(type);
-            hls.PlayerId = grinderOwnerIdentityId;
+            hls.PlayerId = playerId;
             hls.Enabled = true;
             hls.LineThickness = _mediator.DefaultSettings.EnabledThickness;
             hls.PulseDuration = _mediator.DefaultSettings.HighlightPulseDuration;
@@ -97,15 +101,17 @@ namespace HostileTakeover2.Thraxus.Controllers
             }
         }
 
-        public void EnableHighlights(IMyGridGroupData myGridGroupData, long grinderOwnerIdentityId)
+        public void EnableHighlights(IMyGridGroupData myGridGroupData, IMyAngleGrinder grinder)
         {
             ClearReusableImportantBlockDictionary();
-            WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {grinderOwnerIdentityId.ToEntityIdFormat()}");
+            long playerId = grinder.OwnerIdentityId;
+            WriteGeneral(nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {playerId.ToEntityIdFormat()}");
             var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
             int counter = 0;
             foreach (var myCubeGrid in gridList)
             {
                 Construct construct = _mediator.ConstructController.GetConstruct(myCubeGrid.EntityId);
+                if (construct == null) continue;
                 foreach (var kvp in construct.BlockController.GetImportantBlockDictionary())
                 {
                     Block block = kvp.Value;
@@ -120,53 +126,155 @@ namespace HostileTakeover2.Thraxus.Controllers
             }
             WriteGeneral(nameof(EnableHighlights), $"Attempting to highlight {counter:D3} blocks [{_reusableImportantBlocksDictionary[BlockType.Control].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Medical].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Weapon].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Trap].Count:D2}]");
             _mediator.ReturnReusableCubeGridList(gridList);
-            HighlightNextSet(grinderOwnerIdentityId);
+            HighlightNextSet(grinder, playerId);
         }
 
         private void ClearReusableImportantBlockDictionary()
         {
             foreach (var kvp in _reusableImportantBlocksDictionary)
-            {
                 kvp.Value.Clear();
-            }
         }
 
-        private void HighlightNextSet(long grinderOwnerIdentityId)
+        private void HighlightNextSet(IMyAngleGrinder grinder, long playerId)
         {
+            Vector3D grinderPos = grinder.GetPosition();
+
+            // 1. Single nearest block across all groups
+            if (_mediator.DefaultSettings.HighlightSingleNearestBlock.Current)
+            {
+                Block nearest = FindNearestBlockInAll(grinderPos);
+                if (nearest != null) HighlightBlock(nearest, nearest.BlockType, playerId);
+                return;
+            }
+
+            // 2. All important blocks regardless of group
+            if (_mediator.DefaultSettings.HighlightAllBlocks.Current)
+            {
+                foreach (var kvp in _reusableImportantBlocksDictionary)
+                    HighlightBlocks(kvp.Value, kvp.Key, playerId);
+                return;
+            }
+
+            // 3. Select active group by priority
             BlockType type = BlockType.None;
             if (_reusableImportantBlocksDictionary[BlockType.Control].Count > 0)
-            {
                 type = BlockType.Control;
-            }
             else if (_reusableImportantBlocksDictionary[BlockType.Medical].Count > 0 && _mediator.DefaultSettings.UseMedicalGroup.Current)
-            {
                 type = BlockType.Medical;
-            }
             else if (_reusableImportantBlocksDictionary[BlockType.Weapon].Count > 0 && _mediator.DefaultSettings.UseWeaponGroup.Current)
-            {
                 type = BlockType.Weapon;
-            }
             else if (_reusableImportantBlocksDictionary[BlockType.Trap].Count > 0 && _mediator.DefaultSettings.UseTrapGroup.Current)
-            {
                 type = BlockType.Trap;
-            }
 
             if (type == BlockType.None) return;
 
-            HighlightBlocks(_reusableImportantBlocksDictionary[type], type, grinderOwnerIdentityId);
+            var activeGroup = _reusableImportantBlocksDictionary[type];
+
+            // 4. Single nearest block in active group
+            if (_mediator.DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current)
+            {
+                Block nearest = FindNearestBlock(activeGroup, grinderPos);
+                if (nearest != null) HighlightBlock(nearest, type, playerId);
+                return;
+            }
+
+            // 5. Default: all in active group, tier-capped if enabled
+            if (_mediator.DefaultSettings.UseGrinderTierHighlighting.Current)
+            {
+                int tier = GetGrinderTier(grinder);
+                if (tier < 4)
+                {
+                    HighlightNearestBlocks(activeGroup, type, playerId, grinderPos, tier);
+                    return;
+                }
+            }
+
+            HighlightBlocks(activeGroup, type, playerId);
         }
 
-        private void HighlightBlocks(HashSet<Block> importantBlocks, BlockType type, long grinderOwnerIdentityId)
+        private void HighlightBlocks(HashSet<Block> blocks, BlockType type, long playerId)
         {
-            foreach (var block in importantBlocks)
+            foreach (var block in blocks)
+                HighlightBlock(block, type, playerId);
+        }
+
+        // Partial selection sort: finds and highlights the nearest `maxCount` blocks
+        // without allocating. For the small block sets typical in this mod (1-10 blocks),
+        // this is faster than a full sort and avoids any heap pressure.
+        private void HighlightNearestBlocks(HashSet<Block> blocks, BlockType type, long playerId, Vector3D position, int maxCount)
+        {
+            _sortBuffer.Clear();
+            foreach (var block in blocks)
+                _sortBuffer.Add(block);
+
+            int count = Math.Min(maxCount, _sortBuffer.Count);
+            for (int pass = 0; pass < count; pass++)
             {
-                HighlightBlock(block, type, grinderOwnerIdentityId);
+                int nearestIdx = pass;
+                double nearestDist = (_sortBuffer[pass].MyCubeBlock.PositionComp.GetPosition() - position).LengthSquared();
+                for (int i = pass + 1; i < _sortBuffer.Count; i++)
+                {
+                    double dist = (_sortBuffer[i].MyCubeBlock.PositionComp.GetPosition() - position).LengthSquared();
+                    if (dist >= nearestDist) continue;
+                    nearestDist = dist;
+                    nearestIdx = i;
+                }
+                Block tmp = _sortBuffer[pass];
+                _sortBuffer[pass] = _sortBuffer[nearestIdx];
+                _sortBuffer[nearestIdx] = tmp;
+                HighlightBlock(_sortBuffer[pass], type, playerId);
+            }
+            _sortBuffer.Clear();
+        }
+
+        private static Block FindNearestBlock(HashSet<Block> blocks, Vector3D position)
+        {
+            Block nearest = null;
+            double minDist = double.MaxValue;
+            foreach (var block in blocks)
+            {
+                double dist = (block.MyCubeBlock.PositionComp.GetPosition() - position).LengthSquared();
+                if (dist >= minDist) continue;
+                minDist = dist;
+                nearest = block;
+            }
+            return nearest;
+        }
+
+        private Block FindNearestBlockInAll(Vector3D position)
+        {
+            Block nearest = null;
+            double minDist = double.MaxValue;
+            foreach (var kvp in _reusableImportantBlocksDictionary)
+            {
+                foreach (var block in kvp.Value)
+                {
+                    double dist = (block.MyCubeBlock.PositionComp.GetPosition() - position).LengthSquared();
+                    if (dist >= minDist) continue;
+                    minDist = dist;
+                    nearest = block;
+                }
+            }
+            return nearest;
+        }
+
+        private static int GetGrinderTier(IMyAngleGrinder grinder)
+        {
+            var entity = grinder as MyEntity;
+            if (entity == null) return 1;
+            switch (entity.DefinitionId.SubtypeId.String)
+            {
+                case "AngleGrinder2": return 2;
+                case "AngleGrinder3": return 3;
+                case "AngleGrinder4": return 4;
+                default:             return 1;
             }
         }
 
         public override void Reset()
         {
             ClearReusableImportantBlockDictionary();
+            _sortBuffer.Clear();
             base.Reset();
         }
     }

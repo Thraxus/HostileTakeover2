@@ -41,6 +41,9 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         [XmlElement(nameof(HighlightSingleNearestBlockInActiveGroup))]
         public string HighlightSingleNearestBlockInActiveGroup;
 
+        [XmlElement(nameof(UseGrinderTierHighlighting))]
+        public string UseGrinderTierHighlighting;
+
         [XmlElement(nameof(DebugMode))]
         public string DebugMode;
 

@@ -8,6 +8,7 @@ using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using Sandbox.ModAPI.Weapons;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -271,11 +272,11 @@ namespace HostileTakeover2.Thraxus.Models
             block.ChangeOwner(block.IsFunctional ? GridOwnershipController.RightfulOwner : 0, MyOwnershipShareModeEnum.None);
         }
 
-        public void TriggerHighlights(long grinderOwnerIdentityId)
+        public void TriggerHighlights(IMyAngleGrinder grinder)
         {
             if (!_mediator.DefaultSettings.UseHighlights.Current) return;
             if (GridGroupManager.GridGroupData == null) return;
-            _mediator.HighlightController.EnableHighlights(GridGroupManager.GridGroupData, grinderOwnerIdentityId);
+            _mediator.HighlightController.EnableHighlights(GridGroupManager.GridGroupData, grinder);
         }
 
         private void AddBlock(MyCubeBlock block)

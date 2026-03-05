@@ -85,9 +85,9 @@ namespace HostileTakeover2.Thraxus.Controllers
             }
             WriteGeneral(nameof(RunGrinderLogic), $"Found: [{construct.EntityId:D18}]");
             if (_mediator.DefaultSettings.HighlightAllGridsInRange.Current)
-                TriggerHighlightsForAllNearbyNpcGrids(grinder.OwnerIdentityId);
+                TriggerHighlightsForAllNearbyNpcGrids(grinder);
             else
-                construct.TriggerHighlights(grinder.OwnerIdentityId);
+                construct.TriggerHighlights(grinder);
 
             if (_mediator.DefaultSettings.IsDebugActive)
             {
@@ -99,7 +99,7 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         }
 
-        private void TriggerHighlightsForAllNearbyNpcGrids(long grinderOwnerIdentityId)
+        private void TriggerHighlightsForAllNearbyNpcGrids(IMyAngleGrinder grinder)
         {
             if (!_mediator.DefaultSettings.UseHighlights.Current) return;
             _seenGroupData.Clear();
@@ -110,7 +110,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                 if (npcConstruct == null || npcConstruct.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
                 var groupData = npcConstruct.GridGroupManager.GridGroupData;
                 if (groupData == null || !_seenGroupData.Add(groupData)) continue;
-                _mediator.HighlightController.EnableHighlights(groupData, grinderOwnerIdentityId);
+                _mediator.HighlightController.EnableHighlights(groupData, grinder);
             }
         }
 

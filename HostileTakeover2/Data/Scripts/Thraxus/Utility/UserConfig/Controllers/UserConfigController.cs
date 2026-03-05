@@ -72,6 +72,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             MyAPIGateway.Utilities.SetVariable("HT_HighlightAllBlocks",                         DefaultSettings.HighlightAllBlocks.Current);
             MyAPIGateway.Utilities.SetVariable("HT_HighlightSingleNearestBlock",                DefaultSettings.HighlightSingleNearestBlock.Current);
             MyAPIGateway.Utilities.SetVariable("HT_HighlightSingleNearestBlockInActiveGroup",   DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_UseGrinderTierHighlighting",                 DefaultSettings.UseGrinderTierHighlighting.Current);
             MyAPIGateway.Utilities.SetVariable("HT_DebugMode",                                  DefaultSettings.DebugMode.Current);
             MyAPIGateway.Utilities.SetVariable("HT_VerboseMode",                                DefaultSettings.VerboseMode.Current);
             int mask = 0;
@@ -102,6 +103,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightAllBlocks", out b))                        DefaultSettings.HighlightAllBlocks.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightSingleNearestBlock", out b))               DefaultSettings.HighlightSingleNearestBlock.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightSingleNearestBlockInActiveGroup", out b))  DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current = b;
+            if (MyAPIGateway.Utilities.GetVariable("HT_UseGrinderTierHighlighting", out b))               DefaultSettings.UseGrinderTierHighlighting.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_DebugMode", out b))                                 DefaultSettings.DebugMode.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_VerboseMode", out b))                               DefaultSettings.VerboseMode.Current = b;
 
@@ -264,6 +266,9 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
 
             _userSettings.HighlightSingleNearestBlockInActiveGroup = ParseBoolSetting(
                 _userSettings.HighlightSingleNearestBlockInActiveGroup, DefaultSettings.HighlightSingleNearestBlockInActiveGroup);
+
+            _userSettings.UseGrinderTierHighlighting = ParseBoolSetting(
+                _userSettings.UseGrinderTierHighlighting, DefaultSettings.UseGrinderTierHighlighting);
 
             _userSettings.DebugMode = ParseBoolSetting(
                 _userSettings.DebugMode, DefaultSettings.DebugMode);
