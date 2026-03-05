@@ -82,8 +82,10 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void BlockOnClose(IClose block)
         {
-            if (!_importantBlocks.ContainsKey(((Block)block).MyCubeBlock)) return;
-            OnResetBlock(_importantBlocks[((Block)block).MyCubeBlock]);
+            var b = (Block)block;
+            Block tracked;
+            if (!_importantBlocks.TryGetValue(b.MyCubeBlock, out tracked)) return;
+            OnResetBlock(tracked);
         }
 
         private void OnBlockDisabled(Block block)

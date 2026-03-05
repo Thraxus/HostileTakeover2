@@ -57,7 +57,7 @@ namespace HostileTakeover2.Thraxus.Models
         {
             try
             {
-                BlockOnOwnershipChanged((IMyTerminalBlock)block);
+                _gridOwnershipController.SetOwnership(MyCubeBlock);
                 if (!block.IsFunctional)
                     BlockHasBeenDisable();
             }

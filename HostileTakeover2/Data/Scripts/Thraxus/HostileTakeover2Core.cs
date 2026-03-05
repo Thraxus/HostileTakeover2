@@ -67,7 +67,6 @@ namespace HostileTakeover2.Thraxus
         {
             var grid = entity as MyCubeGrid;
             if (grid == null) return false;
-            //WriteGeneral("OnEntityAdd", $"Grid: [{grid.EntityId:D18}] {grid.DisplayName}");
             CheckGrid(grid);
             return true;
         }
@@ -107,7 +106,6 @@ namespace HostileTakeover2.Thraxus
             }
             if (action != null)
                 _mediator.ActionQueue.Add(delay, action);
-            //WriteGeneral(nameof(CheckGrid), $"Check Grid returned type of {type}, Action was null? {action == null} {action?.Method}");
         }
 
         protected override void UpdateBeforeSim()
