@@ -5,6 +5,7 @@ using HostileTakeover2.Thraxus.Common.Factions.Models;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
+using HostileTakeover2.Thraxus.Utility.Research;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
@@ -107,6 +108,12 @@ namespace HostileTakeover2.Thraxus
             }
             if (action != null)
                 _mediator.ActionQueue.Add(delay, action);
+        }
+
+        protected override void LateSetup()
+        {
+            base.LateSetup();
+            ResearchManager.Initialize();
         }
 
         protected override void UpdateBeforeSim()
