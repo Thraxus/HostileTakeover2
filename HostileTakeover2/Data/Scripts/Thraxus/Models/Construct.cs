@@ -141,7 +141,10 @@ namespace HostileTakeover2.Thraxus.Models
             {
                 WriteGeneral(nameof(OnGridSplit), $"Grid Split -- Old: [{oldGrid.EntityId.ToEntityIdFormat()}]  New: [{newGrid.EntityId.ToEntityIdFormat()}]");
                 BlockController.RemoveOldBlocks(newGrid);
-                ReEvaluateOwnership();
+                if (BlockController.GetImportantBlockCount() == 0 && !BlockController.IsClosed)
+                    OnAllImportantBlocksGone();
+                else
+                    ReEvaluateOwnership();
             }
             catch (Exception e) { WriteGeneral(nameof(OnGridSplit), $"Exception: {e}"); }
         }
