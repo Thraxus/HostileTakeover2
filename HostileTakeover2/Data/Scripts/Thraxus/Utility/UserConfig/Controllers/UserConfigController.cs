@@ -313,11 +313,19 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             // and capture features regardless of what the user set for those fields.
             if (DefaultSettings.MirrorEasyNpcTakeovers.Current)
             {
-                DefaultSettings.UseHighlights.Current      = false;
-                DefaultSettings.UseWeaponGroup.Current     = false;
-                DefaultSettings.UseMedicalGroup.Current    = false;
-                DefaultSettings.UseTrapGroup.Current       = false;
-                DefaultSettings.AllowPlayerHacking.Current = false;
+                DefaultSettings.UseHighlights.Current                             = false;
+                DefaultSettings.UseWeaponGroup.Current                            = false;
+                DefaultSettings.UseMedicalGroup.Current                           = false;
+                DefaultSettings.UseTrapGroup.Current                              = false;
+                DefaultSettings.AllowPlayerHacking.Current                        = false;
+                DefaultSettings.HighlightAllGridsInRange.Current                  = DefaultSettings.HighlightAllGridsInRange.Default;
+                DefaultSettings.HighlightAllBlocks.Current                        = DefaultSettings.HighlightAllBlocks.Default;
+                DefaultSettings.HighlightSingleNearestBlock.Current               = DefaultSettings.HighlightSingleNearestBlock.Default;
+                DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current  = DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Default;
+                DefaultSettings.UseGrinderTierHighlighting.Current                = DefaultSettings.UseGrinderTierHighlighting.Default;
+                DefaultSettings.BlocksPerGrinderTier.Current                      = DefaultSettings.BlocksPerGrinderTier.Default;
+                DefaultSettings.UnknownGrinderTierBlockCount.Current              = DefaultSettings.UnknownGrinderTierBlockCount.Default;
+                DefaultSettings.EntityDetectionRange.Current                      = DefaultSettings.EntityDetectionRange.Default;
             }
         }
     }
