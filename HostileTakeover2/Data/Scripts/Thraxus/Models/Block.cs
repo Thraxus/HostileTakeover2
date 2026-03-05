@@ -14,15 +14,16 @@ namespace HostileTakeover2.Thraxus.Models
         private GridOwnershipController _gridOwnershipController;
         public Action<Block> BlockHasBeenDisableAction;
         public BlockType BlockType;
-        public string Name => MyCubeBlock.Name;
-        public long EntityId => MyCubeBlock.EntityId;
+        public string Name => MyCubeBlock?.Name ?? string.Empty;
+        public long EntityId { get; private set; }
 
         public bool IsFunctional => MyCubeBlock.IsFunctional;
-        
+
         public void Initialize(BlockType blockType, MyCubeBlock block, GridOwnershipController gridOwnershipController)
         {
             BlockType = blockType;
             MyCubeBlock = block;
+            EntityId = block.EntityId;
             _gridOwnershipController = gridOwnershipController;
             RegisterEvents();
         }
