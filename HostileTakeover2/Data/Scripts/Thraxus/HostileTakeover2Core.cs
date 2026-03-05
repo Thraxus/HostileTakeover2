@@ -76,7 +76,7 @@ namespace HostileTakeover2.Thraxus
             var grinder = entity as IMyAngleGrinder;
             if (grinder == null) return false;
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
-                WriteGeneral(DebugType.Grinder, nameof(CheckForGrinder), $"Grinder: [{grinder.EntityId:D18}]");
+                WriteGeneral(nameof(CheckForGrinder), $"Grinder: [{grinder.EntityId:D18}]");
             _mediator.GrinderController.RunGrinderLogic(grinder);
             return true;
         }
@@ -129,7 +129,7 @@ namespace HostileTakeover2.Thraxus
             var construct = _mediator.GetConstruct(cubeGrid.EntityId);
             construct.Init(_mediator, cubeGrid);
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Construct))
-                WriteGeneral(DebugType.Construct, nameof(ConstructFactory), $"Construct Factory Engaged.  Created Construct.");
+                WriteGeneral(nameof(ConstructFactory), $"Construct Factory Engaged.  Created Construct.");
         }
 
         private GridValidationType ValidateGrid(MyCubeGrid grid)
@@ -191,7 +191,7 @@ namespace HostileTakeover2.Thraxus
         private void WriteRejectionReason(MyCubeGrid grid, string reason)
         {
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grid))
-                WriteGeneral(DebugType.Grid, nameof(WriteRejectionReason), $"Grid Rejected as {reason}: [{grid?.EntityId:D18}] {grid?.DisplayName}");
+                WriteGeneral(nameof(WriteRejectionReason), $"Grid Rejected as {reason}: [{grid?.EntityId:D18}] {grid?.DisplayName}");
         }
     }
 }
