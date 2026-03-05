@@ -12,7 +12,6 @@ using Sandbox.ModAPI.Weapons;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
-using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Models
 {
@@ -45,7 +44,7 @@ namespace HostileTakeover2.Thraxus.Models
         private void OnGridMarkedForClose(IMyEntity entity)
         {
             try { Close(); }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(OnGridMarkedForClose)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(OnGridMarkedForClose), $"Exception: {e}"); }
         }
 
         private void Init()
@@ -148,7 +147,7 @@ namespace HostileTakeover2.Thraxus.Models
                 else
                     ReEvaluateOwnership();
             }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(OnGridSplit)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(OnGridSplit), $"Exception: {e}"); }
         }
 
         private void OnGridMerge(MyCubeGrid newGrid, MyCubeGrid oldGrid)
@@ -159,7 +158,7 @@ namespace HostileTakeover2.Thraxus.Models
                 BlockController.AddGrid(oldGrid);
                 GridGroupManager.Refresh();
             }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(OnGridMerge)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(OnGridMerge), $"Exception: {e}"); }
         }
 
         private void OnGridRemoved(IMyCubeGrid removedGrid, IMyGridGroupData newGridGroup)
@@ -187,7 +186,7 @@ namespace HostileTakeover2.Thraxus.Models
                 if (BlockController.GetImportantBlockCount() == 0 && !BlockController.IsClosed)
                     OnAllImportantBlocksGone();
             }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(OnGridRemoved)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(OnGridRemoved), $"Exception: {e}"); }
         }
 
         private void OnAllImportantBlocksGone()
@@ -228,7 +227,7 @@ namespace HostileTakeover2.Thraxus.Models
                 }
                 _mediator.ReturnReusableCubeGridList(gridList);
             }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(OnAllImportantBlocksGone)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(OnAllImportantBlocksGone), $"Exception: {e}"); }
         }
 
         public void DisownGrid()
@@ -319,7 +318,7 @@ namespace HostileTakeover2.Thraxus.Models
                 if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
                     _mediator.ActionQueue.Add(DefaultSettings.BlockAddTickDelay, () => AddBlock(block));
             }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(OnBlockAdded)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(OnBlockAdded), $"Exception: {e}"); }
         }
 
         private void ReclaimHackedBlocks(MyCubeGrid grid)
@@ -333,7 +332,7 @@ namespace HostileTakeover2.Thraxus.Models
                         fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.None);
                 }
             }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(ReclaimHackedBlocks)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(ReclaimHackedBlocks), $"Exception: {e}"); }
         }
 
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
@@ -349,7 +348,7 @@ namespace HostileTakeover2.Thraxus.Models
                     EvaluateOwnership();
                 });
             }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] Construct.{nameof(OnBlockOwnershipChanged)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(OnBlockOwnershipChanged), $"Exception: {e}"); }
         }
 
         public override void Reset()

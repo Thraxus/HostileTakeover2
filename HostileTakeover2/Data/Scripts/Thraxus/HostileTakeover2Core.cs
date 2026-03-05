@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Infrastructure;
 using VRage.Game.Components;
-using VRage.Utils;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 
@@ -121,7 +120,7 @@ namespace HostileTakeover2.Thraxus
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
             try { _mediator.Close(); }
-            catch (Exception e) { MyLog.Default.WriteLineAndConsole($"[HostileTakeover2] HostileTakeover2Core.{nameof(Unload)}: Exception: {e}"); }
+            catch (Exception e) { WriteGeneral(nameof(Unload), $"Exception: {e}"); }
             _mediator.OnWriteToLog -= WriteGeneral;
             base.Unload();
         }
