@@ -181,10 +181,10 @@ namespace HostileTakeover2.Thraxus.Controllers
             // 5. Default: all in active group, tier-capped if enabled
             if (_mediator.DefaultSettings.UseGrinderTierHighlighting.Current)
             {
-                int tier = GetGrinderTier(grinder);
-                if (tier < 4)
+                int maxCount = GetHighlightBlockCount(grinder);
+                if (maxCount != int.MaxValue)
                 {
-                    HighlightNearestBlocks(activeGroup, type, playerId, grinderPos, tier);
+                    HighlightNearestBlocks(activeGroup, type, playerId, grinderPos, maxCount);
                     return;
                 }
             }
@@ -258,16 +258,24 @@ namespace HostileTakeover2.Thraxus.Controllers
             return nearest;
         }
 
-        private static int GetGrinderTier(IMyAngleGrinder grinder)
+        private int GetHighlightBlockCount(IMyAngleGrinder grinder)
         {
             var entity = grinder as MyEntity;
-            if (entity == null) return 1;
+            if (entity == null)
+            {
+                int unk = _mediator.DefaultSettings.UnknownGrinderTierBlockCount.Current;
+                return unk == 0 ? int.MaxValue : unk;
+            }
+            int perTier = _mediator.DefaultSettings.BlocksPerGrinderTier.Current;
             switch (entity.DefinitionId.SubtypeId.String)
             {
-                case "AngleGrinder2": return 2;
-                case "AngleGrinder3": return 3;
-                case "AngleGrinder4": return 4;
-                default:             return 1;
+                case "AngleGrinder":  return perTier;
+                case "AngleGrinder2": return 2 * perTier;
+                case "AngleGrinder3": return 3 * perTier;
+                case "AngleGrinder4": return int.MaxValue;
+                default:
+                    int unknown = _mediator.DefaultSettings.UnknownGrinderTierBlockCount.Current;
+                    return unknown == 0 ? int.MaxValue : unknown;
             }
         }
 

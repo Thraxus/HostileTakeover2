@@ -73,6 +73,8 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             MyAPIGateway.Utilities.SetVariable("HT_HighlightSingleNearestBlock",                DefaultSettings.HighlightSingleNearestBlock.Current);
             MyAPIGateway.Utilities.SetVariable("HT_HighlightSingleNearestBlockInActiveGroup",   DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current);
             MyAPIGateway.Utilities.SetVariable("HT_UseGrinderTierHighlighting",                 DefaultSettings.UseGrinderTierHighlighting.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_BlocksPerGrinderTier",                       DefaultSettings.BlocksPerGrinderTier.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_UnknownGrinderTierBlockCount",               DefaultSettings.UnknownGrinderTierBlockCount.Current);
             MyAPIGateway.Utilities.SetVariable("HT_DebugMode",                                  DefaultSettings.DebugMode.Current);
             MyAPIGateway.Utilities.SetVariable("HT_VerboseMode",                                DefaultSettings.VerboseMode.Current);
             int mask = 0;
@@ -104,6 +106,11 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightSingleNearestBlock", out b))               DefaultSettings.HighlightSingleNearestBlock.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightSingleNearestBlockInActiveGroup", out b))  DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_UseGrinderTierHighlighting", out b))               DefaultSettings.UseGrinderTierHighlighting.Current = b;
+
+            int intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_BlocksPerGrinderTier", out intVal))               DefaultSettings.BlocksPerGrinderTier.Current = intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_UnknownGrinderTierBlockCount", out intVal))        DefaultSettings.UnknownGrinderTierBlockCount.Current = intVal;
+
             if (MyAPIGateway.Utilities.GetVariable("HT_DebugMode", out b))                                 DefaultSettings.DebugMode.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_VerboseMode", out b))                               DefaultSettings.VerboseMode.Current = b;
 
@@ -168,6 +175,23 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             }
 
             return DefaultSettings.SerializeActiveCategories();
+        }
+
+        /// <summary>
+        /// Parses a single integer setting from its XML string representation.
+        /// Sets <paramref name="setting"/>.Current to the parsed value on success (when
+        /// the value is within [Min, Max]), or leaves it at the existing value on error.
+        /// Returns the canonical string to write back to the XML field.
+        /// </summary>
+        private string ParseIntSetting(string xmlValue, UserSetting<int> setting)
+        {
+            int value;
+            if (int.TryParse(xmlValue, out value) && value >= setting.Min && value <= setting.Max)
+            {
+                setting.Current = value;
+                return value.ToString();
+            }
+            return setting.Default.ToString();
         }
 
         /// <summary>
@@ -269,6 +293,12 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
 
             _userSettings.UseGrinderTierHighlighting = ParseBoolSetting(
                 _userSettings.UseGrinderTierHighlighting, DefaultSettings.UseGrinderTierHighlighting);
+
+            _userSettings.BlocksPerGrinderTier = ParseIntSetting(
+                _userSettings.BlocksPerGrinderTier, DefaultSettings.BlocksPerGrinderTier);
+
+            _userSettings.UnknownGrinderTierBlockCount = ParseIntSetting(
+                _userSettings.UnknownGrinderTierBlockCount, DefaultSettings.UnknownGrinderTierBlockCount);
 
             _userSettings.DebugMode = ParseBoolSetting(
                 _userSettings.DebugMode, DefaultSettings.DebugMode);
