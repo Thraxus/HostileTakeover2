@@ -92,7 +92,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             long entityId = block.EntityId;
             DeRegisterBlockEvents(block);
             RemoveFromDictionary(block.MyCubeBlock);
-            _mediator.ActionQueue.Add(1, () => _mediator.ReturnBlock(block, entityId));
+            _mediator.ActionQueue.Add(1, () => _mediator.ReturnBlock(block));
             if (_importantBlocks.Count == 0)
                 OnImportantBlocksEmpty?.Invoke();
         }
@@ -108,7 +108,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             DeRegisterBlockEvents((Block)block);
             RemoveFromDictionary(((Block)block).MyCubeBlock);
-            _mediator.ReturnBlock((Block)block, ((Block)block).EntityId);
+            _mediator.ReturnBlock((Block)block);
             if (_importantBlocks.Count == 0)
                 OnImportantBlocksEmpty?.Invoke();
         }
@@ -121,62 +121,37 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private BlockType AssignBlock(MyCubeBlock block)
         {
-            //WriteGeneral(nameof(AssignBlock), $"Attempting to classify new block...");
             var controller = block as IMyShipController;
             if (controller != null && controller.CanControlShip)
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Control}...");
                 return BlockType.Control;
-            }
 
             var medical = block as IMyMedicalRoom;
             if (medical != null)
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
                 return BlockType.Medical;
-            }
 
             var cryo = block as IMyCryoChamber;
             if (cryo != null)
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
                 return BlockType.Medical;
-            }
 
             var weapon = block as IMyLargeTurretBase;
             if (weapon != null)
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
                 return BlockType.Weapon;
-            }
 
             var sorter = block as MyConveyorSorter;
             if (sorter != null && !sorter.BlockDefinition.Context.IsBaseGame)
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
                 return BlockType.Weapon;
-            }
 
             var warhead = block as IMyWarhead;
             if (warhead != null)
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Trap}...");
                 return BlockType.Trap;
-            }
 
             if (block.BlockDefinition.Id.TypeId == typeof(MyObjectBuilder_SurvivalKit))
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Medical}...");
                 return BlockType.Medical;
-            }
 
             var upgrade = block as IMyUpgradeModule;
             if (upgrade != null && block.BlockDefinition.Id.SubtypeId == MyStringHash.GetOrCompute("BotSpawner"))
-            {
-                //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.Weapon}...");
                 return BlockType.Weapon;
-            }
-            //WriteGeneral(nameof(AssignBlock), $"Block classified as {BlockType.None}...");
+
             return BlockType.None;
         }
 
@@ -186,7 +161,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             {
                 Block block = kvp.Value;
                 DeRegisterBlockEvents(block);
-                _mediator.ReturnBlock(block, block.EntityId);
+                _mediator.ReturnBlock(block);
             }
             _importantBlocks.Clear();
         }

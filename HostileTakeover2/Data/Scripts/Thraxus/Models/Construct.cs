@@ -58,7 +58,6 @@ namespace HostileTakeover2.Thraxus.Models
             GridOwnershipController.TakeOverGridAction += TakeOverGrid;
             GridOwnershipController.IgnoreGridAction += IgnoreGrid;
             GridGroupManager.OnWriteToLog += WriteGeneral;
-            GridGroupManager.GridAddedAction += OnGridAdded;
             GridGroupManager.GridRemovedAction += OnGridRemoved;
             SetupGridGroup();
             WriteGeneral(nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] complete.");
@@ -168,7 +167,7 @@ namespace HostileTakeover2.Thraxus.Models
                     if (newGridGroup == null)
                     {
                         WriteGeneral(nameof(OnGridRemoved), $"No new grid group — returning construct to pool: [{_me.EntityId:D18}]");
-                        _mediator.ReturnConstruct(this, _me.EntityId);
+                        _mediator.ReturnConstruct(this);
                         return;
                     }
                     GridGroupManager.Refresh(newGridGroup);
@@ -183,15 +182,6 @@ namespace HostileTakeover2.Thraxus.Models
                     OnAllImportantBlocksGone();
             }
             catch (Exception e) { WriteGeneral(nameof(OnGridRemoved), $"Exception: {e}"); }
-        }
-
-        private void OnGridAdded(IMyCubeGrid newGrid)
-        {
-            try
-            {
-                WriteGeneral(nameof(OnGridAdded), $"Grid was added.  Adding to IMyGridGroupData for [{(_me.EntityId == newGrid.EntityId).ToSingleChar()}] [{_me.EntityId:D18}] [{newGrid.EntityId:D18}].");
-            }
-            catch (Exception e) { WriteGeneral(nameof(OnGridAdded), $"Exception: {e}"); }
         }
 
         private void OnAllImportantBlocksGone()
@@ -366,7 +356,6 @@ namespace HostileTakeover2.Thraxus.Models
             GridOwnershipController.DisownGridAction -= DisownGrid;
             GridOwnershipController.TakeOverGridAction -= TakeOverGrid;
             GridOwnershipController.IgnoreGridAction -= IgnoreGrid;
-            GridGroupManager.GridAddedAction -= OnGridAdded;
             GridGroupManager.GridRemovedAction -= OnGridRemoved;
             GridGroupManager.OnWriteToLog -= WriteGeneral;
             GridGroupManager.Reset();

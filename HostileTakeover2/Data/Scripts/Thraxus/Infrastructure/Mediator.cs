@@ -72,7 +72,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             return construct;
         }
 
-        public void ReturnConstruct(Construct construct, long entityId)
+        public void ReturnConstruct(Construct construct)
         {
             construct.OnWriteToLog -= WriteGeneral;
             _constructPool.Return(construct);
@@ -85,7 +85,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             return block;
         }
 
-        public void ReturnBlock(Block block, long blockId)
+        public void ReturnBlock(Block block)
         {
             block.OnWriteToLog -= WriteGeneral;
             _blockPool.Return(block);

@@ -63,6 +63,9 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             RightfulOwner = 0;
             SetOwnershipAction = null;
+            DisownGridAction = null;
+            IgnoreGridAction = null;
+            TakeOverGridAction = null;
             OwnershipType = OwnershipType.None;
             base.Reset();
         }

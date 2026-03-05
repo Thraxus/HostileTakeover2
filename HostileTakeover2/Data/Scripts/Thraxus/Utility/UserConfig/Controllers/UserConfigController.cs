@@ -10,15 +10,13 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
     /// <summary>
     /// Loads, validates, and saves user-configurable settings for the mod.
     ///
-    /// <see cref="Initialize"/> performs a load-map-clean-save round-trip:
+    /// <see cref="InitializeServer"/> performs a load-map-save round-trip:
     /// <list type="number">
     ///   <item><c>Get&lt;UserSettings&gt;()</c> reads the XML file from world storage
     ///     (returns null on first run when no file exists yet).</item>
     ///   <item><see cref="SettingsMapper"/> parses the raw string fields from the XML
     ///     object into typed values on <see cref="DefaultSettings"/> and repairs any
     ///     out-of-range values by writing the default back to the XML object.</item>
-    ///   <item><see cref="CleanUserSettings"/> is a placeholder for any future sanitisation
-    ///     steps that do not fit naturally into <see cref="SettingsMapper"/>.</item>
     ///   <item><c>Set(_userSettings)</c> writes the (possibly corrected) XML object back
     ///     to disk so the player sees the current effective values next time they edit it.</item>
     /// </list>
@@ -40,7 +38,6 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             DefaultSettings.InitializeToDefaults();
             _userSettings = Get<UserSettings>();
             SettingsMapper();
-            CleanUserSettings();
             Set(_userSettings);
             WriteToSandbox();
         }
@@ -118,15 +115,6 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
                         DefaultSettings.ActiveDebugCategories.Add(cat);
                 }
             }
-        }
-
-        /// <summary>
-        /// Placeholder for any post-parse sanitisation steps.
-        /// Currently a no-op; left in place as a reminder that this hook exists.
-        /// </summary>
-        private void CleanUserSettings()
-        {
-            // Nothing to do here, just leaving it in as a reminder.
         }
 
         /// <summary>
