@@ -119,7 +119,8 @@ namespace HostileTakeover2.Thraxus
         protected override void Unload()
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
-            _mediator.Close();
+            try { _mediator.Close(); }
+            catch (Exception e) { WriteGeneral(nameof(Unload), $"Exception: {e}"); }
             _mediator.OnWriteToLog -= WriteGeneral;
             base.Unload();
         }
