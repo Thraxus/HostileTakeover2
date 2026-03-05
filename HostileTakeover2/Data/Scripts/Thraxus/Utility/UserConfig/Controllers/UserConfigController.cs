@@ -318,7 +318,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
                 DefaultSettings.UseMedicalGroup.Current                           = false;
                 DefaultSettings.UseTrapGroup.Current                              = false;
                 DefaultSettings.AllowPlayerHacking.Current                        = false;
-                DefaultSettings.HighlightAllGridsInRange.Current                  = DefaultSettings.HighlightAllGridsInRange.Default;
+                DefaultSettings.HighlightAllGridsInRange.Current                  = false;
                 DefaultSettings.HighlightAllBlocks.Current                        = DefaultSettings.HighlightAllBlocks.Default;
                 DefaultSettings.HighlightSingleNearestBlock.Current               = DefaultSettings.HighlightSingleNearestBlock.Default;
                 DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current  = DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Default;
