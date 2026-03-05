@@ -267,7 +267,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                 return unk == 0 ? int.MaxValue : unk;
             }
             int perTier = _mediator.DefaultSettings.BlocksPerGrinderTier.Current;
-            string subtype = entity.DefinitionId.HasValue ? entity.DefinitionId.Value.SubtypeId.String : null;
+            string subtype = entity.DefinitionId?.SubtypeId.String;
             switch (subtype)
             {
                 case "AngleGrinder":  return perTier;
