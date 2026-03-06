@@ -50,7 +50,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             _currentHighlightedBlocks.Add(block, hls);
             block.OnClose += RemoveFromHighlightedBlocks;
             block.OnReset += RemoveFromHighlightedBlocks;
-            block.BlockHasBeenDisableAction += RemoveFromHighlightedBlocks;
+            block.BlockHasBeenDisabledAction += RemoveFromHighlightedBlocks;
             _mediator.ActionQueue.Add(_mediator.DefaultSettings.HighlightDuration, () => RemoveFromHighlightedBlocks(block));
         }
 
@@ -65,7 +65,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                 _currentHighlightedBlocks.Remove(block);
                 block.OnClose -= RemoveFromHighlightedBlocks;
                 block.OnReset -= RemoveFromHighlightedBlocks;
-                block.BlockHasBeenDisableAction -= RemoveFromHighlightedBlocks;
+                block.BlockHasBeenDisabledAction -= RemoveFromHighlightedBlocks;
                 hls.Enabled = false;
                 hls.LineThickness = _mediator.DefaultSettings.DisabledThickness;
                 SetHighlight(hls);

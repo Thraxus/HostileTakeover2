@@ -98,7 +98,6 @@ namespace HostileTakeover2.Thraxus.Controllers
                 long capturedPlayerId = playerId;
                 grinder.OnMarkForClose += entity => ClearDebugMarkersForPlayer(capturedPlayerId);
             }
-
         }
 
         private void TriggerHighlightsForAllNearbyNpcGrids(IMyAngleGrinder grinder)
@@ -121,6 +120,19 @@ namespace HostileTakeover2.Thraxus.Controllers
         // before publishing the mod to suppress all GPS marker output.
 
         private readonly Dictionary<long, List<IMyGps>> _debugGpsMarkers = new Dictionary<long, List<IMyGps>>();
+
+        /// <summary>
+        /// Removes all GPS debug markers for <paramref name="playerId"/> from the HUD
+        /// and clears the tracking list.  Safe to call when no markers exist.
+        /// </summary>
+        private void ClearDebugMarkersForPlayer(long playerId)
+        {
+            List<IMyGps> markers;
+            if (!_debugGpsMarkers.TryGetValue(playerId, out markers)) return;
+            foreach (var gps in markers)
+                MyAPIGateway.Session.GPS.RemoveLocalGps(gps);
+            markers.Clear();
+        }
 
         /// <summary>
         /// Places GPS markers in the world to visualise the state of the detection sphere
@@ -146,19 +158,6 @@ namespace HostileTakeover2.Thraxus.Controllers
         /// the server and client share the same process so this works without network
         /// messages.  Do not use in a dedicated-server context without adding a packet.
         /// </summary>
-        /// <summary>
-        /// Removes all GPS debug markers for <paramref name="playerId"/> from the HUD
-        /// and clears the tracking list.  Safe to call when no markers exist.
-        /// </summary>
-        private void ClearDebugMarkersForPlayer(long playerId)
-        {
-            List<IMyGps> markers;
-            if (!_debugGpsMarkers.TryGetValue(playerId, out markers)) return;
-            foreach (var gps in markers)
-                MyAPIGateway.Session.GPS.RemoveLocalGps(gps);
-            markers.Clear();
-        }
-
         private void DebugVisualizeDetection(Vector3D grinderPos, long playerId, long selectedEntityId)
         {
             // Remove markers placed by the previous equip for this player.
@@ -233,6 +232,5 @@ namespace HostileTakeover2.Thraxus.Controllers
             MyAPIGateway.Session.GPS.AddLocalGps(gps);
             markers.Add(gps);
         }
-
     }
 }

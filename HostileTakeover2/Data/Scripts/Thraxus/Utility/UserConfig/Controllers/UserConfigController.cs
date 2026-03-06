@@ -106,7 +106,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightAllBlocks", out b))                        DefaultSettings.HighlightAllBlocks.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightSingleNearestBlock", out b))               DefaultSettings.HighlightSingleNearestBlock.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightSingleNearestBlockInActiveGroup", out b))  DefaultSettings.HighlightSingleNearestBlockInActiveGroup.Current = b;
-            if (MyAPIGateway.Utilities.GetVariable("HT_UseGrinderTierHighlighting", out b))               DefaultSettings.UseGrinderTierHighlighting.Current = b;
+            if (MyAPIGateway.Utilities.GetVariable("HT_UseGrinderTierHighlighting", out b))                DefaultSettings.UseGrinderTierHighlighting.Current = b;
 
             int intVal;
             if (MyAPIGateway.Utilities.GetVariable("HT_BlocksPerGrinderTier", out intVal))               DefaultSettings.BlocksPerGrinderTier.Current = intVal;

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Collections;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Common.Generics;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Controllers;
+using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Models;
 using HostileTakeover2.Thraxus.Settings;
 using HostileTakeover2.Thraxus.Utility.Classification;

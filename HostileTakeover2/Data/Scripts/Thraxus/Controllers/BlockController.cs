@@ -90,7 +90,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             block.OnReset += OnResetBlock;
             block.OnClose += BlockOnClose;
-            block.BlockHasBeenDisableAction += OnBlockDisabled;
+            block.BlockHasBeenDisabledAction += OnBlockDisabled;
         }
 
         private void BlockOnClose(IClose block)
@@ -118,7 +118,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             block.OnReset -= OnResetBlock;
             block.OnClose -= BlockOnClose;
-            block.BlockHasBeenDisableAction -= OnBlockDisabled;
+            block.BlockHasBeenDisabledAction -= OnBlockDisabled;
         }
 
         private void OnResetBlock(IReset block)

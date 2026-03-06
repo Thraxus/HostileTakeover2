@@ -1,5 +1,5 @@
-using Sandbox.Definitions;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
+using Sandbox.Definitions;
 
 namespace HostileTakeover2.Thraxus.Utility.Classification
 {

@@ -12,7 +12,7 @@ namespace HostileTakeover2.Thraxus.Models
     {
         public MyCubeBlock MyCubeBlock;
         private GridOwnershipController _gridOwnershipController;
-        public Action<Block> BlockHasBeenDisableAction;
+        public Action<Block> BlockHasBeenDisabledAction;
         public BlockType BlockType;
         public string Name => MyCubeBlock?.Name ?? string.Empty;
         public long EntityId { get; private set; }
@@ -60,14 +60,14 @@ namespace HostileTakeover2.Thraxus.Models
             {
                 _gridOwnershipController.SetOwnership(MyCubeBlock);
                 if (!block.IsFunctional)
-                    BlockHasBeenDisable();
+                    BlockHasBeenDisabled();
             }
             catch (Exception e) { WriteGeneral(nameof(BlockOnWorkingChanged), $"Exception: {e}"); }
         }
 
-        private void BlockHasBeenDisable()
+        private void BlockHasBeenDisabled()
         {
-            BlockHasBeenDisableAction?.Invoke(this);
+            BlockHasBeenDisabledAction?.Invoke(this);
         }
 
         public override void Reset()

@@ -223,7 +223,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         {
             userSettings.EntityDetectionRange                      = EntityDetectionRange.ToString();
             userSettings.AllowPlayerHacking                        = AllowPlayerHacking.ToString().ToLower();
-            userSettings.MirrorEasyNpcTakeovers                   = MirrorEasyNpcTakeovers.ToString().ToLower();
+            userSettings.MirrorEasyNpcTakeovers                    = MirrorEasyNpcTakeovers.ToString().ToLower();
             userSettings.UseHighlights                             = UseHighlights.ToString().ToLower();
             userSettings.HighlightAllGridsInRange                  = HighlightAllGridsInRange.ToString().ToLower();
             userSettings.UseWeaponGroup                            = UseWeaponGroup.ToString().ToLower();
@@ -261,8 +261,8 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", HighlightSingleNearestBlock,               nameof(HighlightSingleNearestBlock));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", HighlightSingleNearestBlockInActiveGroup,  nameof(HighlightSingleNearestBlockInActiveGroup));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", UseGrinderTierHighlighting,                nameof(UseGrinderTierHighlighting));
-            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", BlocksPerGrinderTier,                     nameof(BlocksPerGrinderTier));
-            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", UnknownGrinderTierBlockCount,             nameof(UnknownGrinderTierBlockCount));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", BlocksPerGrinderTier,                      nameof(BlocksPerGrinderTier));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", UnknownGrinderTierBlockCount,              nameof(UnknownGrinderTierBlockCount));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", DebugMode,                                 nameof(DebugMode));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", VerboseMode,                               nameof(VerboseMode));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", SerializeActiveCategories(),               nameof(ActiveDebugCategories));

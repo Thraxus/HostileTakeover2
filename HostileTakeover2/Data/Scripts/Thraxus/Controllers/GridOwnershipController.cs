@@ -15,7 +15,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         public Action DisownGridAction;
         public Action IgnoreGridAction;
         public Action TakeOverGridAction;
-        
+
         private void DisownGrid()
         {
             DisownGridAction?.Invoke();
@@ -41,7 +41,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             RightfulOwner = rightfulOwner;
             OwnershipType = rightfulOwner == 0 ? OwnershipType.None : MyAPIGateway.Players.TryGetSteamId(rightfulOwner) <= 0
                 ? OwnershipType.Npc : OwnershipType.Player;
-            
+
             WriteGeneral(nameof(SetOwnership), $"Owner determined to be {rightfulOwner:D18} which is of type {OwnershipType}");
 
             switch (OwnershipType)
