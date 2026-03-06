@@ -5,7 +5,6 @@ using HostileTakeover2.Thraxus.Common.Factions.Models;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
-using HostileTakeover2.Thraxus.Common.Utilities.Tools;
 using HostileTakeover2.Thraxus.Utility.Classification;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
@@ -50,6 +49,7 @@ namespace HostileTakeover2.Thraxus
                 _mediator.AddSettings(_userConfigController);
                 BlockClassifier.Populate(_mediator.BlockClassificationData, _userConfigController.DefaultSettings);
                 BlockClassificationWriter.Write(_mediator.BlockClassificationData);
+                BlockClassificationOverridesReader.Read(_mediator.BlockClassificationData);
                 MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
             }
             else
@@ -122,14 +122,12 @@ namespace HostileTakeover2.Thraxus
         protected override void LateSetup()
         {
             base.LateSetup();
-            ResearchManager.Initialize();
         }
 
         protected override void UpdateBeforeSim()
         {
             base.UpdateBeforeSim();
             _mediator.ActionQueue.Execute();
-            ResearchManager.Tick();
         }
 
         protected override void Unload()
@@ -138,7 +136,6 @@ namespace HostileTakeover2.Thraxus
             try { _mediator.Close(); }
             catch (Exception e) { WriteGeneral(nameof(Unload), $"Exception: {e}"); }
             _mediator.OnWriteToLog -= WriteGeneral;
-            ResearchManager.Unload();
             base.Unload();
         }
         

@@ -20,7 +20,7 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
             weapon.Sort();
             trap.Sort();
 
-            using (TextWriter w = MyAPIGateway.Utilities.WriteFileInLocalStorage(FileName, typeof(BlockClassificationWriter)))
+            using (TextWriter w = MyAPIGateway.Utilities.WriteFileInWorldStorage(FileName, typeof(BlockClassificationWriter)))
             {
                 w.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                 w.WriteLine("<!--");
