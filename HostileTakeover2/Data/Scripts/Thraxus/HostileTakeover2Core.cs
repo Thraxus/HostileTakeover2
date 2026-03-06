@@ -113,7 +113,7 @@ namespace HostileTakeover2.Thraxus
         protected override void LateSetup()
         {
             base.LateSetup();
-            ResearchManager.Initialize();
+            ResearchManager.Initialize(_mediator);
         }
 
         protected override void UpdateBeforeSim()

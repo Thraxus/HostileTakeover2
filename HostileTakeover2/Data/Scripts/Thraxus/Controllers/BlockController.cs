@@ -5,6 +5,7 @@ using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Models;
+using HostileTakeover2.Thraxus.Utility.Research;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
@@ -50,6 +51,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             _mediator.ActionQueue.Add(10, () =>
             {
+                RuntimeBlockLogger.OnBlockEncountered?.Invoke(myCubeBlock);
                 var blockType = AssignBlock(myCubeBlock);
                 if (blockType == BlockType.None) return;
                 if (!myCubeBlock.IsFunctional) return;
@@ -144,7 +146,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                 return BlockType.Weapon;
 
             var sorter = block as MyConveyorSorter;
-            if (sorter != null && !sorter.BlockDefinition.Context.IsBaseGame)
+            if (sorter != null && !sorter.BlockDefinition.Context.IsBaseGame && sorter.BlockDefinition.Context.ModId == "3154371364")
                 return BlockType.Weapon;
 
             var warhead = block as IMyWarhead;

@@ -5,8 +5,25 @@ using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Utility.Research
 {
-    internal static class BlockDefinitionDumper
+    internal static class FilteredBlockDefinitionDumper
     {
+        private static readonly HashSet<string> IncludedTypes = new HashSet<string>
+        {
+            "MyCockpitDefinition",
+            "MyConveyorSorterDefinition",
+            "MyCryoChamberDefinition",
+            "MyDefensiveCombatBlockDefinition",
+            "MyFunctionalBlockDefinition",
+            "MyLargeTurretBaseDefinition",
+            "MyMedicalRoomDefinition",
+            "MyOffensiveCombatBlockDefinition",
+            "MyRemoteControlDefinition",
+            "MySurvivalKitDefinition",
+            "MyTurretControlBlockDefinition",
+            "MyWarheadDefinition",
+            "MyWeaponBlockDefinition",
+        };
+
         private class BlockDefRecord
         {
             public string TypeName;
@@ -26,6 +43,7 @@ namespace HostileTakeover2.Thraxus.Utility.Research
                 {
                     var cubeDef = def as MyCubeBlockDefinition;
                     if (cubeDef == null || !cubeDef.Public) continue;
+                    if (!IncludedTypes.Contains(cubeDef.GetType().Name)) continue;
                     records.Add(new BlockDefRecord
                     {
                         TypeName = cubeDef.GetType().Name,
@@ -49,10 +67,10 @@ namespace HostileTakeover2.Thraxus.Utility.Research
             }
             catch (Exception e)
             {
-                MyLog.Default.WriteLineAndConsole($"BlockDefinitionDumper.Dump() collection exception: {e}");
+                MyLog.Default.WriteLineAndConsole($"FilteredBlockDefinitionDumper.Dump() collection exception: {e}");
             }
 
-            var data = new DataLog("BlockDefinitionResearch");
+            var data = new DataLog("BlockDefinitionFiltered");
             try
             {
                 data.WriteHeader("TypeName", "TypeId", "SubtypeId", "CubeSize", "Source", "DisplayName");
@@ -61,7 +79,7 @@ namespace HostileTakeover2.Thraxus.Utility.Research
             }
             catch (Exception e)
             {
-                MyLog.Default.WriteLineAndConsole($"BlockDefinitionDumper.Dump() write exception: {e}");
+                MyLog.Default.WriteLineAndConsole($"FilteredBlockDefinitionDumper.Dump() write exception: {e}");
             }
             finally
             {

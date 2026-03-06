@@ -217,6 +217,13 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Controllers\UserConfigController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Models\DefaultSettings.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Models\UserSettings.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\BlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\FilteredBlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\BlockResearchSpawner.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\RuntimeBlockInterfaceDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\DataLog.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\ResearchManager.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\RuntimeBlockLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
