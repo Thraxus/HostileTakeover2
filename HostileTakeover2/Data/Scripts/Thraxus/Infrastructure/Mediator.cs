@@ -7,6 +7,7 @@ using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Controllers;
 using HostileTakeover2.Thraxus.Models;
 using HostileTakeover2.Thraxus.Settings;
+using HostileTakeover2.Thraxus.Utility.Classification;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using VRage.Game.ModAPI;
@@ -24,6 +25,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         private readonly ObjectPool<ReusableCubeGridList<IMyCubeGrid>> _reusableMyCubeGridCollectionObjectPool =
             new ObjectPool<ReusableCubeGridList<IMyCubeGrid>>(() => new ReusableCubeGridList<IMyCubeGrid>());
 
+        public readonly BlockClassificationData BlockClassificationData = new BlockClassificationData();
         public readonly ConstructController ConstructController = new ConstructController();
         public readonly GrinderController GrinderController = new GrinderController();
         public readonly HighlightController HighlightController = new HighlightController();

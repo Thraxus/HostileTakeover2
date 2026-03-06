@@ -6,6 +6,7 @@ using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
 using HostileTakeover2.Thraxus.Common.Utilities.Tools;
+using HostileTakeover2.Thraxus.Utility.Classification;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
@@ -47,6 +48,7 @@ namespace HostileTakeover2.Thraxus
                 _userConfigController.InitializeServer();
                 _mediator.OnWriteToLog += WriteGeneral;
                 _mediator.AddSettings(_userConfigController);
+                BlockClassifier.Populate(_mediator.BlockClassificationData, _userConfigController.DefaultSettings);
                 MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
             }
             else

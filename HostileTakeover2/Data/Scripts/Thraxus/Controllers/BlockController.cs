@@ -6,11 +6,7 @@ using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Models;
 using HostileTakeover2.Thraxus.Common.Utilities.Tools.Research;
-using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
-using Sandbox.ModAPI;
-using SpaceEngineers.Game.ModAPI;
-using VRage.Utils;
 
 namespace HostileTakeover2.Thraxus.Controllers
 {
@@ -129,37 +125,12 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private BlockType AssignBlock(MyCubeBlock block)
         {
-            var controller = block as IMyShipController;
-            if (controller != null && controller.CanControlShip)
-                return BlockType.Control;
-
-            var medical = block as IMyMedicalRoom;
-            if (medical != null)
-                return BlockType.Medical;
-
-            var cryo = block as IMyCryoChamber;
-            if (cryo != null)
-                return BlockType.Medical;
-
-            var weapon = block as IMyLargeTurretBase;
-            if (weapon != null)
-                return BlockType.Weapon;
-
-            var sorter = block as MyConveyorSorter;
-            if (sorter != null && !sorter.BlockDefinition.Context.IsBaseGame && sorter.BlockDefinition.Context.ModId == "3154371364")
-                return BlockType.Weapon;
-
-            var warhead = block as IMyWarhead;
-            if (warhead != null)
-                return BlockType.Trap;
-
-            if (block.BlockDefinition.Id.TypeId == typeof(MyObjectBuilder_SurvivalKit))
-                return BlockType.Medical;
-
-            var upgrade = block as IMyUpgradeModule;
-            if (upgrade != null && block.BlockDefinition.Id.SubtypeId == MyStringHash.GetOrCompute("BotSpawner"))
-                return BlockType.Weapon;
-
+            string key = block.BlockDefinition.Id.ToString();
+            var data = _mediator.BlockClassificationData;
+            if (data.ControlBlocks.Contains(key)) return BlockType.Control;
+            if (data.MedicalBlocks.Contains(key))  return BlockType.Medical;
+            if (data.WeaponBlocks.Contains(key))   return BlockType.Weapon;
+            if (data.TrapBlocks.Contains(key))     return BlockType.Trap;
             return BlockType.None;
         }
 
