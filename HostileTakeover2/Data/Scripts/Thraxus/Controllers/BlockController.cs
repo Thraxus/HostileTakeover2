@@ -17,6 +17,9 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public Action OnImportantBlocksEmpty;
 
+        private int _pendingAddCount;
+        public bool HasPendingAdds => _pendingAddCount > 0;
+
         private Mediator _mediator;
         private GridOwnershipController _ownershipController;
 
@@ -45,20 +48,30 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public void AddBlock(MyCubeBlock myCubeBlock)
         {
+            _pendingAddCount++;
             _mediator.ActionQueue.Add(10, () =>
             {
-                RuntimeBlockLogger.OnBlockEncountered?.Invoke(myCubeBlock);
-                var blockType = AssignBlock(myCubeBlock);
-                if (blockType == BlockType.None) return;
-                if (!myCubeBlock.IsFunctional) return;
-                if (_importantBlocks.ContainsKey(myCubeBlock)) return;
-                IsClosed = false;
-                Block block = _mediator.GetBlock(myCubeBlock.EntityId);
-                block.Initialize(blockType, myCubeBlock, _ownershipController);
-                if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
-                    WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block classified [{blockType}]: {myCubeBlock.EntityId:D18}");
-                RegisterBlockEvents(block);
-                AddToDictionary(myCubeBlock, block);
+                try
+                {
+                    RuntimeBlockLogger.OnBlockEncountered?.Invoke(myCubeBlock);
+                    var blockType = AssignBlock(myCubeBlock);
+                    if (blockType == BlockType.None) return;
+                    if (!myCubeBlock.IsFunctional) return;
+                    if (_importantBlocks.ContainsKey(myCubeBlock)) return;
+                    IsClosed = false;
+                    Block block = _mediator.GetBlock(myCubeBlock.EntityId);
+                    block.Initialize(blockType, myCubeBlock, _ownershipController);
+                    if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
+                        WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block classified [{blockType}]: {myCubeBlock.EntityId:D18}");
+                    RegisterBlockEvents(block);
+                    AddToDictionary(myCubeBlock, block);
+                }
+                finally
+                {
+                    _pendingAddCount--;
+                    if (_pendingAddCount == 0 && _importantBlocks.Count == 0 && !IsClosed)
+                        OnImportantBlocksEmpty?.Invoke();
+                }
             });
         }
 
@@ -136,6 +149,8 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void SoftReset()
         {
+            _pendingAddCount = 0;
+            IsClosed = true;
             foreach (var kvp in _importantBlocks)
             {
                 Block block = kvp.Value;

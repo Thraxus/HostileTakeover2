@@ -209,27 +209,47 @@ namespace HostileTakeover2.Thraxus.Models
 
                 var gridList = _mediator.GetReusableCubeGridList(groupData);
                 bool anyHasBlocks = false;
+                bool anyPending   = false;
+
                 foreach (var grid in gridList)
                 {
                     Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                    if (construct != null && construct.BlockController.GetImportantBlockCount() > 0)
+                    if (construct == null)
+                    {
+                        // Null construct = either a player grid (expected) or an NPC grid not yet
+                        // initialized. If it's NPC-owned, defer the decision until it's ready.
+                        var cubeGrid = (MyCubeGrid)grid;
+                        long owner = cubeGrid.BigOwners.Count > 0 ? cubeGrid.BigOwners[0] : 0;
+                        if (owner != 0 && MyAPIGateway.Players.TryGetSteamId(owner) == 0)
+                            anyPending = true;
+                        continue;
+                    }
+                    if (construct.BlockController.GetImportantBlockCount() > 0)
                     {
                         anyHasBlocks = true;
                         break;
                     }
+                    if (construct.BlockController.HasPendingAdds)
+                        anyPending = true;
                 }
 
-                if (!anyHasBlocks)
+                if (anyHasBlocks || anyPending)
                 {
-                    foreach (var grid in gridList)
-                    {
-                        var cubeGrid = (MyCubeGrid)grid;
-                        if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0)
-                            continue;
-                        cubeGrid.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
-                        Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                        construct?.DisownGrid();
-                    }
+                    _mediator.ReturnReusableCubeGridList(gridList);
+                    if (anyPending)
+                        _mediator.ActionQueue.Add(DefaultSettings.MinorTickDelay + 11, OnAllImportantBlocksGone);
+                    return;
+                }
+
+                // All constructs accounted for, none pending, none have important blocks — disown.
+                foreach (var grid in gridList)
+                {
+                    var cubeGrid = (MyCubeGrid)grid;
+                    if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0)
+                        continue;
+                    cubeGrid.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
+                    Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                    construct?.DisownGrid();
                 }
                 _mediator.ReturnReusableCubeGridList(gridList);
             }
