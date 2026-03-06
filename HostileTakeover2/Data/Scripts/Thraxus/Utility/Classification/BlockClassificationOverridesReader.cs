@@ -54,7 +54,7 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
                 using (TextReader tr = MyAPIGateway.Utilities.ReadFileInWorldStorage(FileName, typeof(BlockClassificationOverridesReader)))
                     xml = tr.ReadToEnd();
 
-                BlockClassificationOverridesXml overrides =
+                var overrides =
                     MyAPIGateway.Utilities.SerializeFromXML<BlockClassificationOverridesXml>(xml);
 
                 if (overrides == null) return;
@@ -73,7 +73,7 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
 
         private static void ApplyAdds(List<string> adds, HashSet<string> set)
         {
-            foreach (string key in adds)
+            foreach (var key in adds)
             {
                 string trimmed = key.Trim();
                 if (!string.IsNullOrEmpty(trimmed)) set.Add(trimmed);
@@ -82,7 +82,7 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
 
         private static void ApplyExcludes(List<string> excludes, BlockClassificationData data)
         {
-            foreach (string key in excludes)
+            foreach (var key in excludes)
             {
                 string trimmed = key.Trim();
                 if (string.IsNullOrEmpty(trimmed)) continue;

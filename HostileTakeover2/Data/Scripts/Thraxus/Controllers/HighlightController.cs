@@ -124,7 +124,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                     if (!block.IsFunctional || block.IsClosed || block.BlockType == BlockType.None)
                     {
                         if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
-                        WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Block rejected!  Type: {block.BlockType} | Functional: {block.IsFunctional} | Closed: {block.IsClosed}");
+                            WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Block rejected!  Type: {block.BlockType} | Functional: {block.IsFunctional} | Closed: {block.IsClosed}");
                         continue;
                     }
                     _reusableImportantBlocksDictionary[block.BlockType].Add(block);
