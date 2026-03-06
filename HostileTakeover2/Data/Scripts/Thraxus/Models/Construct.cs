@@ -137,6 +137,7 @@ namespace HostileTakeover2.Thraxus.Models
                 if (!hasOwnerBlocks) continue;
                 Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                 if (construct == null) continue;
+                if (construct.GridOwnershipController.RightfulOwner == ownerId) continue;
                 construct.GridOwnershipController.SetOwnership(ownerId);
             }
             _mediator.ReturnReusableCubeGridList(gridList);
@@ -197,6 +198,7 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void OnAllImportantBlocksGone()
         {
+            if (GridOwnershipController.OwnershipType != OwnershipType.Npc) return;
             try
             {
                 var groupData = GridGroupManager.GridGroupData;
@@ -288,10 +290,10 @@ namespace HostileTakeover2.Thraxus.Models
         private void SetOwnership()
         {
             if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
-                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Grabbing some blocks...");
+                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Scanning grid for important blocks.");
             BlockController.AddGrid(_me);
             if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
-                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Grabbed some blocks.. {BlockController.GetImportantBlockCount()}");
+                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Scan queued. Current important block count: {BlockController.GetImportantBlockCount()}");
         }
 
         private void SetOwnership(MyCubeBlock block)
