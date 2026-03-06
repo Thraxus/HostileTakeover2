@@ -216,6 +216,7 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Settings\UserSetting.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Classification\BlockClassificationData.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Classification\BlockClassifier.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Classification\BlockClassificationWriter.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Controllers\UserConfigController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Models\DefaultSettings.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Models\UserSettings.cs" />

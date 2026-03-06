@@ -49,6 +49,7 @@ namespace HostileTakeover2.Thraxus
                 _mediator.OnWriteToLog += WriteGeneral;
                 _mediator.AddSettings(_userConfigController);
                 BlockClassifier.Populate(_mediator.BlockClassificationData, _userConfigController.DefaultSettings);
+                BlockClassificationWriter.Write(_mediator.BlockClassificationData);
                 MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
             }
             else
