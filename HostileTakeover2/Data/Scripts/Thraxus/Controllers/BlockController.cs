@@ -5,7 +5,7 @@ using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Models;
-using HostileTakeover2.Thraxus.Utility.Research;
+using HostileTakeover2.Thraxus.Common.Utilities.Tools.Research;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;

@@ -11,7 +11,7 @@ using VRage.ObjectBuilders;
 using VRage.Utils;
 using VRageMath;
 
-namespace HostileTakeover2.Thraxus.Utility.Research
+namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Research
 {
     internal static class BlockResearchSpawner
     {

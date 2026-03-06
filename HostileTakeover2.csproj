@@ -217,13 +217,18 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Controllers\UserConfigController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Models\DefaultSettings.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\UserConfig\Models\UserSettings.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\BlockDefinitionDumper.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\FilteredBlockDefinitionDumper.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\BlockResearchSpawner.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\RuntimeBlockInterfaceDumper.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\DataLog.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\ResearchManager.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Utility\Research\RuntimeBlockLogger.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\BlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\ControlBlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\MedicalBlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\WeaponBlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\TrapBlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\ModdedBlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\FilteredBlockDefinitionDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\BlockResearchSpawner.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\RuntimeBlockInterfaceDumper.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\DataLog.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\ResearchManager.cs" />
+    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Common\Utilities\Tools\Research\RuntimeBlockLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

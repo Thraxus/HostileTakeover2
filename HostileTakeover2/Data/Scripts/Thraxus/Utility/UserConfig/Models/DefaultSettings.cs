@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Settings;
+using Sandbox.ModAPI;
 using VRageMath;
 
 // ReSharper disable SpecifyACultureInStringConversionExplicitly
@@ -104,6 +105,29 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
 
         /// <summary>True only when VerboseMode is active.  VerboseMode enables all categories regardless of <see cref="ActiveDebugCategories"/>.</summary>
         public bool IsVerboseActiveFor(LogCategory category) => VerboseMode.Current;
+
+        // ── Active mod detection ─────────────────────────────────────────────────────
+        // Computed once at session init; never persisted. Used by the block classifier
+        // to gate modded-block classification rules that only apply when specific mods
+        // are loaded.
+
+        /// <summary>True when WeaponCore (ModId 3154371364) is loaded. Enables classification of non-vanilla MyConveyorSorterDefinition blocks as Weapon.</summary>
+        public bool IsWeaponCoreActive { get; private set; }
+        /// <summary>True when AiEnabled (ModId 2596208372) is loaded. Enables classification of non-vanilla MyConveyorSorterDefinition and MyUpgradeModuleDefinition blocks as Weapon.</summary>
+        public bool IsAiEnabledActive { get; private set; }
+
+        /// <summary>
+        /// Scans the loaded mod list once at session init and sets
+        /// <see cref="IsWeaponCoreActive"/> and <see cref="IsAiEnabledActive"/>.
+        /// </summary>
+        public void DetectActiveMods()
+        {
+            foreach (var mod in MyAPIGateway.Session.Mods)
+            {
+                if (mod.PublishedFileId == 3154371364UL) IsWeaponCoreActive = true;
+                if (mod.PublishedFileId == 2596208372UL) IsAiEnabledActive  = true;
+            }
+        }
 
         // ── Mod hard-coded tick delays ───────────────────────────────────────────────
         // These values control internal timing and are not exposed to users.
@@ -241,7 +265,9 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", UnknownGrinderTierBlockCount,             nameof(UnknownGrinderTierBlockCount));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", DebugMode,                                 nameof(DebugMode));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", VerboseMode,                               nameof(VerboseMode));
-            sb.AppendFormat("{0, -4}[{1}] {2}\n\n", " ", SerializeActiveCategories(),               nameof(ActiveDebugCategories));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", SerializeActiveCategories(),               nameof(ActiveDebugCategories));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", IsWeaponCoreActive,                        nameof(IsWeaponCoreActive));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n\n", " ", IsAiEnabledActive,                         nameof(IsAiEnabledActive));
             return sb;
         }
     }

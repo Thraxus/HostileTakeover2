@@ -1,7 +1,7 @@
 using System;
 using Sandbox.Game.Entities;
 
-namespace HostileTakeover2.Thraxus.Utility.Research
+namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Research
 {
     internal static class RuntimeBlockLogger
     {

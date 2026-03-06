@@ -5,7 +5,7 @@ using HostileTakeover2.Thraxus.Common.Factions.Models;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
-using HostileTakeover2.Thraxus.Utility.Research;
+using HostileTakeover2.Thraxus.Common.Utilities.Tools;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
@@ -45,7 +45,6 @@ namespace HostileTakeover2.Thraxus
                 // Route settings and mediator log output up to the session-level log.
                 _userConfigController.OnWriteToLog += WriteGeneral;
                 _userConfigController.InitializeServer();
-                WriteGeneral(nameof(SuperEarlySetup), _userConfigController.DefaultSettings.PrintSettings().ToString());
                 _mediator.OnWriteToLog += WriteGeneral;
                 _mediator.AddSettings(_userConfigController);
                 MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
@@ -110,16 +109,24 @@ namespace HostileTakeover2.Thraxus
                 _mediator.ActionQueue.Add(delay, action);
         }
 
+        public override void BeforeStart()
+        {
+            base.BeforeStart();
+            if (!References.IsServer) return;
+            WriteGeneral(nameof(BeforeStart), _userConfigController.DefaultSettings.PrintSettings().ToString());
+        }
+
         protected override void LateSetup()
         {
             base.LateSetup();
-            ResearchManager.Initialize(_mediator);
+            ResearchManager.Initialize();
         }
 
         protected override void UpdateBeforeSim()
         {
             base.UpdateBeforeSim();
             _mediator.ActionQueue.Execute();
+            ResearchManager.Tick();
         }
 
         protected override void Unload()
@@ -128,6 +135,7 @@ namespace HostileTakeover2.Thraxus
             try { _mediator.Close(); }
             catch (Exception e) { WriteGeneral(nameof(Unload), $"Exception: {e}"); }
             _mediator.OnWriteToLog -= WriteGeneral;
+            ResearchManager.Unload();
             base.Unload();
         }
         

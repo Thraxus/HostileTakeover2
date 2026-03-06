@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Sandbox.Definitions;
 using VRage.Utils;
 
-namespace HostileTakeover2.Thraxus.Utility.Research
+namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Research
 {
     internal static class FilteredBlockDefinitionDumper
     {

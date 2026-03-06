@@ -4,7 +4,7 @@ using System.Text;
 using Sandbox.ModAPI;
 using VRage.Utils;
 
-namespace HostileTakeover2.Thraxus.Utility.Research
+namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Research
 {
     internal class DataLog
     {

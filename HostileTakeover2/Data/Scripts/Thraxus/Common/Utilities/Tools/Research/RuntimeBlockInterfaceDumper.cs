@@ -5,7 +5,7 @@ using Sandbox.ModAPI;
 using SpaceEngineers.Game.ModAPI;
 using VRage.Utils;
 
-namespace HostileTakeover2.Thraxus.Utility.Research
+namespace HostileTakeover2.Thraxus.Common.Utilities.Tools.Research
 {
     internal static class RuntimeBlockInterfaceDumper
     {

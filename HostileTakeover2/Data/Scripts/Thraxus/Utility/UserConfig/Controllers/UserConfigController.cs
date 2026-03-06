@@ -36,6 +36,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
         public void InitializeServer()
         {
             DefaultSettings.InitializeToDefaults();
+            DefaultSettings.DetectActiveMods();
             _userSettings = Get<UserSettings>();
             SettingsMapper();
             Set(_userSettings);
