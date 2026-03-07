@@ -38,7 +38,8 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
                 }
 
                 // Control
-                if (def is MyCockpitDefinition || def is MyRemoteControlDefinition || def is MyDefensiveCombatBlockDefinition)
+                var cockpit = def as MyCockpitDefinition;
+                if ((cockpit != null && cockpit.EnableShipControl) || def is MyRemoteControlDefinition || def is MyDefensiveCombatBlockDefinition)
                 {
                     data.ControlBlocks.Add(key);
                     continue;
