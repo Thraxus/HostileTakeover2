@@ -70,12 +70,28 @@ namespace HostileTakeover2.Thraxus.Common.Generics
                 // Remove the bucket before invoking so re-entrant Add calls don't corrupt iteration.
                 _scheduledActions.RemoveAt(0);
 
-                foreach (Action action in actions)
+                for (int i = 0; i < actions.Count; i++)
                 {
-                    try { action?.Invoke(); }
+                    try { actions[i]?.Invoke(); }
                     catch { /* prevent a bad action from crashing the game */ }
-                    // Enforce the per-call action cap; bail out early if reached.
-                    if (++processed >= iterationMax) return;
+                    // Enforce the per-call action cap.  When hit, reschedule any remaining
+                    // actions in this bucket for the very next tick so they are not lost.
+                    if (++processed >= iterationMax)
+                    {
+                        if (i + 1 < actions.Count)
+                        {
+                            int nextTick = _currentTick + 1;
+                            List<Action> overflow;
+                            if (!_scheduledActions.TryGetValue(nextTick, out overflow))
+                            {
+                                overflow = new List<Action>();
+                                _scheduledActions[nextTick] = overflow;
+                            }
+                            for (int j = i + 1; j < actions.Count; j++)
+                                overflow.Add(actions[j]);
+                        }
+                        return;
+                    }
                 }
             }
         }
