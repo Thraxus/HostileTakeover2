@@ -26,6 +26,7 @@ namespace HostileTakeover2.Thraxus.Models
         private readonly Dictionary<long, int> _ownershipTally = new Dictionary<long, int>();
         private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
         private bool _ownershipChangePending;
+        private bool _reclaimingBlocks;
 
         public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
         public long EntityId => _me?.EntityId ?? 0;
@@ -353,18 +354,15 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void ReclaimHackedBlocks(MyCubeGrid grid)
         {
+            if (_reclaimingBlocks) return;
             try
             {
-                foreach (var fatBlock in _me.GetFatBlocks())
-                {
-                    long expected = fatBlock.IsFunctional ? GridOwnershipController.RightfulOwner : 0;
-                    if (fatBlock.OwnerId != expected)
-                        fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.Faction);
-                    if (!fatBlock.IsFunctional)
-                        BlockController.HandleNonFunctionalBlock(fatBlock);
-                }
+                _reclaimingBlocks = true;
+                _me.ChangeGridOwnership(GridOwnershipController.RightfulOwner, MyOwnershipShareModeEnum.Faction);
+                BlockController.HandleNonFunctionalBlocks();
             }
             catch (Exception e) { WriteGeneral(nameof(ReclaimHackedBlocks), $"Exception: {e}"); }
+            finally { _reclaimingBlocks = false; }
         }
 
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
@@ -388,6 +386,7 @@ namespace HostileTakeover2.Thraxus.Models
             base.Reset();
             IsClosed = true;
             _ownershipChangePending = false;
+            _reclaimingBlocks = false;
             _groupGrids.Clear();
             _me.OnMarkForClose -= OnGridMarkedForClose;
             DeRegisterEvents();

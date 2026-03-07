@@ -14,6 +14,7 @@ namespace HostileTakeover2.Thraxus.Controllers
     {
         private readonly Dictionary<MyCubeBlock, Block> _importantBlocks =
             new Dictionary<MyCubeBlock, Block>();
+        private readonly List<Block> _nonFunctionalBuffer = new List<Block>();
 
         public Action OnImportantBlocksEmpty;
 
@@ -179,11 +180,15 @@ namespace HostileTakeover2.Thraxus.Controllers
             return _importantBlocks.Count;
         }
 
-        public void HandleNonFunctionalBlock(MyCubeBlock myCubeBlock)
+        public void HandleNonFunctionalBlocks()
         {
-            Block block;
-            if (!_importantBlocks.TryGetValue(myCubeBlock, out block)) return;
-            OnBlockDisabled(block);
+            _nonFunctionalBuffer.Clear();
+            foreach (var kvp in _importantBlocks)
+                if (!kvp.Value.IsFunctional)
+                    _nonFunctionalBuffer.Add(kvp.Value);
+            foreach (var block in _nonFunctionalBuffer)
+                OnBlockDisabled(block);
+            _nonFunctionalBuffer.Clear();
         }
     }
 }
