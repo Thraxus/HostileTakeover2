@@ -159,14 +159,15 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         public readonly int EnabledThickness = 10;
         /// <summary>Line thickness used when disabling a highlight (-1 = remove from HUD).</summary>
         public readonly int DisabledThickness = -1;
+        // Alpha=0 on SE highlights renders outline only with no block fill — intentional.
         /// <summary>Highlight colour for control seats.</summary>
-        public readonly Color ControlColor = Color.DodgerBlue;
+        public readonly Color ControlColor = new Color(30, 144, 255, 0);    // DodgerBlue
         /// <summary>Highlight colour for medical / cryo / survival-kit blocks.</summary>
-        public readonly Color MedicalColor = Color.Red;
+        public readonly Color MedicalColor = new Color(255, 0, 0, 0);       // Red
         /// <summary>Highlight colour for weapon blocks.</summary>
-        public readonly Color WeaponColor = Color.Purple;
+        public readonly Color WeaponColor = new Color(128, 0, 128, 0);      // Purple
         /// <summary>Highlight colour for warhead / trap blocks.</summary>
-        public readonly Color TrapColor = Color.LightSeaGreen;
+        public readonly Color TrapColor = new Color(32, 178, 170, 0);       // LightSeaGreen
 
         /// <summary>
         /// Populates <see cref="ActiveDebugCategories"/> with all registered functional
