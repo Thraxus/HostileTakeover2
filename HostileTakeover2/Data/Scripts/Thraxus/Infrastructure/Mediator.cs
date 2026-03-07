@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using HostileTakeover2.Thraxus.Collections;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Generics;
 using HostileTakeover2.Thraxus.Common.Interfaces;
@@ -23,8 +22,6 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         private readonly ObjectPool<Construct> _constructPool = new ObjectPool<Construct>(() => new Construct());
         private readonly ObjectPool<Block> _blockPool = new ObjectPool<Block>(() => new Block());
         private readonly ObjectPool<HighlightSettings> _highlightSettingsPool = new ObjectPool<HighlightSettings>(() => new HighlightSettings());
-        private readonly ObjectPool<ReusableCubeGridList<IMyCubeGrid>> _reusableMyCubeGridCollectionObjectPool =
-            new ObjectPool<ReusableCubeGridList<IMyCubeGrid>>(() => new ReusableCubeGridList<IMyCubeGrid>());
 
         private readonly HashSet<long> _npcIdentities = new HashSet<long>();
 
@@ -131,18 +128,5 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             _highlightSettingsPool.Return(highlightSettings);
         }
 
-        public ReusableCubeGridList<IMyCubeGrid> GetReusableCubeGridList(IMyGridGroupData myGridGroupData)
-        {
-            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(GetReusableCubeGridList), "ReusableCubeGridList retrieved from pool");
-            var list = _reusableMyCubeGridCollectionObjectPool.Get();
-            myGridGroupData.GetGrids(list);
-            return list;
-        }
-
-        public void ReturnReusableCubeGridList(ReusableCubeGridList<IMyCubeGrid> list)
-        {
-            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(ReturnReusableCubeGridList), "ReusableCubeGridList returned to pool");
-            _reusableMyCubeGridCollectionObjectPool.Return(list);
-        }
     }
 }

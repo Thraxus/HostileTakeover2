@@ -202,7 +202,6 @@
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Controllers\GrinderController.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\DebugType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Infrastructure\Mediator.cs" />
-    <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Collections\ReusableCubeGridList.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Enums\GridValidationType.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\HostileTakeover2Core.cs" />
     <Compile Include="HostileTakeover2\Data\Scripts\Thraxus\Models\Block.cs" />
