@@ -259,7 +259,6 @@ namespace HostileTakeover2.Thraxus.Models
         {
             GridOwnershipController.Reset();
             BlockController.Reset();
-            SetOwnership();
             SetEvents();
         }
 
