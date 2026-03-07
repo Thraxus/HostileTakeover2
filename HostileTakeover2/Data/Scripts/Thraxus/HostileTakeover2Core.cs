@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HostileTakeover2.Thraxus.Common;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Enums;
 using HostileTakeover2.Thraxus.Common.Factions.Models;
 using HostileTakeover2.Thraxus.Common.Interfaces;
 using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Utility;
+using HostileTakeover2.Thraxus.Utility.Classification;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
+using System;
+using System.Collections.Generic;
+using HostileTakeover2.Thraxus.Infrastructure;
+using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -26,16 +30,34 @@ namespace HostileTakeover2.Thraxus
 
         private readonly HashSet<ICommon> _commonObjects = new HashSet<ICommon>();
         private readonly Mediator _mediator = new Mediator();
-        private SettingsController _settings;
-        
+        private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
+        private UserConfigController _userConfigController;
+
+        protected override void EarlyInit()
+        {
+            DebugType.Initialize();
+        }
+
         protected override void SuperEarlySetup()
         {
             base.SuperEarlySetup();
-            _settings = new SettingsController(ModContext.ModName);
-            _mediator.OnWriteToLog += WriteGeneral;
-            _mediator.AddSettings(_settings);
-            _settings.Initialize();
-            MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
+            _userConfigController = new UserConfigController(ModContext.ModName);
+            if (References.IsServer)
+            {
+                // Route settings and mediator log output up to the session-level log.
+                _userConfigController.OnWriteToLog += WriteGeneral;
+                _userConfigController.InitializeServer();
+                _mediator.OnWriteToLog += WriteGeneral;
+                _mediator.AddSettings(_userConfigController);
+                BlockClassifier.Populate(_mediator.BlockClassificationData, _userConfigController.DefaultSettings);
+                BlockClassificationWriter.Write(_mediator.BlockClassificationData);
+                BlockClassificationOverridesReader.Read(_mediator.BlockClassificationData);
+                MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
+            }
+            else
+            {
+                _userConfigController.InitializeClient();
+            }
         }
 
         private void OnEntityAdd(IMyEntity entity)
@@ -50,7 +72,6 @@ namespace HostileTakeover2.Thraxus
         {
             var grid = entity as MyCubeGrid;
             if (grid == null) return false;
-            WriteGeneral("OnEntityAdd", $"Grid: [{grid.EntityId:D18}] {grid.DisplayName}");
             CheckGrid(grid);
             return true;
         }
@@ -59,7 +80,8 @@ namespace HostileTakeover2.Thraxus
         {
             var grinder = entity as IMyAngleGrinder;
             if (grinder == null) return false;
-            WriteGeneral("OnEntityAdd", $"Grinder: [{grinder.EntityId:D18}]");
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
+                WriteGeneral(nameof(CheckForGrinder), $"Grinder: [{grinder.EntityId:D18}]");
             _mediator.GrinderController.RunGrinderLogic(grinder);
             return true;
         }
@@ -83,15 +105,27 @@ namespace HostileTakeover2.Thraxus
                     break;
                 case GridValidationType.Valid:
                     delay = DefaultSettings.MinorTickDelay;
-                    action = () => GridFactory(grid);
+                    action = () => ConstructFactory(grid);
                     break;
                 case GridValidationType.VanillaTrade:
                     break;
             }
             if (action != null)
                 _mediator.ActionQueue.Add(delay, action);
-            //action?.Invoke();
-            WriteGeneral(nameof(CheckGrid), $"Check Grid returned type of {type}, Action was null? {action == null} {action?.Method}");
+        }
+
+        public override void BeforeStart()
+        {
+            base.BeforeStart();
+            if (!References.IsServer) return;
+            _mediator.BuildNpcIdentityCache();
+            _mediator.RegisterFactionEvents();
+            WriteGeneral(nameof(BeforeStart), _userConfigController.DefaultSettings.PrintSettings().ToString());
+        }
+
+        protected override void LateSetup()
+        {
+            base.LateSetup();
         }
 
         protected override void UpdateBeforeSim()
@@ -103,17 +137,35 @@ namespace HostileTakeover2.Thraxus
         protected override void Unload()
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
-            _mediator.Close();
+            try { _mediator.Close(); }
+            catch (Exception e) { WriteGeneral(nameof(Unload), $"Exception: {e}"); }
             _mediator.OnWriteToLog -= WriteGeneral;
             base.Unload();
         }
         
-        private void GridFactory(MyCubeGrid cubeGrid)
+        private void ConstructFactory(MyCubeGrid cubeGrid)
         {
-            //var grid = _mediator.GridPool.Get();
-            var grid = _mediator.GetGrid(cubeGrid.EntityId);
-            grid.Init(_mediator, cubeGrid);
-            WriteGeneral(nameof(GridFactory), $"Grid Factory Engaged.  Created Grid.");
+            if (_mediator.ConstructController.GetConstruct(cubeGrid.EntityId) != null) return;
+            var groupData = cubeGrid.GetGridGroup(GridLinkTypeEnum.Logical);
+            if (groupData != null)
+            {
+                _groupGrids.Clear();
+                groupData.GetGrids(_groupGrids);
+                foreach (var grid in _groupGrids)
+                {
+                    var myCubeGrid = grid as MyCubeGrid;
+                    if (myCubeGrid == null) continue;
+                    if (_mediator.ConstructController.GetConstruct(myCubeGrid.EntityId) != null) continue;
+                    _mediator.GetConstruct(myCubeGrid.EntityId).Init(_mediator, myCubeGrid);
+                }
+            }
+            else
+            {
+                _mediator.GetConstruct(cubeGrid.EntityId).Init(_mediator, cubeGrid);
+            }
+            _mediator.ConstructController.GetConstruct(cubeGrid.EntityId)?.Evaluate();
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Construct))
+                WriteGeneral(nameof(ConstructFactory), $"Construct Factory Engaged.  Created Construct.");
         }
 
         private GridValidationType ValidateGrid(MyCubeGrid grid)
@@ -174,7 +226,8 @@ namespace HostileTakeover2.Thraxus
 
         private void WriteRejectionReason(MyCubeGrid grid, string reason)
         {
-            WriteGeneral(nameof(WriteRejectionReason), $"Grid Rejected as {reason}: [{grid?.EntityId:D18}] {grid?.DisplayName}");
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grid))
+                WriteGeneral(nameof(WriteRejectionReason), $"Grid Rejected as {reason}: [{grid?.EntityId:D18}] {grid?.DisplayName}");
         }
     }
 }

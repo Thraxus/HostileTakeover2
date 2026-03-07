@@ -7,6 +7,5 @@
         None,
         Trap,
         Weapon
-        
     }
 }

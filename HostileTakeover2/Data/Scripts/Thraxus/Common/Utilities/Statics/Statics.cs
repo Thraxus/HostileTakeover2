@@ -62,7 +62,6 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 			return pruneList;
 		}
 
-		// This is broken as fuck
 		public static IEnumerable<MyEntity> DetectPlayersInSphere(Vector3D detectionCenter, double range, bool reportOrigin = false)
 		{
 			if (reportOrigin) AddGpsLocation($"DetectPlayersInSphere {range}", detectionCenter);
@@ -72,10 +71,13 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 			MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref pruneSphere, pruneList);
 			List<IMyPlayer> players = new List<IMyPlayer>();
 			MyAPIGateway.Multiplayer.Players.GetPlayers(players, x => ValidPlayer(x.IdentityId));
-			pruneList.RemoveAll(x => players.Any(y => y.IdentityId != x.EntityId));
-			foreach (MyEntity ent in pruneList)
+			pruneList.RemoveAll(x => !players.Any(y => y.IdentityId == x.EntityId));
+			if (reportOrigin)
 			{
-				AddGpsLocation($"DetectPlayersInSphere ({range}): {((IMyEntity)ent).DisplayName}", ((IMyEntity)ent).GetPosition());
+				foreach (MyEntity ent in pruneList)
+				{
+					AddGpsLocation($"DetectPlayersInSphere ({range}): {((IMyEntity)ent).DisplayName}", ((IMyEntity)ent).GetPosition());
+				}
 			}
 			return pruneList;
 		}
@@ -223,13 +225,16 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 			long otherGridOwner = otherGrid.BigOwners.FirstOrDefault();
 			if (npcGridOwner == 0 || otherGridOwner == 0) return FactionRelationship.Enemies;
 			IMyFaction npcFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(npcGridOwner);
+			if (npcFaction == null) return FactionRelationship.Enemies;
 			return MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(otherGridOwner, npcFaction.FactionId) >= -500 ? FactionRelationship.Friends : FactionRelationship.Enemies;
 		}
 
 		public static FactionRelationship GetRelationBetweenGridAndCharacter(IMyCubeGrid npcGrid, IMyCharacter character)
 		{
 			long npcGridOwner = npcGrid.BigOwners.FirstOrDefault();
+			if (npcGridOwner == 0) return FactionRelationship.Enemies;
 			IMyFaction npcFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(npcGridOwner);
+			if (npcFaction == null) return FactionRelationship.Enemies;
 			return MyAPIGateway.Session.Factions.GetReputationBetweenPlayerAndFaction(character.EntityId, npcFaction.FactionId) >= -500 ? FactionRelationship.Friends : FactionRelationship.Enemies;
 		}
 
@@ -263,12 +268,14 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 
 		public static bool IsPlayerFaction(this long faction)
 		{
-			return !MyAPIGateway.Session.Factions.TryGetFactionById(faction).IsEveryoneNpc();
+			IMyFaction f = MyAPIGateway.Session.Factions.TryGetFactionById(faction);
+			return f != null && !f.IsEveryoneNpc();
 		}
 
 		public static bool IsNpcFaction(this long faction)
 		{
-			return MyAPIGateway.Session.Factions.TryGetFactionById(faction).IsEveryoneNpc();
+			IMyFaction f = MyAPIGateway.Session.Factions.TryGetFactionById(faction);
+			return f != null && f.IsEveryoneNpc();
 		}
 
 		public static bool ValidateFactions(IMyFaction leftFaction, IMyFaction rightFaction)
@@ -308,9 +315,32 @@ namespace HostileTakeover2.Thraxus.Common.Utilities.Statics
 			return sb.ToString();
 		}
 
+        // Tracks every GPS marker created by AddGpsLocation so they can all be removed on
+        // session unload.  Static because Statics itself has no session lifecycle.
+        private static readonly List<IMyGps> _debugGpsMarkers = new List<IMyGps>();
+
+        /// <summary>
+        /// Removes all GPS markers created by <see cref="AddGpsLocation"/> and clears the
+        /// tracking list.  Call this from the session component's Unload path so debug
+        /// markers do not persist into the next session.
+        /// </summary>
+        public static void ClearDebugGpsLocations()
+        {
+            if (MyAPIGateway.Session?.GPS == null)
+            {
+                _debugGpsMarkers.Clear();
+                return;
+            }
+            foreach (var gps in _debugGpsMarkers)
+                MyAPIGateway.Session.GPS.RemoveLocalGps(gps);
+            _debugGpsMarkers.Clear();
+        }
+
         public static void AddGpsLocation(string message, Vector3D location)
         {
-	        MyAPIGateway.Session.GPS.AddGps(MyAPIGateway.Session.LocalHumanPlayer.IdentityId, MyAPIGateway.Session.GPS.Create(message, "", location, true));
+            var gps = MyAPIGateway.Session.GPS.Create(message, "", location, showOnHud: true, temporary: true);
+            MyAPIGateway.Session.GPS.AddLocalGps(gps);
+            _debugGpsMarkers.Add(gps);
         }
 
 		#endregion
