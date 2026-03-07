@@ -7,7 +7,6 @@ using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
-using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
 using VRage.Game;
 using VRage.Game.ModAPI;
@@ -58,6 +57,7 @@ namespace HostileTakeover2.Thraxus.Models
             BlockController.Init(_mediator, GridOwnershipController);
             BlockController.OnImportantBlocksEmpty += OnAllImportantBlocksGone;
             GridOwnershipController.OnWriteToLog += WriteGeneral;
+            GridOwnershipController.IsNpcIdentityCheck = _mediator.IsNpcIdentity;
             GridOwnershipController.SetOwnershipAction += SetOwnership;
             GridOwnershipController.DisownGridAction += DisownGrid;
             GridOwnershipController.TakeOverGridAction += TakeOverGrid;
@@ -103,7 +103,7 @@ namespace HostileTakeover2.Thraxus.Models
                 foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
                 {
                     long id = fatBlock.OwnerId;
-                    if (id == 0 || MyAPIGateway.Players.TryGetSteamId(id) > 0) continue;
+                    if (id == 0 || !_mediator.IsNpcIdentity(id)) continue;
                     if (_ownershipTally.ContainsKey(id))
                         _ownershipTally[id]++;
                     else
@@ -218,7 +218,7 @@ namespace HostileTakeover2.Thraxus.Models
                         // initialized. If it's NPC-owned, defer the decision until it's ready.
                         var cubeGrid = (MyCubeGrid)grid;
                         long owner = cubeGrid.BigOwners.Count > 0 ? cubeGrid.BigOwners[0] : 0;
-                        if (owner != 0 && MyAPIGateway.Players.TryGetSteamId(owner) == 0)
+                        if (owner != 0 && _mediator.IsNpcIdentity(owner))
                             anyPending = true;
                         continue;
                     }
@@ -260,7 +260,7 @@ namespace HostileTakeover2.Thraxus.Models
             foreach (var grid in gridList)
             {
                 var cubeGrid = (MyCubeGrid)grid;
-                if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0)
+                if (cubeGrid.BigOwners.Count > 0 && !_mediator.IsNpcIdentity(cubeGrid.BigOwners[0]))
                     continue;
                 Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                 construct?.DisownGrid();
@@ -399,6 +399,7 @@ namespace HostileTakeover2.Thraxus.Models
             BlockController.OnImportantBlocksEmpty -= OnAllImportantBlocksGone;
             BlockController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.OnWriteToLog -= WriteGeneral;
+            GridOwnershipController.IsNpcIdentityCheck = null;
             GridOwnershipController.SetOwnershipAction -= SetOwnership;
             GridOwnershipController.DisownGridAction -= DisownGrid;
             GridOwnershipController.TakeOverGridAction -= TakeOverGrid;

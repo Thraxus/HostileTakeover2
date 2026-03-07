@@ -48,6 +48,7 @@ namespace HostileTakeover2.Thraxus
                 _userConfigController.InitializeServer();
                 _mediator.OnWriteToLog += WriteGeneral;
                 _mediator.AddSettings(_userConfigController);
+                _mediator.BuildNpcIdentityCache();
                 BlockClassifier.Populate(_mediator.BlockClassificationData, _userConfigController.DefaultSettings);
                 BlockClassificationWriter.Write(_mediator.BlockClassificationData);
                 BlockClassificationOverridesReader.Read(_mediator.BlockClassificationData);

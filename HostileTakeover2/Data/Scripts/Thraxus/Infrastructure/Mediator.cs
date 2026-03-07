@@ -10,6 +10,7 @@ using HostileTakeover2.Thraxus.Settings;
 using HostileTakeover2.Thraxus.Utility.Classification;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
+using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Infrastructure
@@ -24,6 +25,22 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         private readonly ObjectPool<HighlightSettings> _highlightSettingsPool = new ObjectPool<HighlightSettings>(() => new HighlightSettings());
         private readonly ObjectPool<ReusableCubeGridList<IMyCubeGrid>> _reusableMyCubeGridCollectionObjectPool =
             new ObjectPool<ReusableCubeGridList<IMyCubeGrid>>(() => new ReusableCubeGridList<IMyCubeGrid>());
+
+        private readonly HashSet<long> _npcIdentities = new HashSet<long>();
+
+        public bool IsNpcIdentity(long id) { return _npcIdentities.Contains(id); }
+
+        public void BuildNpcIdentityCache()
+        {
+            var identityList = new List<IMyIdentity>();
+            MyAPIGateway.Players.GetAllIdentites(identityList);
+            foreach (var identity in identityList)
+            {
+                if (MyAPIGateway.Players.TryGetSteamId(identity.IdentityId) == 0)
+                    _npcIdentities.Add(identity.IdentityId);
+            }
+            WriteGeneral(nameof(BuildNpcIdentityCache), $"NPC identity cache built: {_npcIdentities.Count} entries.");
+        }
 
         public readonly BlockClassificationData BlockClassificationData = new BlockClassificationData();
         public readonly ConstructController ConstructController = new ConstructController();

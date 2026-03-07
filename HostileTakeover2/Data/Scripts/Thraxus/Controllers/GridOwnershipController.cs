@@ -2,7 +2,6 @@
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
-using Sandbox.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Controllers
 {
@@ -10,6 +9,7 @@ namespace HostileTakeover2.Thraxus.Controllers
     {
         public long RightfulOwner = 0;
         public OwnershipType OwnershipType = OwnershipType.None;
+        public Func<long, bool> IsNpcIdentityCheck;
 
         public Action<MyCubeBlock> SetOwnershipAction;
         public Action DisownGridAction;
@@ -39,7 +39,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         public void SetOwnership(long rightfulOwner)
         {
             RightfulOwner = rightfulOwner;
-            OwnershipType = rightfulOwner == 0 ? OwnershipType.None : MyAPIGateway.Players.TryGetSteamId(rightfulOwner) <= 0
+            OwnershipType = rightfulOwner == 0 ? OwnershipType.None : IsNpcIdentityCheck(rightfulOwner)
                 ? OwnershipType.Npc : OwnershipType.Player;
 
             WriteGeneral(nameof(SetOwnership), $"Owner determined to be {rightfulOwner:D18} which is of type {OwnershipType}");
@@ -62,6 +62,7 @@ namespace HostileTakeover2.Thraxus.Controllers
         public override void Reset()
         {
             RightfulOwner = 0;
+            IsNpcIdentityCheck = null;
             SetOwnershipAction = null;
             DisownGridAction = null;
             IgnoreGridAction = null;
