@@ -49,7 +49,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public Mediator()
         {
-            ActionQueue.OnReport += WriteGeneral;
+            ActionQueue.OnReport += OnActionQueueReport;
             RegisterCommonEvents(ConstructController);
             RegisterCommonEvents(GrinderController);
             RegisterCommonEvents(HighlightController);
@@ -79,9 +79,16 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public override void Close()
         {
-            ActionQueue.OnReport -= WriteGeneral;
+            ActionQueue.OnReport -= OnActionQueueReport;
             DeRegisterCommonEvents();
             base.Close();
+        }
+
+        private bool IsActionQueueReportActive => UserConfigController != null && DefaultSettings.IsDebugActiveFor(DebugType.ActionQueue);
+
+        private void OnActionQueueReport(string caller, string message)
+        {
+            if (IsActionQueueReportActive) WriteGeneral(caller, message);
         }
 
         private bool IsPoolLoggingActive => UserConfigController != null && DefaultSettings.IsVerboseActiveFor(DebugType.Pool);
