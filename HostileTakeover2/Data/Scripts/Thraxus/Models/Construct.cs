@@ -299,7 +299,7 @@ namespace HostileTakeover2.Thraxus.Models
         private void SetOwnership(MyCubeBlock block)
         {
             if (_mediator.DefaultSettings.AllowPlayerHacking.Current) return;
-            block.ChangeOwner(block.IsFunctional ? GridOwnershipController.RightfulOwner : 0, MyOwnershipShareModeEnum.None);
+            block.ChangeOwner(block.IsFunctional ? GridOwnershipController.RightfulOwner : 0, MyOwnershipShareModeEnum.Faction);
         }
 
         public void TriggerHighlights(IMyAngleGrinder grinder)
@@ -360,7 +360,7 @@ namespace HostileTakeover2.Thraxus.Models
                 {
                     long expected = fatBlock.IsFunctional ? GridOwnershipController.RightfulOwner : 0;
                     if (fatBlock.OwnerId != expected)
-                        fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.None);
+                        fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.Faction);
                 }
             }
             catch (Exception e) { WriteGeneral(nameof(ReclaimHackedBlocks), $"Exception: {e}"); }
