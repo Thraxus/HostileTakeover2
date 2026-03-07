@@ -7,6 +7,7 @@ using HostileTakeover2.Thraxus.Enums;
 using HostileTakeover2.Thraxus.Infrastructure;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
 using Sandbox.Game.Entities;
+using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
 using VRage.Game;
 using VRage.Game.ModAPI;
