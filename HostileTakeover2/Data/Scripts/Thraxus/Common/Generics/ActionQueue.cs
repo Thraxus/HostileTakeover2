@@ -19,6 +19,10 @@ namespace HostileTakeover2.Thraxus.Common.Generics
         private readonly SortedList<int, List<Action>> _scheduledActions = new SortedList<int, List<Action>>();
         // Monotonically increasing counter advanced by Execute() on each call.
         private int _currentTick = 0;
+        // Diagnostic: counts all actions invoked (deferred + immediate) in the current 120-tick window.
+        private int _windowActionCount = 0;
+        // Invoked every 120 ticks with (context, message) matching the WriteGeneral signature.
+        public Action<string, string> OnReport;
 
         /// <summary>
         /// Schedule an action to run after <paramref name="delay"/> calls to Execute().
@@ -33,6 +37,7 @@ namespace HostileTakeover2.Thraxus.Common.Generics
                 // Immediate invocation: bypass the scheduler entirely and call inline.
                 try { action?.Invoke(); }
                 catch { /* prevent a bad action from crashing the game */ }
+                _windowActionCount++;
                 return;
             }
 
@@ -60,6 +65,11 @@ namespace HostileTakeover2.Thraxus.Common.Generics
         public void Execute(int iterationMax = 500)
         {
             _currentTick++;
+            if (_currentTick % 120 == 0)
+            {
+                OnReport?.Invoke(nameof(ActionQueue), $"Actions executed in last 120 ticks: {_windowActionCount}");
+                _windowActionCount = 0;
+            }
             int processed = 0;
 
             // The SortedList is ordered ascending by target tick; the first entry is always
@@ -74,6 +84,7 @@ namespace HostileTakeover2.Thraxus.Common.Generics
                 {
                     try { actions[i]?.Invoke(); }
                     catch { /* prevent a bad action from crashing the game */ }
+                    _windowActionCount++;
                     // Enforce the per-call action cap.  When hit, reschedule any remaining
                     // actions in this bucket for the very next tick so they are not lost.
                     if (++processed >= iterationMax)
@@ -104,6 +115,8 @@ namespace HostileTakeover2.Thraxus.Common.Generics
         {
             _scheduledActions.Clear();
             _currentTick = 0;
+            _windowActionCount = 0;
+            OnReport = null;
         }
     }
 }
