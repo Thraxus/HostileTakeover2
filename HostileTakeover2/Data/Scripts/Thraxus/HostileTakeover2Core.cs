@@ -21,6 +21,7 @@ using VRage.ModAPI;
 
 namespace HostileTakeover2.Thraxus
 {
+    // Priority int.MinValue+1 ensures we initialize before almost everything else in the session.
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation, priority: int.MinValue + 1)]
     internal class HostileTakeover2Core : BaseSessionComp
     {
@@ -62,6 +63,8 @@ namespace HostileTakeover2.Thraxus
 
         private void OnEntityAdd(IMyEntity entity)
         {
+            // Give SE a tick to finish wiring the entity up before we touch it.
+            // Grid ownership and physics aren't always populated the frame OnEntityAdd fires.
             _mediator.ActionQueue.Add(DefaultSettings.EntityAddTickDelay, () =>
             {
                 if (!CheckForGrid(entity)) CheckForGrinder(entity);
@@ -93,6 +96,8 @@ namespace HostileTakeover2.Thraxus
             var delay = 0;
             switch (type)
             {
+                // These states can be temporary (e.g. a grid being spawned in, or a scenario
+                // script toggling immunity). Retry after a delay rather than permanently skipping.
                 case GridValidationType.Indestructible:
                 case GridValidationType.Immune:
                 case GridValidationType.NotEditable:
@@ -146,6 +151,7 @@ namespace HostileTakeover2.Thraxus
         private void ConstructFactory(MyCubeGrid cubeGrid)
         {
             if (_mediator.ConstructController.GetConstruct(cubeGrid.EntityId) != null) return;
+            // Must use Logical — NoContactDamage returns null even for rotor-connected grids.
             var groupData = cubeGrid.GetGridGroup(GridLinkTypeEnum.Logical);
             if (groupData != null)
             {
@@ -163,6 +169,8 @@ namespace HostileTakeover2.Thraxus
             {
                 _mediator.GetConstruct(cubeGrid.EntityId).Init(_mediator, cubeGrid);
             }
+            // Only Evaluate the originally-added grid. GridGroupManager handles group-level
+            // ownership evaluation for the rest of the group via its own event hooks.
             _mediator.ConstructController.GetConstruct(cubeGrid.EntityId)?.Evaluate();
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Construct))
                 WriteGeneral(nameof(ConstructFactory), $"Construct Factory Engaged.  Created Construct.");

@@ -19,6 +19,9 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public void Init(MyCubeGrid me, BlockController blockController, Func<long, bool> isNpcIdentity)
         {
+            // These refs are set on Init, not in the constructor, because this class
+            // is pooled. Reset() nulls them out so a stale instance can't accidentally
+            // touch a grid it no longer owns. Init re-establishes them each reuse.
             _me = me;
             _blockController = blockController;
             _isNpcIdentity = isNpcIdentity;

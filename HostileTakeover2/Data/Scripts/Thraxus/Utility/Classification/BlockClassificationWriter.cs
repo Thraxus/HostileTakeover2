@@ -6,6 +6,8 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
 {
     internal static class BlockClassificationWriter
     {
+        // World storage = per-save, not global. Two saves with different mods get different
+        // classification files, which is exactly what we want.
         private const string FileName = "BlockClassification.xml";
 
         public static void Write(BlockClassificationData data)

@@ -119,6 +119,8 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             if (MyAPIGateway.Utilities.GetVariable("HT_ActiveDebugCategories", out mask))
             {
                 DefaultSettings.ActiveDebugCategories.Clear();
+                // Iterating LogCategory.AllRegistered means this reconstructs correctly
+                // even if new categories are added later — no hardcoded enum switch needed.
                 foreach (var cat in LogCategory.AllRegistered)
                 {
                     if (cat.Id != 0 && (mask & cat.Id) != 0)

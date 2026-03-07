@@ -42,6 +42,8 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
 
         public static void Read(BlockClassificationData data)
         {
+            // First run: no overrides file exists yet. Drop a commented-out template so
+            // the user has something to edit rather than having to figure out the format.
             if (!MyAPIGateway.Utilities.FileExistsInWorldStorage(FileName, typeof(BlockClassificationOverridesReader)))
             {
                 WriteTemplate();
@@ -82,6 +84,8 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
 
         private static void ApplyExcludes(List<string> excludes, BlockClassificationData data)
         {
+            // Excludes are category-agnostic: the user shouldn't need to know (or care)
+            // which category a block landed in, so we just nuke it from all four.
             foreach (var key in excludes)
             {
                 string trimmed = key.Trim();

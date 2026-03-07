@@ -102,6 +102,9 @@ namespace HostileTakeover2.Thraxus.Models
                 foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
                 {
                     long id = fatBlock.OwnerId;
+                    // id == 0: unowned or ownership not yet applied at load time (SE doesn't fire
+                    // ownership events during world load, so blocks can appear with no owner briefly).
+                    // !IsNpcIdentity: player-owned blocks don't vote — only NPC blocks determine NPC ownership.
                     if (id == 0 || !_mediator.IsNpcIdentity(id)) continue;
                     if (_ownershipTally.ContainsKey(id))
                         _ownershipTally[id]++;
@@ -128,9 +131,13 @@ namespace HostileTakeover2.Thraxus.Models
                 bool hasOwnerBlocks = false;
                 foreach (var fatBlock in cubeGrid.GetFatBlocks())
                     if (fatBlock.OwnerId == ownerId) { hasOwnerBlocks = true; break; }
+                // Don't claim grids that don't already have at least one block owned by the NPC —
+                // connected player grids live in the same logical group and we don't want to touch them.
                 if (!hasOwnerBlocks) continue;
                 Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                 if (construct == null) continue;
+                // Skip constructs already set to this owner — avoids redundant re-init on every
+                // group setup call, which would turn group evaluation into an O(n²) mess.
                 if (construct.GridOwnershipController.RightfulOwner == ownerId) continue;
                 construct.ApplyOwnership(ownerId);
             }
@@ -191,6 +198,10 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void OnAllImportantBlocksGone()
         {
+            // When the last important block is ground down on any construct in the group, every
+            // construct in that group fires this event. Only the NPC-owned ones should act on it —
+            // the early return prevents the player-owned constructs in the same logical group from
+            // running the full disown pass unnecessarily.
             if (GridOwnershipController.OwnershipType != OwnershipType.Npc) return;
             try
             {
@@ -228,6 +239,9 @@ namespace HostileTakeover2.Thraxus.Models
                         anyPending = true;
                 }
 
+                // anyHasBlocks: another construct in the group still has important blocks — not done yet.
+                // anyPending: an NPC construct hasn't finished its deferred block-add pass, so we can't
+                // conclude it has no important blocks. Retry after a short delay instead of disowning early.
                 if (anyHasBlocks || anyPending)
                 {
                     if (anyPending)
@@ -314,6 +328,9 @@ namespace HostileTakeover2.Thraxus.Models
         {
             try
             {
+                // When two grids connect via a connector, SE fires OnFatBlockAdded for every block
+                // on the joining grid. We don't want to re-classify blocks that belong to the other
+                // grid — skip if the block is a live, connected connector (the thing that just docked).
                 var connector = block as IMyShipConnector;
                 if (connector != null && connector.IsFunctional && connector.IsConnected) return;
                 if (GridOwnershipController.OwnershipType == OwnershipType.Npc)
@@ -346,6 +363,9 @@ namespace HostileTakeover2.Thraxus.Models
         public override void Reset()
         {
             base.Reset();
+            // IsClosed = true BEFORE deregistering events and resetting sub-controllers.
+            // This prevents any in-flight deferred actions (e.g. deferred AddBlock callbacks)
+            // from re-triggering OnImportantBlocksEmpty after we've already started tearing down.
             IsClosed = true;
             _ownershipChangePending = false;
             _groupGrids.Clear();

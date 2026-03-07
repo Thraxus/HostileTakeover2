@@ -47,6 +47,8 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public void AddBlock(MyCubeBlock myCubeBlock)
         {
+            // Track in-flight deferred adds so we don't fire OnImportantBlocksEmpty
+            // prematurely while blocks are still queued up waiting to be evaluated.
             _pendingAddCount++;
             _mediator.ActionQueue.Add(10, () =>
             {
@@ -72,6 +74,11 @@ namespace HostileTakeover2.Thraxus.Controllers
                 }
                 finally
                 {
+                    // Always decrement, even on early return — the count must reach zero
+                    // for the empty-check to fire. This is the only place that matters for
+                    // grids that have zero important blocks: every block returns early above,
+                    // so the dictionary stays empty, and the finally is the only code path
+                    // that ever sees pendingAddCount == 0 && count == 0.
                     _pendingAddCount--;
                     if (_pendingAddCount == 0 && _importantBlocks.Count == 0 && !IsClosed)
                         OnImportantBlocksEmpty?.Invoke();
@@ -154,6 +161,10 @@ namespace HostileTakeover2.Thraxus.Controllers
         private void SoftReset()
         {
             _pendingAddCount = 0;
+            // Set IsClosed = true BEFORE deregistering events. If we nulled out
+            // and returned blocks first, the OnResetBlock/OnBlockDisabled callbacks
+            // could still fire during teardown and see an empty dictionary, then
+            // re-trigger OnImportantBlocksEmpty on a construct we're trying to disown.
             IsClosed = true;
             foreach (var kvp in _importantBlocks)
             {

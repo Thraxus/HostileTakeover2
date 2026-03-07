@@ -14,6 +14,9 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public IMyGridGroupData GridGroupData => _gridGroupData;
 
+        // Delegates instead of exposing _gridGroupData directly — callers don't need
+        // to know about IMyGridGroupData internals, and this lets us swap the underlying
+        // group object on Refresh() without anyone outside noticing.
         public Action<IMyCubeGrid> GridAddedAction;
         public Action<IMyCubeGrid, IMyGridGroupData> GridRemovedAction;
 
@@ -25,6 +28,8 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public void Refresh()
         {
+            // NoContactDamage doesn't work with GetGridGroup — returns null even for
+            // rotor-connected grids. Logical is the only link type that behaves.
             Refresh(_me.GetGridGroup(GridLinkTypeEnum.Logical));
         }
 

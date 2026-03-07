@@ -46,6 +46,8 @@ namespace HostileTakeover2.Thraxus.Models
         {
             try
             {
+                // IsWorkingChanged fires on both transitions (working → broken AND broken → working).
+                // We only care when the block stops being functional (i.e. getting ground down).
                 if (!block.IsFunctional)
                     BlockHasBeenDisabled();
             }

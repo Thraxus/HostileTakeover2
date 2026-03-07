@@ -27,6 +27,8 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public bool IsNpcIdentity(long id) { return _npcIdentities.Contains(id); }
 
+        // Called from BeforeStart, not SuperEarlySetup — NPC identities aren't fully
+        // populated in the identity list until the session finishes loading.
         public void BuildNpcIdentityCache()
         {
             var identityList = new List<IMyIdentity>();
@@ -46,6 +48,8 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         private void OnFactionStateChanged(MyFactionStateChange action, long fromFactionId, long toFactionId, long playerId, long senderId)
         {
+            // Only care about new joins. SteamId == 0 means it's an NPC identity, not a player.
+            // fromFactionId is the faction being joined; playerId is the joining identity.
             if (action != MyFactionStateChange.FactionMemberAcceptJoin) return;
             if (MyAPIGateway.Players.TryGetSteamId(playerId) != 0) return;
             _npcIdentities.Add(playerId);
@@ -97,6 +101,8 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             base.Close();
         }
 
+        // UserConfigController is wired up after construction via AddSettings, so it can be null
+        // during early ActionQueue activity (before SuperEarlySetup completes).
         private bool IsActionQueueReportActive => UserConfigController != null && DefaultSettings.IsDebugActiveFor(DebugType.ActionQueue);
 
         private void OnActionQueueReport(string caller, string message)
