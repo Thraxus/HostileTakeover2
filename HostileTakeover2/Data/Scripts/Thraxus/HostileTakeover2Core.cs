@@ -14,6 +14,7 @@ using Sandbox.ModAPI.Weapons;
 using System;
 using System.Collections.Generic;
 using HostileTakeover2.Thraxus.Infrastructure;
+using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -141,8 +142,25 @@ namespace HostileTakeover2.Thraxus
         
         private void ConstructFactory(MyCubeGrid cubeGrid)
         {
-            var construct = _mediator.GetConstruct(cubeGrid.EntityId);
-            construct.Init(_mediator, cubeGrid);
+            if (_mediator.ConstructController.GetConstruct(cubeGrid.EntityId) != null) return;
+            var groupData = cubeGrid.GetGridGroup(GridLinkTypeEnum.Logical);
+            if (groupData != null)
+            {
+                var gridList = _mediator.GetReusableCubeGridList(groupData);
+                foreach (var grid in gridList)
+                {
+                    var myCubeGrid = grid as MyCubeGrid;
+                    if (myCubeGrid == null) continue;
+                    if (_mediator.ConstructController.GetConstruct(myCubeGrid.EntityId) != null) continue;
+                    _mediator.GetConstruct(myCubeGrid.EntityId).Init(_mediator, myCubeGrid);
+                }
+                _mediator.ReturnReusableCubeGridList(gridList);
+            }
+            else
+            {
+                _mediator.GetConstruct(cubeGrid.EntityId).Init(_mediator, cubeGrid);
+            }
+            _mediator.ConstructController.GetConstruct(cubeGrid.EntityId)?.Evaluate();
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Construct))
                 WriteGeneral(nameof(ConstructFactory), $"Construct Factory Engaged.  Created Construct.");
         }

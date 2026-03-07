@@ -40,7 +40,7 @@ namespace HostileTakeover2.Thraxus.Models
             _me.OnMarkForClose += OnGridMarkedForClose;
             if (mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
                 WriteGeneral(DebugType.Construct, nameof(Init), $"Primary Initialization for Construct [{_me.EntityId:D18}] complete.");
-            Init();
+            WireUp();
         }
 
         private void OnGridMarkedForClose(IMyEntity entity)
@@ -49,10 +49,10 @@ namespace HostileTakeover2.Thraxus.Models
             catch (Exception e) { WriteGeneral(nameof(OnGridMarkedForClose), $"Exception: {e}"); }
         }
 
-        private void Init()
+        private void WireUp()
         {
             if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
-                WriteGeneral(DebugType.Construct, nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] starting.");
+                WriteGeneral(DebugType.Construct, nameof(WireUp), $"Wiring Construct [{_me.EntityId:D18}].");
             _mediator.ConstructController.Add(_me.EntityId, this);
             BlockController.OnWriteToLog += WriteGeneral;
             BlockController.Init(_mediator, GridOwnershipController);
@@ -64,15 +64,12 @@ namespace HostileTakeover2.Thraxus.Models
             GridOwnershipController.IgnoreGridAction += IgnoreGrid;
             GridGroupManager.OnWriteToLog += WriteGeneral;
             GridGroupManager.GridRemovedAction += OnGridRemoved;
-            SetupGridGroup();
-            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
-                WriteGeneral(DebugType.Construct, nameof(Init), $"Secondary Initialization for Construct [{_me.EntityId:D18}] complete.");
+            GridGroupManager.Init(_me);
         }
 
-        private void SetupGridGroup()
+        public void Evaluate()
         {
             if (IsClosed) return;
-            GridGroupManager.Init(_me);
             EvaluateOwnership();
             SetEvents();
         }
@@ -361,6 +358,8 @@ namespace HostileTakeover2.Thraxus.Models
                     long expected = fatBlock.IsFunctional ? GridOwnershipController.RightfulOwner : 0;
                     if (fatBlock.OwnerId != expected)
                         fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.Faction);
+                    if (!fatBlock.IsFunctional)
+                        BlockController.HandleNonFunctionalBlock(fatBlock);
                 }
             }
             catch (Exception e) { WriteGeneral(nameof(ReclaimHackedBlocks), $"Exception: {e}"); }
