@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using HostileTakeover2.Thraxus.Collections;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
 using HostileTakeover2.Thraxus.Common.Generics;
 using HostileTakeover2.Thraxus.Common.Interfaces;
@@ -10,6 +9,7 @@ using HostileTakeover2.Thraxus.Settings;
 using HostileTakeover2.Thraxus.Utility.Classification;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Controllers;
 using HostileTakeover2.Thraxus.Utility.UserConfig.Models;
+using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Infrastructure
@@ -22,8 +22,22 @@ namespace HostileTakeover2.Thraxus.Infrastructure
         private readonly ObjectPool<Construct> _constructPool = new ObjectPool<Construct>(() => new Construct());
         private readonly ObjectPool<Block> _blockPool = new ObjectPool<Block>(() => new Block());
         private readonly ObjectPool<HighlightSettings> _highlightSettingsPool = new ObjectPool<HighlightSettings>(() => new HighlightSettings());
-        private readonly ObjectPool<ReusableCubeGridList<IMyCubeGrid>> _reusableMyCubeGridCollectionObjectPool =
-            new ObjectPool<ReusableCubeGridList<IMyCubeGrid>>(() => new ReusableCubeGridList<IMyCubeGrid>());
+
+        private readonly HashSet<long> _npcIdentities = new HashSet<long>();
+
+        public bool IsNpcIdentity(long id) { return _npcIdentities.Contains(id); }
+
+        public void BuildNpcIdentityCache()
+        {
+            var identityList = new List<IMyIdentity>();
+            MyAPIGateway.Players.GetAllIdentites(identityList);
+            foreach (var identity in identityList)
+            {
+                if (MyAPIGateway.Players.TryGetSteamId(identity.IdentityId) == 0)
+                    _npcIdentities.Add(identity.IdentityId);
+            }
+            WriteGeneral(nameof(BuildNpcIdentityCache), $"NPC identity cache built: {_npcIdentities.Count} entries.");
+        }
 
         public readonly BlockClassificationData BlockClassificationData = new BlockClassificationData();
         public readonly ConstructController ConstructController = new ConstructController();
@@ -35,6 +49,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public Mediator()
         {
+            ActionQueue.OnReport += OnActionQueueReport;
             RegisterCommonEvents(ConstructController);
             RegisterCommonEvents(GrinderController);
             RegisterCommonEvents(HighlightController);
@@ -64,8 +79,16 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public override void Close()
         {
+            ActionQueue.OnReport -= OnActionQueueReport;
             DeRegisterCommonEvents();
             base.Close();
+        }
+
+        private bool IsActionQueueReportActive => UserConfigController != null && DefaultSettings.IsDebugActiveFor(DebugType.ActionQueue);
+
+        private void OnActionQueueReport(string caller, string message)
+        {
+            if (IsActionQueueReportActive) WriteGeneral(caller, message);
         }
 
         private bool IsPoolLoggingActive => UserConfigController != null && DefaultSettings.IsVerboseActiveFor(DebugType.Pool);
@@ -112,18 +135,5 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             _highlightSettingsPool.Return(highlightSettings);
         }
 
-        public ReusableCubeGridList<IMyCubeGrid> GetReusableCubeGridList(IMyGridGroupData myGridGroupData)
-        {
-            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(GetReusableCubeGridList), "ReusableCubeGridList retrieved from pool");
-            var list = _reusableMyCubeGridCollectionObjectPool.Get();
-            myGridGroupData.GetGrids(list);
-            return list;
-        }
-
-        public void ReturnReusableCubeGridList(ReusableCubeGridList<IMyCubeGrid> list)
-        {
-            if (IsPoolLoggingActive) WriteGeneral(DebugType.Pool, nameof(ReturnReusableCubeGridList), "ReusableCubeGridList returned to pool");
-            _reusableMyCubeGridCollectionObjectPool.Return(list);
-        }
     }
 }

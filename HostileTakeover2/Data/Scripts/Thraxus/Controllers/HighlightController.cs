@@ -28,6 +28,7 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private readonly Dictionary<Block, HighlightSettings> _currentHighlightedBlocks = new Dictionary<Block, HighlightSettings>();
         private readonly List<Block> _sortBuffer = new List<Block>();
+        private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
 
         private Mediator _mediator;
 
@@ -114,9 +115,10 @@ namespace HostileTakeover2.Thraxus.Controllers
             long playerId = grinder.OwnerIdentityId;
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
                 WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {playerId.ToEntityIdFormat()}");
-            var gridList = _mediator.GetReusableCubeGridList(myGridGroupData);
+            _groupGrids.Clear();
+            myGridGroupData.GetGrids(_groupGrids);
             int counter = 0;
-            foreach (var myCubeGrid in gridList)
+            foreach (var myCubeGrid in _groupGrids)
             {
                 Construct construct = _mediator.ConstructController.GetConstruct(myCubeGrid.EntityId);
                 if (construct == null) continue;
@@ -135,7 +137,6 @@ namespace HostileTakeover2.Thraxus.Controllers
             }
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
                 WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Attempting to highlight {counter:D3} blocks [{_reusableImportantBlocksDictionary[BlockType.Control].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Medical].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Weapon].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Trap].Count:D2}]");
-            _mediator.ReturnReusableCubeGridList(gridList);
             HighlightNextSet(grinder, playerId);
         }
 

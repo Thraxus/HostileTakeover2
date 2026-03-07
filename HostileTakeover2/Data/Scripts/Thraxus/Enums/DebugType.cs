@@ -24,8 +24,9 @@ namespace HostileTakeover2.Thraxus.Enums
         public static readonly DebugType Blocks    = new DebugType(1 << 2, "Blocks");
         public static readonly DebugType Highlight = new DebugType(1 << 3, "Highlight");
         public static readonly DebugType Grinder   = new DebugType(1 << 4, "Grinder");
-        public static readonly DebugType Pool      = new DebugType(1 << 5, "Pool");
-        public static readonly DebugType Construct = new DebugType(1 << 6, "Construct");
+        public static readonly DebugType Pool        = new DebugType(1 << 5, "Pool");
+        public static readonly DebugType Construct   = new DebugType(1 << 6, "Construct");
+        public static readonly DebugType ActionQueue = new DebugType(1 << 7, "ActionQueue");
 
         private DebugType(int id, string name) : base(id, name) { }
 

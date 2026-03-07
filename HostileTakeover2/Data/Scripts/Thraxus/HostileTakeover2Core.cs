@@ -30,6 +30,7 @@ namespace HostileTakeover2.Thraxus
 
         private readonly HashSet<ICommon> _commonObjects = new HashSet<ICommon>();
         private readonly Mediator _mediator = new Mediator();
+        private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
         private UserConfigController _userConfigController;
 
         protected override void EarlyInit()
@@ -117,6 +118,7 @@ namespace HostileTakeover2.Thraxus
         {
             base.BeforeStart();
             if (!References.IsServer) return;
+            _mediator.BuildNpcIdentityCache();
             WriteGeneral(nameof(BeforeStart), _userConfigController.DefaultSettings.PrintSettings().ToString());
         }
 
@@ -146,15 +148,15 @@ namespace HostileTakeover2.Thraxus
             var groupData = cubeGrid.GetGridGroup(GridLinkTypeEnum.Logical);
             if (groupData != null)
             {
-                var gridList = _mediator.GetReusableCubeGridList(groupData);
-                foreach (var grid in gridList)
+                _groupGrids.Clear();
+                groupData.GetGrids(_groupGrids);
+                foreach (var grid in _groupGrids)
                 {
                     var myCubeGrid = grid as MyCubeGrid;
                     if (myCubeGrid == null) continue;
                     if (_mediator.ConstructController.GetConstruct(myCubeGrid.EntityId) != null) continue;
                     _mediator.GetConstruct(myCubeGrid.EntityId).Init(_mediator, myCubeGrid);
                 }
-                _mediator.ReturnReusableCubeGridList(gridList);
             }
             else
             {

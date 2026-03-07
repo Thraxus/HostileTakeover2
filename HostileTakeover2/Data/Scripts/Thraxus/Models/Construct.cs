@@ -24,7 +24,9 @@ namespace HostileTakeover2.Thraxus.Models
         public readonly BlockController BlockController = new BlockController();
         public readonly GridGroupManager GridGroupManager = new GridGroupManager();
         private readonly Dictionary<long, int> _ownershipTally = new Dictionary<long, int>();
+        private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
         private bool _ownershipChangePending;
+        private bool _reclaimingBlocks;
 
         public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
         public long EntityId => _me?.EntityId ?? 0;
@@ -58,6 +60,7 @@ namespace HostileTakeover2.Thraxus.Models
             BlockController.Init(_mediator, GridOwnershipController);
             BlockController.OnImportantBlocksEmpty += OnAllImportantBlocksGone;
             GridOwnershipController.OnWriteToLog += WriteGeneral;
+            GridOwnershipController.IsNpcIdentityCheck = _mediator.IsNpcIdentity;
             GridOwnershipController.SetOwnershipAction += SetOwnership;
             GridOwnershipController.DisownGridAction += DisownGrid;
             GridOwnershipController.TakeOverGridAction += TakeOverGrid;
@@ -81,7 +84,7 @@ namespace HostileTakeover2.Thraxus.Models
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Ownership))
                 WriteGeneral(DebugType.Ownership, nameof(ReEvaluateOwnership), $"Reevaluating ownership.  Current Rightful Owner: [{GridOwnershipController.RightfulOwner.ToEntityIdFormat()}]");
             if (GridOwnershipController.RightfulOwner == ownerId) return;
-            SetGroupOwnership(GridGroupManager.GridGroupData, ownerId);
+            SetGroupOwnership(ownerId);
         }
 
         private void EvaluateOwnership()
@@ -91,26 +94,26 @@ namespace HostileTakeover2.Thraxus.Models
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Ownership))
                 WriteGeneral(DebugType.Ownership, nameof(EvaluateOwnership), $"Grid group owner determined to be {ownerId:D18}");
             if (GridOwnershipController.RightfulOwner == ownerId) return;
-            SetGroupOwnership(GridGroupManager.GridGroupData, ownerId);
+            SetGroupOwnership(ownerId);
         }
 
         private long CalculateGroupOwnerId(IMyGridGroupData groupData)
         {
             _ownershipTally.Clear();
-            var gridList = _mediator.GetReusableCubeGridList(groupData);
-            foreach (var grid in gridList)
+            _groupGrids.Clear();
+            groupData.GetGrids(_groupGrids);
+            foreach (var grid in _groupGrids)
             {
                 foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
                 {
                     long id = fatBlock.OwnerId;
-                    if (id == 0 || MyAPIGateway.Players.TryGetSteamId(id) > 0) continue;
+                    if (id == 0 || !_mediator.IsNpcIdentity(id)) continue;
                     if (_ownershipTally.ContainsKey(id))
                         _ownershipTally[id]++;
                     else
                         _ownershipTally.Add(id, 1);
                 }
             }
-            _mediator.ReturnReusableCubeGridList(gridList);
             long ownerId = 0;
             int count = 0;
             foreach (var kvp in _ownershipTally)
@@ -122,10 +125,9 @@ namespace HostileTakeover2.Thraxus.Models
             return ownerId;
         }
 
-        private void SetGroupOwnership(IMyGridGroupData groupData, long ownerId)
+        private void SetGroupOwnership(long ownerId)
         {
-            var gridList = _mediator.GetReusableCubeGridList(groupData);
-            foreach (var grid in gridList)
+            foreach (var grid in _groupGrids)
             {
                 var cubeGrid = (MyCubeGrid)grid;
                 bool hasOwnerBlocks = false;
@@ -137,7 +139,6 @@ namespace HostileTakeover2.Thraxus.Models
                 if (construct.GridOwnershipController.RightfulOwner == ownerId) continue;
                 construct.GridOwnershipController.SetOwnership(ownerId);
             }
-            _mediator.ReturnReusableCubeGridList(gridList);
         }
 
         private void OnGridSplit(MyCubeGrid oldGrid, MyCubeGrid newGrid)
@@ -201,16 +202,16 @@ namespace HostileTakeover2.Thraxus.Models
                 var groupData = GridGroupManager.GridGroupData;
                 if (groupData == null)
                 {
-                    _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
                     DisownGrid();
                     return;
                 }
 
-                var gridList = _mediator.GetReusableCubeGridList(groupData);
+                _groupGrids.Clear();
+                groupData.GetGrids(_groupGrids);
                 bool anyHasBlocks = false;
                 bool anyPending   = false;
 
-                foreach (var grid in gridList)
+                foreach (var grid in _groupGrids)
                 {
                     Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                     if (construct == null)
@@ -219,7 +220,7 @@ namespace HostileTakeover2.Thraxus.Models
                         // initialized. If it's NPC-owned, defer the decision until it's ready.
                         var cubeGrid = (MyCubeGrid)grid;
                         long owner = cubeGrid.BigOwners.Count > 0 ? cubeGrid.BigOwners[0] : 0;
-                        if (owner != 0 && MyAPIGateway.Players.TryGetSteamId(owner) == 0)
+                        if (owner != 0 && _mediator.IsNpcIdentity(owner))
                             anyPending = true;
                         continue;
                     }
@@ -234,33 +235,35 @@ namespace HostileTakeover2.Thraxus.Models
 
                 if (anyHasBlocks || anyPending)
                 {
-                    _mediator.ReturnReusableCubeGridList(gridList);
                     if (anyPending)
                         _mediator.ActionQueue.Add(DefaultSettings.MinorTickDelay + 11, OnAllImportantBlocksGone);
                     return;
                 }
 
                 // All constructs accounted for, none pending, none have important blocks — disown.
-                foreach (var grid in gridList)
-                {
-                    var cubeGrid = (MyCubeGrid)grid;
-                    if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0)
-                        continue;
-                    cubeGrid.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
-                    Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                    construct?.DisownGrid();
-                }
-                _mediator.ReturnReusableCubeGridList(gridList);
+                DisownConstruct();
             }
             catch (Exception e) { WriteGeneral(nameof(OnAllImportantBlocksGone), $"Exception: {e}"); }
         }
 
         public void DisownGrid()
         {
+            _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
             GridOwnershipController.Reset();
             BlockController.Reset();
-            SetOwnership();
             SetEvents();
+        }
+
+        private void DisownConstruct()
+        {
+            foreach (var grid in _groupGrids)
+            {
+                var cubeGrid = (MyCubeGrid)grid;
+                if (cubeGrid.BigOwners.Count > 0 && !_mediator.IsNpcIdentity(cubeGrid.BigOwners[0]))
+                    continue;
+                Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                construct?.DisownGrid();
+            }
         }
 
         private void IgnoreGrid()
@@ -351,18 +354,15 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void ReclaimHackedBlocks(MyCubeGrid grid)
         {
+            if (_reclaimingBlocks) return;
             try
             {
-                foreach (var fatBlock in _me.GetFatBlocks())
-                {
-                    long expected = fatBlock.IsFunctional ? GridOwnershipController.RightfulOwner : 0;
-                    if (fatBlock.OwnerId != expected)
-                        fatBlock.ChangeOwner(expected, MyOwnershipShareModeEnum.Faction);
-                    if (!fatBlock.IsFunctional)
-                        BlockController.HandleNonFunctionalBlock(fatBlock);
-                }
+                _reclaimingBlocks = true;
+                _me.ChangeGridOwnership(GridOwnershipController.RightfulOwner, MyOwnershipShareModeEnum.Faction);
+                BlockController.HandleNonFunctionalBlocks();
             }
             catch (Exception e) { WriteGeneral(nameof(ReclaimHackedBlocks), $"Exception: {e}"); }
+            finally { _reclaimingBlocks = false; }
         }
 
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
@@ -386,6 +386,8 @@ namespace HostileTakeover2.Thraxus.Models
             base.Reset();
             IsClosed = true;
             _ownershipChangePending = false;
+            _reclaimingBlocks = false;
+            _groupGrids.Clear();
             _me.OnMarkForClose -= OnGridMarkedForClose;
             DeRegisterEvents();
             GridOwnershipController.Reset();
@@ -394,6 +396,7 @@ namespace HostileTakeover2.Thraxus.Models
             BlockController.OnImportantBlocksEmpty -= OnAllImportantBlocksGone;
             BlockController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.OnWriteToLog -= WriteGeneral;
+            GridOwnershipController.IsNpcIdentityCheck = null;
             GridOwnershipController.SetOwnershipAction -= SetOwnership;
             GridOwnershipController.DisownGridAction -= DisownGrid;
             GridOwnershipController.TakeOverGridAction -= TakeOverGrid;
