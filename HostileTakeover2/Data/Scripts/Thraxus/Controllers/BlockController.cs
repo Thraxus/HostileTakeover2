@@ -54,15 +54,20 @@ namespace HostileTakeover2.Thraxus.Controllers
                     RuntimeBlockLogger.OnBlockEncountered?.Invoke(myCubeBlock);
                     var blockType = AssignBlock(myCubeBlock);
                     if (blockType == BlockType.None) return;
-                    if (!myCubeBlock.IsFunctional) return;
+                    if (!myCubeBlock.IsFunctional)
+                    {
+                        if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
+                            WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block skipped [{blockType}] not functional '{myCubeBlock.DisplayNameText}': block=[{myCubeBlock.EntityId:D18}] grid=[{myCubeBlock.CubeGrid?.EntityId:D18}]");
+                        return;
+                    }
                     if (_importantBlocks.ContainsKey(myCubeBlock)) return;
                     IsClosed = false;
                     Block block = _mediator.GetBlock(myCubeBlock.EntityId);
                     block.Initialize(blockType, myCubeBlock);
-                    if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
-                        WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block classified [{blockType}]: {myCubeBlock.EntityId:D18}");
                     RegisterBlockEvents(block);
                     AddToDictionary(myCubeBlock, block);
+                    if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
+                        WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block captured [{blockType}] '{myCubeBlock.DisplayNameText}': block=[{block.EntityId:D18}] grid=[{myCubeBlock.CubeGrid?.EntityId:D18}] tracked=[{_importantBlocks.Count}]");
                 }
                 finally
                 {
@@ -172,6 +177,13 @@ namespace HostileTakeover2.Thraxus.Controllers
         public int GetImportantBlockCount()
         {
             return _importantBlocks.Count;
+        }
+
+        public void HandleNonFunctionalBlock(MyCubeBlock myCubeBlock)
+        {
+            Block block;
+            if (!_importantBlocks.TryGetValue(myCubeBlock, out block)) return;
+            OnBlockDisabled(block);
         }
     }
 }

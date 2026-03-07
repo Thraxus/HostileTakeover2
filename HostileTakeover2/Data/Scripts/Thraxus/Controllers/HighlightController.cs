@@ -39,6 +39,8 @@ namespace HostileTakeover2.Thraxus.Controllers
         private void HighlightBlock(Block block, BlockType type, long playerId)
         {
             if (_currentHighlightedBlocks.ContainsKey(block)) return;
+            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
+                WriteGeneral(DebugType.Highlight, nameof(HighlightBlock), $"Block highlighted [{type}] '{block.MyCubeBlock?.DisplayNameText}': block=[{block.EntityId:D18}] grid=[{block.MyCubeBlock?.CubeGrid?.EntityId:D18}]");
             var hls = _mediator.GetHighlightSetting();
             hls.Name = block.Name;
             hls.Color = GetHighlightColor(type);
