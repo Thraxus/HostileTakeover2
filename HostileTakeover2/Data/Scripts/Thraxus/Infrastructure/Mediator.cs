@@ -39,6 +39,18 @@ namespace HostileTakeover2.Thraxus.Infrastructure
             WriteGeneral(nameof(BuildNpcIdentityCache), $"NPC identity cache built: {_npcIdentities.Count} entries.");
         }
 
+        public void RegisterFactionEvents()
+        {
+            MyAPIGateway.Session.Factions.FactionStateChanged += OnFactionStateChanged;
+        }
+
+        private void OnFactionStateChanged(MyFactionStateChange action, long fromFactionId, long toFactionId, long playerId, long senderId)
+        {
+            if (action != MyFactionStateChange.FactionMemberAcceptJoin) return;
+            if (MyAPIGateway.Players.TryGetSteamId(playerId) != 0) return;
+            _npcIdentities.Add(playerId);
+        }
+
         public readonly BlockClassificationData BlockClassificationData = new BlockClassificationData();
         public readonly ConstructController ConstructController = new ConstructController();
         public readonly GrinderController GrinderController = new GrinderController();
@@ -79,6 +91,7 @@ namespace HostileTakeover2.Thraxus.Infrastructure
 
         public override void Close()
         {
+            MyAPIGateway.Session.Factions.FactionStateChanged -= OnFactionStateChanged;
             ActionQueue.OnReport -= OnActionQueueReport;
             DeRegisterCommonEvents();
             base.Close();

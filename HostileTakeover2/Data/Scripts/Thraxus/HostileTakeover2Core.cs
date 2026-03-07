@@ -119,6 +119,7 @@ namespace HostileTakeover2.Thraxus
             base.BeforeStart();
             if (!References.IsServer) return;
             _mediator.BuildNpcIdentityCache();
+            _mediator.RegisterFactionEvents();
             WriteGeneral(nameof(BeforeStart), _userConfigController.DefaultSettings.PrintSettings().ToString());
         }
 
