@@ -26,7 +26,6 @@ namespace HostileTakeover2.Thraxus.Models
         private readonly Dictionary<long, int> _ownershipTally = new Dictionary<long, int>();
         private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
         private bool _ownershipChangePending;
-        private bool _reclaimingBlocks;
 
         public long CurrentOwnerId => _me.BigOwners.Count != 0 ? _me.BigOwners[0] : 0;
         public long EntityId => _me?.EntityId ?? 0;
@@ -60,11 +59,7 @@ namespace HostileTakeover2.Thraxus.Models
             BlockController.Init(_mediator, GridOwnershipController);
             BlockController.OnImportantBlocksEmpty += OnAllImportantBlocksGone;
             GridOwnershipController.OnWriteToLog += WriteGeneral;
-            GridOwnershipController.IsNpcIdentityCheck = _mediator.IsNpcIdentity;
-            GridOwnershipController.SetOwnershipAction += SetOwnership;
-            GridOwnershipController.DisownGridAction += DisownGrid;
-            GridOwnershipController.TakeOverGridAction += TakeOverGrid;
-            GridOwnershipController.IgnoreGridAction += IgnoreGrid;
+            GridOwnershipController.Init(_me, BlockController, _mediator.IsNpcIdentity);
             GridGroupManager.OnWriteToLog += WriteGeneral;
             GridGroupManager.GridRemovedAction += OnGridRemoved;
             GridGroupManager.Init(_me);
@@ -137,7 +132,7 @@ namespace HostileTakeover2.Thraxus.Models
                 Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
                 if (construct == null) continue;
                 if (construct.GridOwnershipController.RightfulOwner == ownerId) continue;
-                construct.GridOwnershipController.SetOwnership(ownerId);
+                construct.ApplyOwnership(ownerId);
             }
         }
 
@@ -248,9 +243,13 @@ namespace HostileTakeover2.Thraxus.Models
 
         public void DisownGrid()
         {
-            _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
-            GridOwnershipController.Reset();
-            BlockController.Reset();
+            GridOwnershipController.DisownGrid();
+            SetEvents();
+        }
+
+        public void ApplyOwnership(long ownerId)
+        {
+            GridOwnershipController.SetOwnership(ownerId);
             SetEvents();
         }
 
@@ -266,40 +265,10 @@ namespace HostileTakeover2.Thraxus.Models
             }
         }
 
-        private void IgnoreGrid()
-        {
-            SetEvents();
-        }
-
-        private void TakeOverGrid()
-        {
-            WriteGeneral(nameof(TakeOverGrid), $"Attempting to take over grid: [{(GridOwnershipController.OwnershipType == OwnershipType.Npc).ToSingleChar()}] [{(!BlockController.IsClosed).ToSingleChar()}]");
-            if (GridOwnershipController.OwnershipType != OwnershipType.Npc || BlockController.IsClosed) return;
-            GridOwnershipController.SetOwnershipAction -= SetOwnership;
-            GridOwnershipController.SetOwnershipAction += SetOwnership;
-            SetOwnership();
-            SetEvents();
-        }
-
         private void SetEvents()
         {
             DeRegisterEvents();
             RegisterEvents();
-        }
-
-        private void SetOwnership()
-        {
-            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
-                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Scanning grid for important blocks.");
-            BlockController.AddGrid(_me);
-            if (_mediator.DefaultSettings.IsVerboseActiveFor(DebugType.Construct))
-                WriteGeneral(DebugType.Construct, nameof(SetOwnership), $"Scan queued. Current important block count: {BlockController.GetImportantBlockCount()}");
-        }
-
-        private void SetOwnership(MyCubeBlock block)
-        {
-            if (_mediator.DefaultSettings.AllowPlayerHacking.Current) return;
-            block.ChangeOwner(block.IsFunctional ? GridOwnershipController.RightfulOwner : 0, MyOwnershipShareModeEnum.Faction);
         }
 
         public void TriggerHighlights(IMyAngleGrinder grinder)
@@ -311,7 +280,8 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void AddBlock(MyCubeBlock block)
         {
-            SetOwnership(block);
+            if (!_mediator.DefaultSettings.AllowPlayerHacking.Current)
+                GridOwnershipController.SetBlockOwnership(block);
             BlockController.AddBlock(block);
         }
 
@@ -354,15 +324,7 @@ namespace HostileTakeover2.Thraxus.Models
 
         private void ReclaimHackedBlocks(MyCubeGrid grid)
         {
-            if (_reclaimingBlocks) return;
-            try
-            {
-                _reclaimingBlocks = true;
-                _me.ChangeGridOwnership(GridOwnershipController.RightfulOwner, MyOwnershipShareModeEnum.Faction);
-                BlockController.HandleNonFunctionalBlocks();
-            }
-            catch (Exception e) { WriteGeneral(nameof(ReclaimHackedBlocks), $"Exception: {e}"); }
-            finally { _reclaimingBlocks = false; }
+            GridOwnershipController.ReclaimHackedBlocks();
         }
 
         private void OnBlockOwnershipChanged(MyCubeGrid unused)
@@ -386,7 +348,6 @@ namespace HostileTakeover2.Thraxus.Models
             base.Reset();
             IsClosed = true;
             _ownershipChangePending = false;
-            _reclaimingBlocks = false;
             _groupGrids.Clear();
             _me.OnMarkForClose -= OnGridMarkedForClose;
             DeRegisterEvents();
@@ -396,11 +357,6 @@ namespace HostileTakeover2.Thraxus.Models
             BlockController.OnImportantBlocksEmpty -= OnAllImportantBlocksGone;
             BlockController.OnWriteToLog -= WriteGeneral;
             GridOwnershipController.OnWriteToLog -= WriteGeneral;
-            GridOwnershipController.IsNpcIdentityCheck = null;
-            GridOwnershipController.SetOwnershipAction -= SetOwnership;
-            GridOwnershipController.DisownGridAction -= DisownGrid;
-            GridOwnershipController.TakeOverGridAction -= TakeOverGrid;
-            GridOwnershipController.IgnoreGridAction -= IgnoreGrid;
             GridGroupManager.GridRemovedAction -= OnGridRemoved;
             GridGroupManager.OnWriteToLog -= WriteGeneral;
             GridGroupManager.Reset();
