@@ -201,7 +201,6 @@ namespace HostileTakeover2.Thraxus.Models
                 var groupData = GridGroupManager.GridGroupData;
                 if (groupData == null)
                 {
-                    _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
                     DisownGrid();
                     return;
                 }
@@ -241,25 +240,32 @@ namespace HostileTakeover2.Thraxus.Models
                 }
 
                 // All constructs accounted for, none pending, none have important blocks — disown.
-                foreach (var grid in gridList)
-                {
-                    var cubeGrid = (MyCubeGrid)grid;
-                    if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0)
-                        continue;
-                    cubeGrid.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
-                    Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                    construct?.DisownGrid();
-                }
                 _mediator.ReturnReusableCubeGridList(gridList);
+                DisownConstruct(groupData);
             }
             catch (Exception e) { WriteGeneral(nameof(OnAllImportantBlocksGone), $"Exception: {e}"); }
         }
 
         public void DisownGrid()
         {
+            _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
             GridOwnershipController.Reset();
             BlockController.Reset();
             SetEvents();
+        }
+
+        private void DisownConstruct(IMyGridGroupData groupData)
+        {
+            var gridList = _mediator.GetReusableCubeGridList(groupData);
+            foreach (var grid in gridList)
+            {
+                var cubeGrid = (MyCubeGrid)grid;
+                if (cubeGrid.BigOwners.Count > 0 && MyAPIGateway.Players.TryGetSteamId(cubeGrid.BigOwners[0]) > 0)
+                    continue;
+                Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
+                construct?.DisownGrid();
+            }
+            _mediator.ReturnReusableCubeGridList(gridList);
         }
 
         private void IgnoreGrid()
