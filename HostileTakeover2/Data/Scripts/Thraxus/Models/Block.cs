@@ -1,9 +1,7 @@
 ﻿using System;
 using HostileTakeover2.Thraxus.Common.BaseClasses;
-using HostileTakeover2.Thraxus.Controllers;
 using HostileTakeover2.Thraxus.Enums;
 using Sandbox.Game.Entities;
-using Sandbox.ModAPI;
 using VRage.ModAPI;
 
 namespace HostileTakeover2.Thraxus.Models
@@ -11,7 +9,6 @@ namespace HostileTakeover2.Thraxus.Models
     internal class Block : BaseLoggingClass
     {
         public MyCubeBlock MyCubeBlock;
-        private GridOwnershipController _gridOwnershipController;
         public Action<Block> BlockHasBeenDisabledAction;
         public BlockType BlockType;
         public string Name => MyCubeBlock?.Name ?? string.Empty;
@@ -19,12 +16,11 @@ namespace HostileTakeover2.Thraxus.Models
 
         public bool IsFunctional => MyCubeBlock.IsFunctional;
 
-        public void Initialize(BlockType blockType, MyCubeBlock block, GridOwnershipController gridOwnershipController)
+        public void Initialize(BlockType blockType, MyCubeBlock block)
         {
             BlockType = blockType;
             MyCubeBlock = block;
             EntityId = block.EntityId;
-            _gridOwnershipController = gridOwnershipController;
             RegisterEvents();
         }
 
@@ -38,27 +34,18 @@ namespace HostileTakeover2.Thraxus.Models
         {
             MyCubeBlock.OnClose += OnCubeBlockClose;
             MyCubeBlock.IsWorkingChanged += BlockOnWorkingChanged;
-            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged += BlockOnOwnershipChanged;
         }
 
         private void DeRegisterEvents()
         {
             MyCubeBlock.OnClose -= OnCubeBlockClose;
             MyCubeBlock.IsWorkingChanged -= BlockOnWorkingChanged;
-            ((IMyTerminalBlock)MyCubeBlock).OwnershipChanged -= BlockOnOwnershipChanged;
-        }
-
-        private void BlockOnOwnershipChanged(IMyTerminalBlock block)
-        {
-            try { _gridOwnershipController.SetOwnership(MyCubeBlock); }
-            catch (Exception e) { WriteGeneral(nameof(BlockOnOwnershipChanged), $"Exception: {e}"); }
         }
 
         private void BlockOnWorkingChanged(MyCubeBlock block)
         {
             try
             {
-                _gridOwnershipController.SetOwnership(MyCubeBlock);
                 if (!block.IsFunctional)
                     BlockHasBeenDisabled();
             }

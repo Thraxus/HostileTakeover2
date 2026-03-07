@@ -21,12 +21,10 @@ namespace HostileTakeover2.Thraxus.Controllers
         public bool HasPendingAdds => _pendingAddCount > 0;
 
         private Mediator _mediator;
-        private GridOwnershipController _ownershipController;
 
         public void Init(Mediator mediator, GridOwnershipController ownershipController)
         {
             _mediator = mediator;
-            _ownershipController = ownershipController;
             IsClosed = false;
         }
 
@@ -60,7 +58,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                     if (_importantBlocks.ContainsKey(myCubeBlock)) return;
                     IsClosed = false;
                     Block block = _mediator.GetBlock(myCubeBlock.EntityId);
-                    block.Initialize(blockType, myCubeBlock, _ownershipController);
+                    block.Initialize(blockType, myCubeBlock);
                     if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
                         WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block classified [{blockType}]: {myCubeBlock.EntityId:D18}");
                     RegisterBlockEvents(block);
