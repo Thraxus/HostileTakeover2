@@ -170,9 +170,14 @@ namespace HostileTakeover2.Thraxus.Controllers
             SoftReset();
         }
 
-        public Dictionary<MyCubeBlock, Block> GetImportantBlockDictionary()
+        public void GetHighlightableBlocks(Dictionary<BlockType, HashSet<Block>> output)
         {
-            return _importantBlocks;
+            foreach (var kvp in _importantBlocks)
+            {
+                Block block = kvp.Value;
+                if (!block.IsFunctional || block.IsClosed || block.BlockType == BlockType.None) continue;
+                output[block.BlockType].Add(block);
+            }
         }
 
         public int GetImportantBlockCount()

@@ -117,26 +117,14 @@ namespace HostileTakeover2.Thraxus.Controllers
                 WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Attempting to enable highlights for grid group against entity {playerId.ToEntityIdFormat()}");
             _groupGrids.Clear();
             myGridGroupData.GetGrids(_groupGrids);
-            int counter = 0;
             foreach (var myCubeGrid in _groupGrids)
             {
                 Construct construct = _mediator.ConstructController.GetConstruct(myCubeGrid.EntityId);
                 if (construct == null) continue;
-                foreach (var kvp in construct.BlockController.GetImportantBlockDictionary())
-                {
-                    Block block = kvp.Value;
-                    if (!block.IsFunctional || block.IsClosed || block.BlockType == BlockType.None)
-                    {
-                        if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
-                            WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Block rejected!  Type: {block.BlockType} | Functional: {block.IsFunctional} | Closed: {block.IsClosed}");
-                        continue;
-                    }
-                    _reusableImportantBlocksDictionary[block.BlockType].Add(block);
-                    counter++;
-                }
+                construct.BlockController.GetHighlightableBlocks(_reusableImportantBlocksDictionary);
             }
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
-                WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Attempting to highlight {counter:D3} blocks [{_reusableImportantBlocksDictionary[BlockType.Control].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Medical].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Weapon].Count:D2}]  [{_reusableImportantBlocksDictionary[BlockType.Trap].Count:D2}]");
+                WriteGeneral(DebugType.Highlight, nameof(EnableHighlights), $"Attempting to highlight [{_reusableImportantBlocksDictionary[BlockType.Control].Count:D2}] ctrl  [{_reusableImportantBlocksDictionary[BlockType.Medical].Count:D2}] med  [{_reusableImportantBlocksDictionary[BlockType.Weapon].Count:D2}] wpn  [{_reusableImportantBlocksDictionary[BlockType.Trap].Count:D2}] trap");
             HighlightNextSet(grinder, playerId);
         }
 
