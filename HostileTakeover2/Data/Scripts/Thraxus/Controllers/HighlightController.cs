@@ -26,7 +26,7 @@ namespace HostileTakeover2.Thraxus.Controllers
                 { BlockType.Weapon, new HashSet<Block>() }
             };
 
-        private readonly Dictionary<Block, HighlightSettings> _currentHighlightedBlocks = new Dictionary<Block, HighlightSettings>();
+        private readonly Dictionary<long, HighlightSettings> _currentHighlightedBlocks = new Dictionary<long, HighlightSettings>();
         private readonly List<Block> _sortBuffer = new List<Block>();
         private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
 
@@ -39,7 +39,7 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void HighlightBlock(Block block, BlockType type, long playerId)
         {
-            if (_currentHighlightedBlocks.ContainsKey(block)) return;
+            if (_currentHighlightedBlocks.ContainsKey(block.EntityId)) return;
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
                 WriteGeneral(DebugType.Highlight, nameof(HighlightBlock), $"Block highlighted [{type}] '{block.MyCubeBlock?.DisplayNameText}': block=[{block.EntityId:D18}] grid=[{block.MyCubeBlock?.CubeGrid?.EntityId:D18}]");
             var hls = _mediator.GetHighlightSetting();
@@ -50,7 +50,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             hls.LineThickness = _mediator.DefaultSettings.EnabledThickness;
             hls.PulseDuration = _mediator.DefaultSettings.HighlightPulseDuration;
             SetHighlight(hls);
-            _currentHighlightedBlocks.Add(block, hls);
+            _currentHighlightedBlocks.Add(block.EntityId, hls);
             block.OnClose += RemoveFromHighlightedBlocks;
             block.OnReset += RemoveFromHighlightedBlocks;
             block.BlockHasBeenDisabledAction += RemoveFromHighlightedBlocks;
@@ -63,9 +63,9 @@ namespace HostileTakeover2.Thraxus.Controllers
             {
                 if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
                     WriteGeneral(DebugType.Highlight, nameof(RemoveFromHighlightedBlocks), $"Attempting to remove a block: [{(_currentHighlightedBlocks.ContainsKey(block)).ToSingleChar()}] {block.EntityId.ToEntityIdFormat()}");
-                if (!_currentHighlightedBlocks.ContainsKey(block)) return;
-                HighlightSettings hls = _currentHighlightedBlocks[block];
-                _currentHighlightedBlocks.Remove(block);
+                if (!_currentHighlightedBlocks.ContainsKey(block.EntityId)) return;
+                HighlightSettings hls = _currentHighlightedBlocks[block.EntityId];
+                _currentHighlightedBlocks.Remove(block.EntityId);
                 block.OnClose -= RemoveFromHighlightedBlocks;
                 block.OnReset -= RemoveFromHighlightedBlocks;
                 block.BlockHasBeenDisabledAction -= RemoveFromHighlightedBlocks;
