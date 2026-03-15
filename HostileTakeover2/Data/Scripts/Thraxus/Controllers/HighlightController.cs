@@ -26,7 +26,12 @@ namespace HostileTakeover2.Thraxus.Controllers
                 { BlockType.Weapon, new HashSet<Block>() }
             };
 
-        private readonly Dictionary<long, HighlightSettings> _currentHighlightedBlocks = new Dictionary<long, HighlightSettings>();
+        // Outer key: block.EntityId — Inner key: playerId.
+        // SE's SetHighlight is already scoped per player, so each player gets their own
+        // independent highlight entry. Event subscriptions are managed on the outer key
+        // (subscribe on first player highlight, unsubscribe when all players are cleared).
+        private readonly Dictionary<long, Dictionary<long, HighlightSettings>> _currentHighlightedBlocks =
+            new Dictionary<long, Dictionary<long, HighlightSettings>>();
         private readonly List<Block> _sortBuffer = new List<Block>();
         private readonly HashSet<IMyCubeGrid> _groupGrids = new HashSet<IMyCubeGrid>();
 
@@ -39,9 +44,21 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void HighlightBlock(Block block, BlockType type, long playerId)
         {
-            if (_currentHighlightedBlocks.ContainsKey(block.EntityId)) return;
+            Dictionary<long, HighlightSettings> playerHighlights;
+            if (_currentHighlightedBlocks.TryGetValue(block.EntityId, out playerHighlights))
+            {
+                if (playerHighlights.ContainsKey(playerId)) return;
+            }
+            else
+            {
+                playerHighlights = new Dictionary<long, HighlightSettings>();
+                _currentHighlightedBlocks.Add(block.EntityId, playerHighlights);
+                block.OnClose += RemoveFromHighlightedBlocks;
+                block.OnReset += RemoveFromHighlightedBlocks;
+                block.BlockHasBeenDisabledAction += RemoveFromHighlightedBlocks;
+            }
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
-                WriteGeneral(DebugType.Highlight, nameof(HighlightBlock), $"Block highlighted [{type}] '{block.MyCubeBlock?.DisplayNameText}': block=[{block.EntityId:D18}] grid=[{block.MyCubeBlock?.CubeGrid?.EntityId:D18}]");
+                WriteGeneral(DebugType.Highlight, nameof(HighlightBlock), $"Block highlighted [{type}] '{block.MyCubeBlock?.DisplayNameText}': block=[{block.EntityId:D18}] grid=[{block.MyCubeBlock?.CubeGrid?.EntityId:D18}] player=[{playerId:D18}]");
             var hls = _mediator.GetHighlightSetting();
             hls.Name = block.Name;
             hls.Color = GetHighlightColor(type);
@@ -50,29 +67,59 @@ namespace HostileTakeover2.Thraxus.Controllers
             hls.LineThickness = _mediator.DefaultSettings.EnabledThickness;
             hls.PulseDuration = _mediator.DefaultSettings.HighlightPulseDuration;
             SetHighlight(hls);
-            _currentHighlightedBlocks.Add(block.EntityId, hls);
-            block.OnClose += RemoveFromHighlightedBlocks;
-            block.OnReset += RemoveFromHighlightedBlocks;
-            block.BlockHasBeenDisabledAction += RemoveFromHighlightedBlocks;
-            _mediator.ActionQueue.Add(_mediator.DefaultSettings.HighlightDuration, () => RemoveFromHighlightedBlocks(block));
+            playerHighlights.Add(playerId, hls);
+            long capturedPlayerId = playerId;
+            _mediator.ActionQueue.Add(_mediator.DefaultSettings.HighlightDuration, () => RemoveFromHighlightedBlocks(block, capturedPlayerId));
         }
 
+        // Called from block lifecycle events (close/reset/disabled) — clears all players at once.
         private void RemoveFromHighlightedBlocks(Block block)
         {
             try
             {
+                Dictionary<long, HighlightSettings> playerHighlights;
+                if (!_currentHighlightedBlocks.TryGetValue(block.EntityId, out playerHighlights)) return;
                 if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
-                    WriteGeneral(DebugType.Highlight, nameof(RemoveFromHighlightedBlocks), $"Attempting to remove a block: [{(_currentHighlightedBlocks.ContainsKey(block)).ToSingleChar()}] {block.EntityId.ToEntityIdFormat()}");
-                if (!_currentHighlightedBlocks.ContainsKey(block.EntityId)) return;
-                HighlightSettings hls = _currentHighlightedBlocks[block.EntityId];
+                    WriteGeneral(DebugType.Highlight, nameof(RemoveFromHighlightedBlocks), $"Removing all player highlights for block: {block.EntityId.ToEntityIdFormat()} [{playerHighlights.Count}] players");
                 _currentHighlightedBlocks.Remove(block.EntityId);
                 block.OnClose -= RemoveFromHighlightedBlocks;
                 block.OnReset -= RemoveFromHighlightedBlocks;
                 block.BlockHasBeenDisabledAction -= RemoveFromHighlightedBlocks;
+                foreach (var kvp in playerHighlights)
+                {
+                    HighlightSettings hls = kvp.Value;
+                    hls.Enabled = false;
+                    hls.LineThickness = _mediator.DefaultSettings.DisabledThickness;
+                    SetHighlight(hls);
+                    _mediator.ReturnHighlightSetting(hls);
+                }
+            }
+            catch (Exception e) { WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Exception: {e}"); }
+        }
+
+        // Called from the ActionQueue timer — clears only the specific player's highlight.
+        private void RemoveFromHighlightedBlocks(Block block, long playerId)
+        {
+            try
+            {
+                Dictionary<long, HighlightSettings> playerHighlights;
+                if (!_currentHighlightedBlocks.TryGetValue(block.EntityId, out playerHighlights)) return;
+                HighlightSettings hls;
+                if (!playerHighlights.TryGetValue(playerId, out hls)) return;
+                if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Highlight))
+                    WriteGeneral(DebugType.Highlight, nameof(RemoveFromHighlightedBlocks), $"Removing highlight for block: {block.EntityId.ToEntityIdFormat()} player=[{playerId:D18}]");
+                playerHighlights.Remove(playerId);
                 hls.Enabled = false;
                 hls.LineThickness = _mediator.DefaultSettings.DisabledThickness;
                 SetHighlight(hls);
                 _mediator.ReturnHighlightSetting(hls);
+                if (playerHighlights.Count == 0)
+                {
+                    _currentHighlightedBlocks.Remove(block.EntityId);
+                    block.OnClose -= RemoveFromHighlightedBlocks;
+                    block.OnReset -= RemoveFromHighlightedBlocks;
+                    block.BlockHasBeenDisabledAction -= RemoveFromHighlightedBlocks;
+                }
             }
             catch (Exception e) { WriteGeneral(nameof(RemoveFromHighlightedBlocks), $"Exception: {e}"); }
         }
