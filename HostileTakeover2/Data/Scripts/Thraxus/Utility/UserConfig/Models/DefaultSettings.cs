@@ -43,6 +43,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             $"\n\t\t* {nameof(UseGrinderTierHighlighting)} default is {UseGrinderTierHighlighting.Default} [{UseGrinderTierHighlighting.Type}].  When true, the tier of the grinder limits how many blocks are highlighted in the default all-in-active-group mode.  Tier 4 (Elite) always shows all.  See BlocksPerGrinderTier for the per-tier block count.  Nearest blocks are shown first.  Ignored when any single-block or all-blocks override is active." +
             $"\n\t\t* {nameof(BlocksPerGrinderTier)} default is {BlocksPerGrinderTier.Default} [{BlocksPerGrinderTier.Type}].  Number of blocks highlighted per grinder tier when UseGrinderTierHighlighting is active.  Tier N shows N x value blocks; tier 4 (Elite) always shows all regardless.  Value must be between {BlocksPerGrinderTier.Min} and {BlocksPerGrinderTier.Max}." +
             $"\n\t\t* {nameof(UnknownGrinderTierBlockCount)} default is {UnknownGrinderTierBlockCount.Default} [{UnknownGrinderTierBlockCount.Type}].  Blocks shown for unrecognised grinder subtypes (modded grinders) when UseGrinderTierHighlighting is active.  0 = show all blocks.  Value must be between {UnknownGrinderTierBlockCount.Min} and {UnknownGrinderTierBlockCount.Max}." +
+            $"\n\t\t* {nameof(HighlightFillAlpha)} default is {HighlightFillAlpha.Default} [{HighlightFillAlpha.Type}].  Fill opacity for highlighted blocks as a percentage (0 = outline only, no fill; 100 = fully opaque fill).  Value must be between {HighlightFillAlpha.Min} and {HighlightFillAlpha.Max}." +
             $"\n\t\t* {nameof(DebugMode)} default is {DebugMode.Default} [{DebugMode.Type}].  When true, extra diagnostic log messages and GPS markers are emitted to help identify issues during testing.  Disable before publishing." +
             $"\n\t\t* {nameof(VerboseMode)} default is {VerboseMode.Default} [{VerboseMode.Type}].  When true, also logs high-frequency internal events (pool ops, per-grid init steps, topology fan-out).  Enabling VerboseMode implies DebugMode.  Disable before publishing." +
             $"\n\t\t* {nameof(ActiveDebugCategories)} default is All [{nameof(LogCategory)}].  Comma-separated list of subsystems to log when DebugMode is active.  Valid values: {validCategoryNames}.  VerboseMode always enables all categories." +
@@ -77,6 +78,8 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         public UserSetting<int> BlocksPerGrinderTier = new UserSetting<int>(1, 10, 1, 1);
         /// <summary>Blocks shown for unrecognised grinder subtypes (modded grinders) when UseGrinderTierHighlighting is active. 0 = show all.</summary>
         public UserSetting<int> UnknownGrinderTierBlockCount = new UserSetting<int>(0, 10, 0, 0);
+        /// <summary>Percentage of fill opacity applied to highlighted blocks (0 = outline only, 100 = fully filled). Mapped to SE's 0–255 alpha range internally.</summary>
+        public UserSetting<int> HighlightFillAlpha = new UserSetting<int>(0, 100, 0, 0);
         /// <summary>Sphere radius (in metres) used when searching for nearby NPC grids from a grinder position.</summary>
         public UserSetting<double> EntityDetectionRange = new UserSetting<double>(100, 250, 150, 150);
         /// <summary>When true, extra diagnostic log messages and GPS markers are emitted to help identify issues during testing.</summary>
@@ -236,6 +239,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             userSettings.UseGrinderTierHighlighting                = UseGrinderTierHighlighting.ToString().ToLower();
             userSettings.BlocksPerGrinderTier                      = BlocksPerGrinderTier.ToString();
             userSettings.UnknownGrinderTierBlockCount              = UnknownGrinderTierBlockCount.ToString();
+            userSettings.HighlightFillAlpha                        = HighlightFillAlpha.ToString();
             userSettings.DebugMode                                 = DebugMode.ToString().ToLower();
             userSettings.VerboseMode                               = VerboseMode.ToString().ToLower();
             userSettings.ActiveDebugCategories                     = SerializeActiveCategories();
@@ -264,6 +268,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", UseGrinderTierHighlighting,                nameof(UseGrinderTierHighlighting));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", BlocksPerGrinderTier,                      nameof(BlocksPerGrinderTier));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", UnknownGrinderTierBlockCount,              nameof(UnknownGrinderTierBlockCount));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", HighlightFillAlpha,                        nameof(HighlightFillAlpha));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", DebugMode,                                 nameof(DebugMode));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", VerboseMode,                               nameof(VerboseMode));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", SerializeActiveCategories(),               nameof(ActiveDebugCategories));

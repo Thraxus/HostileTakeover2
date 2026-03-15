@@ -76,6 +76,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             MyAPIGateway.Utilities.SetVariable("HT_UseGrinderTierHighlighting",                 DefaultSettings.UseGrinderTierHighlighting.Current);
             MyAPIGateway.Utilities.SetVariable("HT_BlocksPerGrinderTier",                       DefaultSettings.BlocksPerGrinderTier.Current);
             MyAPIGateway.Utilities.SetVariable("HT_UnknownGrinderTierBlockCount",               DefaultSettings.UnknownGrinderTierBlockCount.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_HighlightFillAlpha",                         DefaultSettings.HighlightFillAlpha.Current);
             MyAPIGateway.Utilities.SetVariable("HT_DebugMode",                                  DefaultSettings.DebugMode.Current);
             MyAPIGateway.Utilities.SetVariable("HT_VerboseMode",                                DefaultSettings.VerboseMode.Current);
             int mask = 0;
@@ -111,6 +112,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             int intVal;
             if (MyAPIGateway.Utilities.GetVariable("HT_BlocksPerGrinderTier", out intVal))               DefaultSettings.BlocksPerGrinderTier.Current = intVal;
             if (MyAPIGateway.Utilities.GetVariable("HT_UnknownGrinderTierBlockCount", out intVal))        DefaultSettings.UnknownGrinderTierBlockCount.Current = intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_HighlightFillAlpha", out intVal))                  DefaultSettings.HighlightFillAlpha.Current = intVal;
 
             if (MyAPIGateway.Utilities.GetVariable("HT_DebugMode", out b))                                 DefaultSettings.DebugMode.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_VerboseMode", out b))                               DefaultSettings.VerboseMode.Current = b;
@@ -303,6 +305,9 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             _userSettings.UnknownGrinderTierBlockCount = ParseIntSetting(
                 _userSettings.UnknownGrinderTierBlockCount, DefaultSettings.UnknownGrinderTierBlockCount);
 
+            _userSettings.HighlightFillAlpha = ParseIntSetting(
+                _userSettings.HighlightFillAlpha, DefaultSettings.HighlightFillAlpha);
+
             _userSettings.DebugMode = ParseBoolSetting(
                 _userSettings.DebugMode, DefaultSettings.DebugMode);
 
@@ -328,6 +333,7 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
                 DefaultSettings.UseGrinderTierHighlighting.Current                = DefaultSettings.UseGrinderTierHighlighting.Default;
                 DefaultSettings.BlocksPerGrinderTier.Current                      = DefaultSettings.BlocksPerGrinderTier.Default;
                 DefaultSettings.UnknownGrinderTierBlockCount.Current              = DefaultSettings.UnknownGrinderTierBlockCount.Default;
+                DefaultSettings.HighlightFillAlpha.Current                        = DefaultSettings.HighlightFillAlpha.Default;
                 DefaultSettings.EntityDetectionRange.Current                      = DefaultSettings.EntityDetectionRange.Default;
             }
         }

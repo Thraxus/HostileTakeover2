@@ -10,6 +10,7 @@ using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace HostileTakeover2.Thraxus.Controllers
@@ -25,6 +26,15 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private readonly List<MyEntity> _reusableEntityList = new List<MyEntity>();
         private readonly HashSet<Construct> _seenConstructs = new HashSet<Construct>();
+
+        private static Vector3D GetGrinderSearchOrigin(IMyAngleGrinder grinder)
+        {
+            // On a dedicated server the hand-tool entity's position can be stale or at
+            // origin at the moment RunGrinderLogic fires.  The owning character entity
+            // always has the authoritative world position, so prefer that.
+            IMyEntity owner = MyAPIGateway.Entities.GetEntityById(grinder.OwnerId);
+            return owner?.GetPosition() ?? grinder.GetPosition();
+        }
 
         private void GrabAllNearbyGrids(Vector3D center)
         {
@@ -76,8 +86,9 @@ namespace HostileTakeover2.Thraxus.Controllers
         public void RunGrinderLogic(IMyAngleGrinder grinder)
         {
             if (grinder.OwnerIdentityId == 0) return;
-            GrabAllNearbyGrids(grinder.GetPosition());
-            var construct = FilterToNearestConstruct(grinder.GetPosition());
+            Vector3D origin = GetGrinderSearchOrigin(grinder);
+            GrabAllNearbyGrids(origin);
+            var construct = FilterToNearestConstruct(origin);
             if (construct == null)
             {
                 if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
@@ -94,7 +105,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             if (_mediator.DefaultSettings.IsDebugActive)
             {
                 long playerId = grinder.OwnerIdentityId;
-                DebugVisualizeDetection(grinder.GetPosition(), playerId, construct.EntityId);
+                DebugVisualizeDetection(origin, playerId, construct.EntityId);
                 long capturedPlayerId = playerId;
                 grinder.OnMarkForClose += entity => ClearDebugMarkersForPlayer(capturedPlayerId);
             }

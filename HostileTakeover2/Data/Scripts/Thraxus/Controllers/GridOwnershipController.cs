@@ -58,6 +58,7 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         public void DisownGrid()
         {
+            WriteGeneral(DebugType.Ownership, nameof(DisownGrid), $"Disowning grid: [{_me.EntityId:D18}]  Previous owner: [{RightfulOwner:D18}]");
             _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
             _blockController.Reset();
             RightfulOwner = 0;

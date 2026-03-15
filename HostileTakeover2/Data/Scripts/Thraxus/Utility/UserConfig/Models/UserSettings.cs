@@ -50,6 +50,9 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         [XmlElement(nameof(UnknownGrinderTierBlockCount))]
         public string UnknownGrinderTierBlockCount;
 
+        [XmlElement(nameof(HighlightFillAlpha))]
+        public string HighlightFillAlpha;
+
         [XmlElement(nameof(DebugMode))]
         public string DebugMode;
 

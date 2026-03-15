@@ -94,19 +94,26 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private Color GetHighlightColor(BlockType type)
         {
+            Color rgb;
             switch (type)
             {
                 case BlockType.Medical:
-                    return _mediator.DefaultSettings.MedicalColor;
+                    rgb = _mediator.DefaultSettings.MedicalColor;
+                    break;
                 case BlockType.Trap:
-                    return _mediator.DefaultSettings.TrapColor;
+                    rgb = _mediator.DefaultSettings.TrapColor;
+                    break;
                 case BlockType.Weapon:
-                    return _mediator.DefaultSettings.WeaponColor;
+                    rgb = _mediator.DefaultSettings.WeaponColor;
+                    break;
                 case BlockType.Control:
                 case BlockType.None:
                 default:
-                    return _mediator.DefaultSettings.ControlColor;
+                    rgb = _mediator.DefaultSettings.ControlColor;
+                    break;
             }
+            int alpha = _mediator.DefaultSettings.HighlightFillAlpha.Current * 255 / 100;
+            return new Color(rgb.R, rgb.G, rgb.B, alpha);
         }
 
         public void EnableHighlights(IMyGridGroupData myGridGroupData, IMyAngleGrinder grinder)
