@@ -257,8 +257,9 @@ namespace HostileTakeover2.Thraxus.Models
 
         public void DisownGrid()
         {
+            DeRegisterEvents();
             GridOwnershipController.DisownGrid();
-            SetEvents();
+            RegisterEvents();
         }
 
         public void ApplyOwnership(long ownerId)
