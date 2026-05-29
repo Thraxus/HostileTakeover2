@@ -14,7 +14,7 @@ namespace HostileTakeover2.Thraxus.Models
         public string Name => MyCubeBlock?.Name ?? string.Empty;
         public long EntityId { get; private set; }
 
-        public bool IsFunctional => MyCubeBlock.IsFunctional;
+        public bool IsFunctional => MyCubeBlock?.IsFunctional ?? false;
 
         public void Initialize(BlockType blockType, MyCubeBlock block)
         {

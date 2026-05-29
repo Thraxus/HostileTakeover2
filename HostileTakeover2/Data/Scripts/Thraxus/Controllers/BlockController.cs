@@ -12,8 +12,8 @@ namespace HostileTakeover2.Thraxus.Controllers
 {
     internal class BlockController : BaseLoggingClass
     {
-        private readonly Dictionary<MyCubeBlock, Block> _importantBlocks =
-            new Dictionary<MyCubeBlock, Block>();
+        private readonly Dictionary<long, Block> _importantBlocks =
+            new Dictionary<long, Block>();
         private readonly List<Block> _nonFunctionalBuffer = new List<Block>();
 
         public Action OnImportantBlocksEmpty;
@@ -63,12 +63,12 @@ namespace HostileTakeover2.Thraxus.Controllers
                             WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block skipped [{blockType}] not functional '{myCubeBlock.DisplayNameText}': block=[{myCubeBlock.EntityId:D18}] grid=[{myCubeBlock.CubeGrid?.EntityId:D18}]");
                         return;
                     }
-                    if (_importantBlocks.ContainsKey(myCubeBlock)) return;
+                    if (_importantBlocks.ContainsKey(myCubeBlock.EntityId)) return;
                     IsClosed = false;
                     Block block = _mediator.GetBlock(myCubeBlock.EntityId);
                     block.Initialize(blockType, myCubeBlock);
                     RegisterBlockEvents(block);
-                    AddToDictionary(myCubeBlock, block);
+                    AddToDictionary(block);
                     if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
                         WriteGeneral(DebugType.Blocks, nameof(AddBlock), $"Block captured [{blockType}] '{myCubeBlock.DisplayNameText}': block=[{block.EntityId:D18}] grid=[{myCubeBlock.CubeGrid?.EntityId:D18}] tracked=[{_importantBlocks.Count}]");
                 }
@@ -86,15 +86,15 @@ namespace HostileTakeover2.Thraxus.Controllers
             });
         }
 
-        private void AddToDictionary(MyCubeBlock myCubeBlock, Block block)
+        private void AddToDictionary(Block block)
         {
-            if (_importantBlocks.ContainsKey(myCubeBlock)) return;
-            _importantBlocks.Add(myCubeBlock, block);
+            if (_importantBlocks.ContainsKey(block.EntityId)) return;
+            _importantBlocks.Add(block.EntityId, block);
         }
 
-        private void RemoveFromDictionary(MyCubeBlock myCubeBlock)
+        private void RemoveFromDictionary(long entityId)
         {
-            _importantBlocks.Remove(myCubeBlock);
+            _importantBlocks.Remove(entityId);
         }
 
         private void RegisterBlockEvents(Block block)
@@ -106,23 +106,30 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void BlockOnClose(IClose block)
         {
-            var b = (Block)block;
-            Block tracked;
-            if (!_importantBlocks.TryGetValue(b.MyCubeBlock, out tracked)) return;
-            OnResetBlock(tracked);
+            try
+            {
+                var b = (Block)block;
+                Block tracked;
+                if (!_importantBlocks.TryGetValue(b.EntityId, out tracked)) return;
+                OnResetBlock(tracked);
+            }
+            catch (Exception e) { WriteGeneral(nameof(BlockOnClose), $"Exception: {e}"); }
         }
 
         private void OnBlockDisabled(Block block)
         {
-            if (!_importantBlocks.ContainsKey(block.MyCubeBlock)) return;
-            if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
-                WriteGeneral(DebugType.Blocks, nameof(OnBlockDisabled), $"Block disabled [{block.BlockType}]: {block.EntityId:D18}");
-            long entityId = block.EntityId;
-            DeRegisterBlockEvents(block);
-            RemoveFromDictionary(block.MyCubeBlock);
-            _mediator.ActionQueue.Add(1, () => _mediator.ReturnBlock(block));
-            if (_importantBlocks.Count == 0)
-                OnImportantBlocksEmpty?.Invoke();
+            try
+            {
+                if (!_importantBlocks.ContainsKey(block.EntityId)) return;
+                if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Blocks))
+                    WriteGeneral(DebugType.Blocks, nameof(OnBlockDisabled), $"Block disabled [{block.BlockType}]: {block.EntityId:D18}");
+                DeRegisterBlockEvents(block);
+                RemoveFromDictionary(block.EntityId);
+                _mediator.ActionQueue.Add(1, () => _mediator.ReturnBlock(block));
+                if (_importantBlocks.Count == 0)
+                    OnImportantBlocksEmpty?.Invoke();
+            }
+            catch (Exception e) { WriteGeneral(nameof(OnBlockDisabled), $"Exception: {e}"); }
         }
 
         private void DeRegisterBlockEvents(Block block)
@@ -134,17 +141,23 @@ namespace HostileTakeover2.Thraxus.Controllers
 
         private void OnResetBlock(IReset block)
         {
-            DeRegisterBlockEvents((Block)block);
-            RemoveFromDictionary(((Block)block).MyCubeBlock);
-            _mediator.ReturnBlock((Block)block);
-            if (_importantBlocks.Count == 0)
-                OnImportantBlocksEmpty?.Invoke();
+            try
+            {
+                var b = (Block)block;
+                DeRegisterBlockEvents(b);
+                RemoveFromDictionary(b.EntityId);
+                _mediator.ReturnBlock(b);
+                if (_importantBlocks.Count == 0)
+                    OnImportantBlocksEmpty?.Invoke();
+            }
+            catch (Exception e) { WriteGeneral(nameof(OnResetBlock), $"Exception: {e}"); }
         }
 
         private void ResetBlock(MyCubeBlock myCubeBlock)
         {
-            if (!_importantBlocks.ContainsKey(myCubeBlock)) return;
-            OnResetBlock(_importantBlocks[myCubeBlock]);
+            Block block;
+            if (!_importantBlocks.TryGetValue(myCubeBlock.EntityId, out block)) return;
+            OnResetBlock(block);
         }
 
         private BlockType AssignBlock(MyCubeBlock block)
