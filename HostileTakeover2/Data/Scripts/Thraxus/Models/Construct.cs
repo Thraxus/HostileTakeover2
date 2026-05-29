@@ -208,7 +208,7 @@ namespace HostileTakeover2.Thraxus.Models
                 var groupData = GridGroupManager.GridGroupData;
                 if (groupData == null)
                 {
-                    DisownGrid();
+                    _mediator.ActionQueue.Add(1, DisownGrid);
                     return;
                 }
 
@@ -250,7 +250,9 @@ namespace HostileTakeover2.Thraxus.Models
                 }
 
                 // All constructs accounted for, none pending, none have important blocks — disown.
-                DisownConstruct();
+                // Deferred 1 tick: ChangeGridOwnership must not fire synchronously inside Grind()'s
+                // IsWorkingChanged callback — it invalidates SE's internal block list mid-iteration.
+                _mediator.ActionQueue.Add(1, DisownConstruct);
             }
             catch (Exception e) { WriteGeneral(nameof(OnAllImportantBlocksGone), $"Exception: {e}"); }
         }
