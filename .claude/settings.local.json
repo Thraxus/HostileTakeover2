@@ -6,7 +6,9 @@
       "WebSearch",
       "WebFetch(domain:spaceengineers.wiki.gg)",
       "Bash(git:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(Get-ChildItem -Path . -Recurse)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }
