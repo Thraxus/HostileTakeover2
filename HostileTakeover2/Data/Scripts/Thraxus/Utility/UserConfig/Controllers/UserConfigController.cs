@@ -77,6 +77,11 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             MyAPIGateway.Utilities.SetVariable("HT_BlocksPerGrinderTier",                       DefaultSettings.BlocksPerGrinderTier.Current);
             MyAPIGateway.Utilities.SetVariable("HT_UnknownGrinderTierBlockCount",               DefaultSettings.UnknownGrinderTierBlockCount.Current);
             MyAPIGateway.Utilities.SetVariable("HT_HighlightFillAlpha",                         DefaultSettings.HighlightFillAlpha.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_HighlightDuration",                          DefaultSettings.HighlightDuration.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_ControlGroupWeight",                         DefaultSettings.ControlGroupWeight.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_MedicalGroupWeight",                         DefaultSettings.MedicalGroupWeight.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_WeaponGroupWeight",                          DefaultSettings.WeaponGroupWeight.Current);
+            MyAPIGateway.Utilities.SetVariable("HT_TrapGroupWeight",                            DefaultSettings.TrapGroupWeight.Current);
             MyAPIGateway.Utilities.SetVariable("HT_DebugMode",                                  DefaultSettings.DebugMode.Current);
             MyAPIGateway.Utilities.SetVariable("HT_VerboseMode",                                DefaultSettings.VerboseMode.Current);
             int mask = 0;
@@ -113,6 +118,11 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             if (MyAPIGateway.Utilities.GetVariable("HT_BlocksPerGrinderTier", out intVal))               DefaultSettings.BlocksPerGrinderTier.Current = intVal;
             if (MyAPIGateway.Utilities.GetVariable("HT_UnknownGrinderTierBlockCount", out intVal))        DefaultSettings.UnknownGrinderTierBlockCount.Current = intVal;
             if (MyAPIGateway.Utilities.GetVariable("HT_HighlightFillAlpha", out intVal))                  DefaultSettings.HighlightFillAlpha.Current = intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_HighlightDuration", out intVal))                   DefaultSettings.HighlightDuration.Current = intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_ControlGroupWeight", out intVal))                  DefaultSettings.ControlGroupWeight.Current = intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_MedicalGroupWeight", out intVal))                  DefaultSettings.MedicalGroupWeight.Current = intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_WeaponGroupWeight", out intVal))                   DefaultSettings.WeaponGroupWeight.Current = intVal;
+            if (MyAPIGateway.Utilities.GetVariable("HT_TrapGroupWeight", out intVal))                     DefaultSettings.TrapGroupWeight.Current = intVal;
 
             if (MyAPIGateway.Utilities.GetVariable("HT_DebugMode", out b))                                 DefaultSettings.DebugMode.Current = b;
             if (MyAPIGateway.Utilities.GetVariable("HT_VerboseMode", out b))                               DefaultSettings.VerboseMode.Current = b;
@@ -308,6 +318,21 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
             _userSettings.HighlightFillAlpha = ParseIntSetting(
                 _userSettings.HighlightFillAlpha, DefaultSettings.HighlightFillAlpha);
 
+            _userSettings.HighlightDuration = ParseIntSetting(
+                _userSettings.HighlightDuration, DefaultSettings.HighlightDuration);
+
+            _userSettings.ControlGroupWeight = ParseIntSetting(
+                _userSettings.ControlGroupWeight, DefaultSettings.ControlGroupWeight);
+
+            _userSettings.MedicalGroupWeight = ParseIntSetting(
+                _userSettings.MedicalGroupWeight, DefaultSettings.MedicalGroupWeight);
+
+            _userSettings.WeaponGroupWeight = ParseIntSetting(
+                _userSettings.WeaponGroupWeight, DefaultSettings.WeaponGroupWeight);
+
+            _userSettings.TrapGroupWeight = ParseIntSetting(
+                _userSettings.TrapGroupWeight, DefaultSettings.TrapGroupWeight);
+
             _userSettings.DebugMode = ParseBoolSetting(
                 _userSettings.DebugMode, DefaultSettings.DebugMode);
 
@@ -334,6 +359,11 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Controllers
                 DefaultSettings.BlocksPerGrinderTier.Current                      = DefaultSettings.BlocksPerGrinderTier.Default;
                 DefaultSettings.UnknownGrinderTierBlockCount.Current              = DefaultSettings.UnknownGrinderTierBlockCount.Default;
                 DefaultSettings.HighlightFillAlpha.Current                        = DefaultSettings.HighlightFillAlpha.Default;
+                DefaultSettings.HighlightDuration.Current                         = DefaultSettings.HighlightDuration.Default;
+                DefaultSettings.ControlGroupWeight.Current                        = DefaultSettings.ControlGroupWeight.Default;
+                DefaultSettings.MedicalGroupWeight.Current                        = DefaultSettings.MedicalGroupWeight.Default;
+                DefaultSettings.WeaponGroupWeight.Current                         = DefaultSettings.WeaponGroupWeight.Default;
+                DefaultSettings.TrapGroupWeight.Current                           = DefaultSettings.TrapGroupWeight.Default;
                 DefaultSettings.EntityDetectionRange.Current                      = DefaultSettings.EntityDetectionRange.Default;
             }
         }

@@ -69,7 +69,7 @@ namespace HostileTakeover2.Thraxus.Controllers
             SetHighlight(hls);
             playerHighlights.Add(playerId, hls);
             long capturedPlayerId = playerId;
-            _mediator.ActionQueue.Add(_mediator.DefaultSettings.HighlightDuration, () => RemoveFromHighlightedBlocks(block, capturedPlayerId));
+            _mediator.ActionQueue.Add(_mediator.DefaultSettings.HighlightDurationTicks, () => RemoveFromHighlightedBlocks(block, capturedPlayerId));
         }
 
         // Called from block lifecycle events (close/reset/disabled) — clears all players at once.
@@ -208,16 +208,35 @@ namespace HostileTakeover2.Thraxus.Controllers
                 return;
             }
 
-            // 3. Select active group by priority
+            // 3. Select active group by user-configured priority (lower weight = higher priority; ties broken by default rank)
             BlockType type = BlockType.None;
+            int bestWeight = int.MaxValue;
+            int bestRank   = int.MaxValue;
+
             if (_reusableImportantBlocksDictionary[BlockType.Control].Count > 0)
-                type = BlockType.Control;
-            else if (_reusableImportantBlocksDictionary[BlockType.Medical].Count > 0 && _mediator.DefaultSettings.UseMedicalGroup.Current)
-                type = BlockType.Medical;
-            else if (_reusableImportantBlocksDictionary[BlockType.Weapon].Count > 0 && _mediator.DefaultSettings.UseWeaponGroup.Current)
-                type = BlockType.Weapon;
-            else if (_reusableImportantBlocksDictionary[BlockType.Trap].Count > 0 && _mediator.DefaultSettings.UseTrapGroup.Current)
-                type = BlockType.Trap;
+            {
+                bestWeight = _mediator.DefaultSettings.ControlGroupWeight.Current;
+                bestRank   = 0;
+                type       = BlockType.Control;
+            }
+            if (_reusableImportantBlocksDictionary[BlockType.Medical].Count > 0 && _mediator.DefaultSettings.UseMedicalGroup.Current)
+            {
+                int w = _mediator.DefaultSettings.MedicalGroupWeight.Current;
+                if (w < bestWeight || (w == bestWeight && 1 < bestRank))
+                { bestWeight = w; bestRank = 1; type = BlockType.Medical; }
+            }
+            if (_reusableImportantBlocksDictionary[BlockType.Weapon].Count > 0 && _mediator.DefaultSettings.UseWeaponGroup.Current)
+            {
+                int w = _mediator.DefaultSettings.WeaponGroupWeight.Current;
+                if (w < bestWeight || (w == bestWeight && 2 < bestRank))
+                { bestWeight = w; bestRank = 2; type = BlockType.Weapon; }
+            }
+            if (_reusableImportantBlocksDictionary[BlockType.Trap].Count > 0 && _mediator.DefaultSettings.UseTrapGroup.Current)
+            {
+                int w = _mediator.DefaultSettings.TrapGroupWeight.Current;
+                if (w < bestWeight || (w == bestWeight && 3 < bestRank))
+                { bestWeight = w; bestRank = 3; type = BlockType.Trap; }
+            }
 
             if (type == BlockType.None) return;
 

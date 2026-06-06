@@ -50,6 +50,21 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         [XmlElement(nameof(UnknownGrinderTierBlockCount))]
         public string UnknownGrinderTierBlockCount;
 
+        [XmlElement(nameof(HighlightDuration))]
+        public string HighlightDuration;
+
+        [XmlElement(nameof(ControlGroupWeight))]
+        public string ControlGroupWeight;
+
+        [XmlElement(nameof(MedicalGroupWeight))]
+        public string MedicalGroupWeight;
+
+        [XmlElement(nameof(WeaponGroupWeight))]
+        public string WeaponGroupWeight;
+
+        [XmlElement(nameof(TrapGroupWeight))]
+        public string TrapGroupWeight;
+
         [XmlElement(nameof(HighlightFillAlpha))]
         public string HighlightFillAlpha;
 
