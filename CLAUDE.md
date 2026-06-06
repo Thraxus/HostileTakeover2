@@ -59,15 +59,36 @@ OnEntityAdd → ActionQueue (EntityAddTickDelay ticks) → ValidateGrid
 
 `GridOwnershipController` owns all SE API ownership calls. `Construct.ApplyOwnership()` and `Construct.DisownGrid()` are thin coordinators — they do not call SE API directly.
 
+`GridOwnershipController.DisownGrid()` resets `RightfulOwner`/`OwnershipType` state but does NOT null the structural refs (`_me`, `_blockController`, `_isNpcIdentity`) — those are only nulled by `Reset()` at pool return.
+
 ### Block Classification
 
 `BlockClassificationData` holds four `HashSet<string>` keyed by `block.BlockDefinition.Id.ToString()`. Populated once at init by `BlockClassifier.Populate()`. `BlockController.AssignBlock()` does a single O(1) lookup against those sets.
 
 Override flow: `BlockClassifier.Populate()` → `BlockClassificationWriter.Write()` (writes XML to world storage) → `BlockClassificationOverridesReader.Read()` (applies user overrides from world storage). XML files live per-save, not in global storage.
 
+Modded-weapon classification depends on two flags on `DefaultSettings`, set by `DetectActiveMods()` in `UserConfigController.InitializeServer()`:
+- `IsWeaponCoreActive` — mod ID `3154371364` present
+- `IsAiEnabledActive` — mod ID `2596208372` present
+
+### BlockController Invariants
+
+- `_pendingAddCount` tracks in-flight deferred `AddBlock` operations. `OnImportantBlocksEmpty` only fires when `_pendingAddCount == 0 && count == 0 && !IsClosed` — this prevents false-empty signals on grids that haven't finished registering blocks yet.
+- `SoftReset()` sets `IsClosed = true` **first**, then deregisters block events, then returns blocks to the pool. This ordering prevents a post-disown re-scan from re-firing `OnImportantBlocksEmpty` (the feedback loop guard).
+
+### OnAllImportantBlocksGone Guards
+
+Two guards prevent spurious disown cascades:
+1. Early-return when `OwnershipType != Npc` — prevents all N constructs in a group from running the full disown pass when only one triggers.
+2. `anyPending` retry — defers the decision via `ActionQueue.Add(1, ...)` when another NPC-owned construct in the group hasn't been evaluated yet.
+
+Both the `groupData == null` path and the normal disown path also defer via `ActionQueue.Add(1, ...)` for the same reason as all ownership API calls (see SE API Gotchas).
+
 ### Highlight Flow
 
 All highlight triggering routes through `Construct.TriggerHighlights(grinder)` — `GrinderController` never calls `HighlightController` directly. Selection strategy (nearest / all / group-priority / tier-limited) is resolved inside `HighlightController`. Alpha=0 on the highlight color renders outline-only (no fill); `HighlightFillAlpha` user setting maps 0–100% → 0–255.
+
+Grinder tier → block count: `AngleGrinder`=tier1, `AngleGrinder2`=tier2, `AngleGrinder3`=tier3, `AngleGrinder4`=all. Each tier maps to `N × BlocksPerGrinderTier`. Unknown subtype uses `UnknownGrinderTierBlockCount` (default 0 → show all).
 
 ### ActionQueue
 
@@ -79,6 +100,7 @@ Tick-based deferred scheduler (`Common/Generics/ActionQueue.cs`). Wraps every ac
 
 ## Key SE API Gotchas
 
+- `ChangeGridOwnership` (and any SE API call that modifies block collections) must **never** be called synchronously from callbacks that fire during `MyAngleGrinder.Grind()` (e.g., `IsWorkingChanged`, `OnBlockOwnershipChanged`). It invalidates SE's internal block iterator → `ArgumentOutOfRangeException`. Always defer via `ActionQueue.Add(1, ...)`.
 - `OnEntityAdd` fires before grid physics/ownership is fully populated — always defer processing by at least one tick.
 - `GridLinkTypeEnum.NoContactDamage` with `MyCubeGrid.GetGridGroup()` returns null even for rotor-connected grids. Use `Logical` only.
 - `MyCubeBlock.Name` is populated for NPC blocks — `SetHighlight` name lookup is reliable on NPC grids.

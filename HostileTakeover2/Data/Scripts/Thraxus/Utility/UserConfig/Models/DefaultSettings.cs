@@ -44,6 +44,11 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             $"\n\t\t* {nameof(BlocksPerGrinderTier)} default is {BlocksPerGrinderTier.Default} [{BlocksPerGrinderTier.Type}].  Number of blocks highlighted per grinder tier when UseGrinderTierHighlighting is active.  Tier N shows N x value blocks; tier 4 (Elite) always shows all regardless.  Value must be between {BlocksPerGrinderTier.Min} and {BlocksPerGrinderTier.Max}." +
             $"\n\t\t* {nameof(UnknownGrinderTierBlockCount)} default is {UnknownGrinderTierBlockCount.Default} [{UnknownGrinderTierBlockCount.Type}].  Blocks shown for unrecognised grinder subtypes (modded grinders) when UseGrinderTierHighlighting is active.  0 = show all blocks.  Value must be between {UnknownGrinderTierBlockCount.Min} and {UnknownGrinderTierBlockCount.Max}." +
             $"\n\t\t* {nameof(HighlightFillAlpha)} default is {HighlightFillAlpha.Default} [{HighlightFillAlpha.Type}].  Fill opacity for highlighted blocks as a percentage (0 = outline only, no fill; 100 = fully opaque fill).  Value must be between {HighlightFillAlpha.Min} and {HighlightFillAlpha.Max}." +
+            $"\n\t\t* {nameof(HighlightDuration)} default is {HighlightDuration.Default} [{HighlightDuration.Type}].  How long (in seconds) a highlight remains active before automatically turning off.  Value must be between {HighlightDuration.Min} and {HighlightDuration.Max}." +
+            $"\n\t\t* {nameof(ControlGroupWeight)} default is {ControlGroupWeight.Default} [{ControlGroupWeight.Type}].  Highlight priority for control seat blocks.  Lower value = highlighted first.  Ties use default order (Control wins).  Value must be between {ControlGroupWeight.Min} and {ControlGroupWeight.Max}." +
+            $"\n\t\t* {nameof(MedicalGroupWeight)} default is {MedicalGroupWeight.Default} [{MedicalGroupWeight.Type}].  Highlight priority for medical / cryo / survival-kit blocks.  Lower value = highlighted first.  Ties use default order.  Value must be between {MedicalGroupWeight.Min} and {MedicalGroupWeight.Max}." +
+            $"\n\t\t* {nameof(WeaponGroupWeight)} default is {WeaponGroupWeight.Default} [{WeaponGroupWeight.Type}].  Highlight priority for weapon blocks.  Lower value = highlighted first.  Ties use default order.  Value must be between {WeaponGroupWeight.Min} and {WeaponGroupWeight.Max}." +
+            $"\n\t\t* {nameof(TrapGroupWeight)} default is {TrapGroupWeight.Default} [{TrapGroupWeight.Type}].  Highlight priority for warhead / trap blocks.  Lower value = highlighted first.  Ties use default order.  Value must be between {TrapGroupWeight.Min} and {TrapGroupWeight.Max}." +
             $"\n\t\t* {nameof(DebugMode)} default is {DebugMode.Default} [{DebugMode.Type}].  When true, extra diagnostic log messages and GPS markers are emitted to help identify issues during testing.  Disable before publishing." +
             $"\n\t\t* {nameof(VerboseMode)} default is {VerboseMode.Default} [{VerboseMode.Type}].  When true, also logs high-frequency internal events (pool ops, per-grid init steps, topology fan-out).  Enabling VerboseMode implies DebugMode.  Disable before publishing." +
             $"\n\t\t* {nameof(ActiveDebugCategories)} default is All [{nameof(LogCategory)}].  Comma-separated list of subsystems to log when DebugMode is active.  Valid values: {validCategoryNames}.  VerboseMode always enables all categories." +
@@ -80,6 +85,16 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         public UserSetting<int> UnknownGrinderTierBlockCount = new UserSetting<int>(0, 10, 0, 0);
         /// <summary>Percentage of fill opacity applied to highlighted blocks (0 = outline only, 100 = fully filled). Mapped to SE's 0–255 alpha range internally.</summary>
         public UserSetting<int> HighlightFillAlpha = new UserSetting<int>(0, 100, 0, 0);
+        /// <summary>How long (in seconds) a highlight remains active before automatically turning off.</summary>
+        public UserSetting<int> HighlightDuration = new UserSetting<int>(1, 120, 10, 10);
+        /// <summary>Highlight priority for control seat blocks. Lower value = higher priority (highlighted first). Ties broken by default order.</summary>
+        public UserSetting<int> ControlGroupWeight = new UserSetting<int>(1, 4, 1, 1);
+        /// <summary>Highlight priority for medical / cryo / survival-kit blocks. Lower value = higher priority (highlighted first). Ties broken by default order.</summary>
+        public UserSetting<int> MedicalGroupWeight = new UserSetting<int>(1, 4, 2, 2);
+        /// <summary>Highlight priority for weapon blocks. Lower value = higher priority (highlighted first). Ties broken by default order.</summary>
+        public UserSetting<int> WeaponGroupWeight = new UserSetting<int>(1, 4, 3, 3);
+        /// <summary>Highlight priority for warhead / trap blocks. Lower value = higher priority (highlighted first). Ties broken by default order.</summary>
+        public UserSetting<int> TrapGroupWeight = new UserSetting<int>(1, 4, 4, 4);
         /// <summary>Sphere radius (in metres) used when searching for nearby NPC grids from a grinder position.</summary>
         public UserSetting<double> EntityDetectionRange = new UserSetting<double>(100, 250, 150, 150);
         /// <summary>When true, extra diagnostic log messages and GPS markers are emitted to help identify issues during testing.</summary>
@@ -92,6 +107,9 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         // ── Computed debug-level helpers ─────────────────────────────────────────────
         // Use these everywhere instead of DebugMode.Current directly, so VerboseMode
         // automatically implies debug output without needing explicit OR checks at each site.
+
+        /// <summary>Highlight duration converted to ticks for use with <see cref="Common.Generics.ActionQueue"/>.</summary>
+        public int HighlightDurationTicks => HighlightDuration.Current * Common.References.TicksPerSecond;
 
         /// <summary>True when either DebugMode or VerboseMode is active.  Use <see cref="IsDebugActiveFor"/> for category-filtered gating.</summary>
         public bool IsDebugActive => DebugMode.Current || VerboseMode.Current;
@@ -154,8 +172,6 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
         // ── Highlight visual constants ───────────────────────────────────────────────
         // These control the appearance of the block highlights shown to the grinder user.
 
-        /// <summary>How long (in ticks) a highlight remains active before automatically turning off.</summary>
-        public readonly int HighlightDuration = Common.References.TicksPerSecond * 10;
         /// <summary>Duration of the highlight pulse animation in ticks (controls pulse speed).</summary>
         public readonly int HighlightPulseDuration = 120;
         /// <summary>Line thickness used when a highlight is active (visible to the player).</summary>
@@ -240,6 +256,11 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             userSettings.BlocksPerGrinderTier                      = BlocksPerGrinderTier.ToString();
             userSettings.UnknownGrinderTierBlockCount              = UnknownGrinderTierBlockCount.ToString();
             userSettings.HighlightFillAlpha                        = HighlightFillAlpha.ToString();
+            userSettings.HighlightDuration                         = HighlightDuration.ToString();
+            userSettings.ControlGroupWeight                        = ControlGroupWeight.ToString();
+            userSettings.MedicalGroupWeight                        = MedicalGroupWeight.ToString();
+            userSettings.WeaponGroupWeight                         = WeaponGroupWeight.ToString();
+            userSettings.TrapGroupWeight                           = TrapGroupWeight.ToString();
             userSettings.DebugMode                                 = DebugMode.ToString().ToLower();
             userSettings.VerboseMode                               = VerboseMode.ToString().ToLower();
             userSettings.ActiveDebugCategories                     = SerializeActiveCategories();
@@ -269,6 +290,11 @@ namespace HostileTakeover2.Thraxus.Utility.UserConfig.Models
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", BlocksPerGrinderTier,                      nameof(BlocksPerGrinderTier));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", UnknownGrinderTierBlockCount,              nameof(UnknownGrinderTierBlockCount));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", HighlightFillAlpha,                        nameof(HighlightFillAlpha));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", HighlightDuration,                         nameof(HighlightDuration));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", ControlGroupWeight,                        nameof(ControlGroupWeight));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", MedicalGroupWeight,                        nameof(MedicalGroupWeight));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", WeaponGroupWeight,                         nameof(WeaponGroupWeight));
+            sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", TrapGroupWeight,                           nameof(TrapGroupWeight));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", DebugMode,                                 nameof(DebugMode));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", VerboseMode,                               nameof(VerboseMode));
             sb.AppendFormat("{0, -4}[{1}] {2}\n",   " ", SerializeActiveCategories(),               nameof(ActiveDebugCategories));
