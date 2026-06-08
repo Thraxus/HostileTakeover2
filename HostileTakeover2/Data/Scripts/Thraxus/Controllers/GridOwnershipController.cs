@@ -60,6 +60,9 @@ namespace HostileTakeover2.Thraxus.Controllers
         {
             WriteGeneral(DebugType.Ownership, nameof(DisownGrid), $"Disowning grid: [{_me.EntityId:D18}]  Previous owner: [{RightfulOwner:D18}]");
             _me.ChangeGridOwnership(0, MyOwnershipShareModeEnum.All);
+            foreach (var fatBlock in _me.GetFatBlocks())
+                if (!fatBlock.IsFunctional && fatBlock.OwnerId != 0)
+                    fatBlock.ChangeOwner(0, MyOwnershipShareModeEnum.All);
             _blockController.Reset();
             RightfulOwner = 0;
             OwnershipType = OwnershipType.None;

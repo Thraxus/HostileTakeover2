@@ -101,6 +101,7 @@ namespace HostileTakeover2.Thraxus.Models
             {
                 foreach (var fatBlock in ((MyCubeGrid)grid).GetFatBlocks())
                 {
+                    if (!fatBlock.IsFunctional) continue;
                     long id = fatBlock.OwnerId;
                     // id == 0: unowned or ownership not yet applied at load time (SE doesn't fire
                     // ownership events during world load, so blocks can appear with no owner briefly).
@@ -274,11 +275,9 @@ namespace HostileTakeover2.Thraxus.Models
         {
             foreach (var grid in _groupGrids)
             {
-                var cubeGrid = (MyCubeGrid)grid;
-                if (cubeGrid.BigOwners.Count > 0 && !_mediator.IsNpcIdentity(cubeGrid.BigOwners[0]))
-                    continue;
                 Construct construct = _mediator.ConstructController.GetConstruct(grid.EntityId);
-                construct?.DisownGrid();
+                if (construct == null || construct.GridOwnershipController.OwnershipType != OwnershipType.Npc) continue;
+                construct.DisownGrid();
             }
         }
 

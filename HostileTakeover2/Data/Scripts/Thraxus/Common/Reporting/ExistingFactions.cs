@@ -22,7 +22,6 @@ namespace HostileTakeover2.Thraxus.Common.Reporting
                     faction.Key, faction.Value.Tag, faction.Value.IsEveryoneNpc(), faction.Value.Name);
             }
 
-            sb.AppendLine();
             return sb;
 		}
 	}

@@ -40,7 +40,7 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
     {
         private const string FileName = "BlockClassificationOverrides.xml";
 
-        public static void Read(BlockClassificationData data)
+        public static void Read(BlockClassificationData data, Action<string, string> log = null)
         {
             // First run: no overrides file exists yet. Drop a commented-out template so
             // the user has something to edit rather than having to figure out the format.
@@ -61,11 +61,11 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
 
                 if (overrides == null) return;
 
-                ApplyAdds(overrides.ControlBlocks.Add, data.ControlBlocks);
-                ApplyAdds(overrides.MedicalBlocks.Add, data.MedicalBlocks);
-                ApplyAdds(overrides.WeaponBlocks.Add,  data.WeaponBlocks);
-                ApplyAdds(overrides.TrapBlocks.Add,    data.TrapBlocks);
-                ApplyExcludes(overrides.ExcludedBlocks.Exclude, data);
+                ApplyAdds(overrides.ControlBlocks.Add, data.ControlBlocks, "Control", log);
+                ApplyAdds(overrides.MedicalBlocks.Add, data.MedicalBlocks, "Medical", log);
+                ApplyAdds(overrides.WeaponBlocks.Add,  data.WeaponBlocks,  "Weapon",  log);
+                ApplyAdds(overrides.TrapBlocks.Add,    data.TrapBlocks,    "Trap",    log);
+                ApplyExcludes(overrides.ExcludedBlocks.Exclude, data, log);
             }
             catch (Exception)
             {
@@ -73,16 +73,18 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
             }
         }
 
-        private static void ApplyAdds(List<string> adds, HashSet<string> set)
+        private static void ApplyAdds(List<string> adds, HashSet<string> set, string category, Action<string, string> log)
         {
             foreach (var key in adds)
             {
                 string trimmed = key.Trim();
-                if (!string.IsNullOrEmpty(trimmed)) set.Add(trimmed);
+                if (string.IsNullOrEmpty(trimmed)) continue;
+                if (set.Add(trimmed) && log != null)
+                    log(nameof(BlockClassificationOverridesReader), $"Override add [{category}]: {trimmed}");
             }
         }
 
-        private static void ApplyExcludes(List<string> excludes, BlockClassificationData data)
+        private static void ApplyExcludes(List<string> excludes, BlockClassificationData data, Action<string, string> log)
         {
             // Excludes are category-agnostic: the user shouldn't need to know (or care)
             // which category a block landed in, so we just nuke it from all four.
@@ -90,10 +92,15 @@ namespace HostileTakeover2.Thraxus.Utility.Classification
             {
                 string trimmed = key.Trim();
                 if (string.IsNullOrEmpty(trimmed)) continue;
-                data.ControlBlocks.Remove(trimmed);
-                data.MedicalBlocks.Remove(trimmed);
-                data.WeaponBlocks.Remove(trimmed);
-                data.TrapBlocks.Remove(trimmed);
+                bool inControl = data.ControlBlocks.Remove(trimmed);
+                bool inMedical = data.MedicalBlocks.Remove(trimmed);
+                bool inWeapon  = data.WeaponBlocks.Remove(trimmed);
+                bool inTrap    = data.TrapBlocks.Remove(trimmed);
+                if (log == null) continue;
+                if (!inControl && !inMedical && !inWeapon && !inTrap)
+                    log(nameof(BlockClassificationOverridesReader), $"Override exclude (not found in any category): {trimmed}");
+                else
+                    log(nameof(BlockClassificationOverridesReader), $"Override exclude [{(inControl ? "Control" : inMedical ? "Medical" : inWeapon ? "Weapon" : "Trap")}]: {trimmed}");
             }
         }
 

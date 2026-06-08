@@ -51,8 +51,9 @@ namespace HostileTakeover2.Thraxus
                 _mediator.OnWriteToLog += WriteGeneral;
                 _mediator.AddSettings(_userConfigController);
                 BlockClassifier.Populate(_mediator.BlockClassificationData, _userConfigController.DefaultSettings);
+                _mediator.BlockClassificationData.LockBaseCounts();
                 BlockClassificationWriter.Write(_mediator.BlockClassificationData);
-                BlockClassificationOverridesReader.Read(_mediator.BlockClassificationData);
+                BlockClassificationOverridesReader.Read(_mediator.BlockClassificationData, WriteGeneral);
                 MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
             }
             else
@@ -63,30 +64,25 @@ namespace HostileTakeover2.Thraxus
 
         private void OnEntityAdd(IMyEntity entity)
         {
-            // Give SE a tick to finish wiring the entity up before we touch it.
-            // Grid ownership and physics aren't always populated the frame OnEntityAdd fires.
-            _mediator.ActionQueue.Add(DefaultSettings.EntityAddTickDelay, () =>
-            {
-                if (!CheckForGrid(entity)) CheckForGrinder(entity);
-            });
-        }
-
-        private bool CheckForGrid(IMyEntity entity)
-        {
+            // Cast immediately — type check is safe synchronously; only the setup work needs deferral.
+            // Grids get a long delay so SE has time to fully stabilize block power and subgrid
+            // connections before we start classifying blocks. Grinders keep a short delay.
             var grid = entity as MyCubeGrid;
-            if (grid == null) return false;
-            CheckGrid(grid);
-            return true;
+            if (grid != null)
+            {
+                _mediator.ActionQueue.Add(DefaultSettings.EntityAddTickDelay, () => CheckGrid(grid));
+                return;
+            }
+            var grinder = entity as IMyAngleGrinder;
+            if (grinder != null)
+                _mediator.ActionQueue.Add(DefaultSettings.GrinderTickDelay, () => CheckForGrinder(grinder));
         }
 
-        private bool CheckForGrinder(IMyEntity entity)
+        private void CheckForGrinder(IMyAngleGrinder grinder)
         {
-            var grinder = entity as IMyAngleGrinder;
-            if (grinder == null) return false;
             if (_mediator.DefaultSettings.IsDebugActiveFor(DebugType.Grinder))
                 WriteGeneral(nameof(CheckForGrinder), $"Grinder: [{grinder.EntityId:D18}]");
             _mediator.GrinderController.RunGrinderLogic(grinder);
-            return true;
         }
 
         private void CheckGrid(MyCubeGrid grid)
@@ -126,6 +122,7 @@ namespace HostileTakeover2.Thraxus
             _mediator.BuildNpcIdentityCache();
             _mediator.RegisterFactionEvents();
             WriteGeneral(nameof(BeforeStart), _userConfigController.DefaultSettings.PrintSettings().ToString());
+            WriteGeneral(nameof(BeforeStart), _mediator.BlockClassificationData.PrintCountsSummary());
         }
 
         protected override void LateSetup()
